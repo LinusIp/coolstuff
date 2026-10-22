@@ -212,7 +212,17 @@ const helper = await browser.newPage();
 await helper.goto(`${origin}/`);
 
 const targets: [string, string][] = [];
-if (!only) targets.push(['showcase', '/']);
+if (!only) {
+  targets.push(['showcase', '/']);
+  // /learn hub pages. A page can list extra query strings to test in a
+  // `<meta name="smoke-variants" content="?s=linalg,?s=dsa">` tag.
+  const learnDir = join(root, 'learn');
+  for (const html of existsSync(learnDir) ? readdirSync(learnDir).filter((f) => f.endsWith('.html')) : []) {
+    const src = readFileSync(join(learnDir, html), 'utf8');
+    const variants = /<meta name="smoke-variants" content="([^"]*)"/.exec(src)?.[1].split(',').filter(Boolean) ?? [''];
+    for (const v of variants) targets.push([`learn/${html}${v}`, `/learn/${html === 'index.html' ? '' : html}${v}`]);
+  }
+}
 for (const p of projects) {
   for (const html of p.pages) targets.push([`${p.slug}/${html}`, `/projects/${p.slug}/${html === 'index.html' ? '' : html}`]);
   if (p.meta.status === 'shipped') targets.push([`${p.slug}/notes`, `/notes.html?p=${p.slug}`]);

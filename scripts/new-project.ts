@@ -5,6 +5,7 @@
  */
 import { cpSync, existsSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { extname, join } from 'node:path';
+import { LESSON_BY_SLUG } from '../src/learn/curriculum.ts';
 import { CATEGORIES, type Category } from './meta.ts';
 
 const root = join(import.meta.dirname, '..');
@@ -22,8 +23,23 @@ const from = join(root, 'templates', category);
 const to = join(root, 'projects', slug);
 if (existsSync(to)) fail(`projects/${slug} already exists`);
 
-const title = titleWords.join(' ') || slug.split('-').map((w) => w[0].toUpperCase() + w.slice(1)).join(' ');
-const vars: Record<string, string> = { slug, title, date: new Date().toISOString().slice(0, 10) };
+// Explainers take their title, unit, order and prerequisites from the curriculum.
+const lesson = category === 'explainer' ? LESSON_BY_SLUG.get(slug) : undefined;
+if (category === 'explainer' && !lesson) {
+  fail(`"${slug}" is not in src/learn/curriculum.ts; explainer slugs look like learn-<subject>-<topic>`);
+}
+
+const title =
+  titleWords.join(' ') || lesson?.title || slug.split('-').map((w) => w[0].toUpperCase() + w.slice(1)).join(' ');
+const vars: Record<string, string> = {
+  slug,
+  title,
+  date: new Date().toISOString().slice(0, 10),
+  subject: lesson?.subject ?? '',
+  unit: lesson?.unit ?? '',
+  order: String(lesson?.order ?? 1),
+  prerequisites: JSON.stringify(lesson?.prerequisites ?? []),
+};
 const TEXT = new Set(['.html', '.ts', '.css', '.json', '.md', '.js', '.webmanifest', '.svg', '.txt']);
 
 cpSync(from, to, { recursive: true });

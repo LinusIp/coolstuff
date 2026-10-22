@@ -5,6 +5,7 @@
  */
 import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { LESSON_BY_SLUG, SUBJECTS } from '../src/learn/curriculum.ts';
 import { validateMeta, type ProjectMeta } from './meta.ts';
 
 const root = join(import.meta.dirname, '..');
@@ -43,6 +44,27 @@ for (const slug of existsSync(projectsDir) ? readdirSync(projectsDir).sort() : [
     continue;
   }
   projects.push({ ...(meta as ProjectMeta), slug, hasThumb: existsSync(join(dir, 'thumb.webp')) });
+}
+
+// Explainers: the slug must follow learn-<subject>-<topic>, the subject must
+// exist, and every prerequisite must be a real project or a curriculum entry.
+const slugs = new Set(projects.map((p) => p.slug));
+for (const p of projects.filter((x) => x.category === 'explainer')) {
+  if (!SUBJECTS.some((s) => s.id === p.subject)) {
+    console.error(`✗ ${p.slug}: unknown subject "${p.subject}"`);
+    failed = true;
+  }
+  if (!p.slug.startsWith(`learn-${p.subject}-`)) {
+    console.error(`✗ ${p.slug}: explainer slugs must look like learn-${p.subject}-<topic>`);
+    failed = true;
+  }
+  if (!LESSON_BY_SLUG.has(p.slug)) console.warn(`! ${p.slug}: not in src/learn/curriculum.ts yet; add it so the hub can place it`);
+  for (const pre of p.prerequisites ?? []) {
+    if (!slugs.has(pre) && !LESSON_BY_SLUG.has(pre)) {
+      console.error(`✗ ${p.slug}: prerequisite "${pre}" is neither a project nor in the curriculum`);
+      failed = true;
+    }
+  }
 }
 
 if (failed) process.exit(1);

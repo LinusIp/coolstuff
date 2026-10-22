@@ -22,6 +22,13 @@ function discoverInputs(): Record<string, string> {
     main: join(root, 'index.html'),
     notes: join(root, 'notes.html'),
   };
+  // The /learn hub's pages live in learn/*.html.
+  const learnDir = join(root, 'learn');
+  if (existsSync(learnDir)) {
+    for (const file of readdirSync(learnDir)) {
+      if (file.endsWith('.html')) inputs[`learn/${file.replace(/\.html$/, '')}`] = join(learnDir, file);
+    }
+  }
   for (const slug of projectSlugs()) {
     for (const file of readdirSync(join(projectsDir, slug))) {
       if (file.endsWith('.html')) {

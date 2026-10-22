@@ -1,4 +1,4 @@
-export type Category = 'game' | 'blog-design' | 'website' | 'ui-concept' | 'tool' | 'experiment' | 'ai' | 'audio';
+export type Category = 'game' | 'blog-design' | 'website' | 'ui-concept' | 'tool' | 'experiment' | 'ai' | 'audio' | 'explainer';
 
 export interface Project {
   slug: string;
@@ -11,6 +11,12 @@ export interface Project {
   status: 'shipped' | 'wip';
   mobile: boolean;
   hasThumb: boolean;
+  subject?: string;
+  unit?: string;
+  order?: number;
+  prerequisites?: string[];
+  minutes?: number;
+  level?: 'intro' | 'core' | 'advanced';
 }
 
 export const CATEGORY_LABELS: Record<Category, string> = {
@@ -22,6 +28,7 @@ export const CATEGORY_LABELS: Record<Category, string> = {
   experiment: 'Experiments',
   ai: 'AI',
   audio: 'Audio',
+  explainer: 'Explainers',
 };
 
 export const CATEGORY_SINGULAR: Record<Category, string> = {
@@ -33,4 +40,5 @@ export const CATEGORY_SINGULAR: Record<Category, string> = {
   experiment: 'Experiment',
   ai: 'AI',
   audio: 'Audio',
+  explainer: 'Explainer',
 };

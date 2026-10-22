@@ -20,7 +20,7 @@ export default tseslint.config(
     },
   },
   {
-    files: ['scripts/**', 'vite.config.ts', 'eslint.config.js'],
+    files: ['scripts/**', 'vite.config.ts', 'vitest.config.ts', 'eslint.config.js'],
     languageOptions: { globals: { ...globals.node } },
     rules: { 'no-console': 'off' },
   },
