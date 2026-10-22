@@ -12,6 +12,7 @@
     "noImplicitOverride": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
+    "moduleDetection": "force",
     "verbatimModuleSyntax": true,
     "skipLibCheck": true,
     "noEmit": true

@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{{title}}</title>
+    <link rel="stylesheet" href="./src/style.css" />
+  </head>
+  <body>
+    <div class="device">
+      <section class="screen" data-screen="home" aria-labelledby="h-home">
+        <h1 id="h-home">Home</h1>
+        <button data-go="detail" type="button">Open detail</button>
+      </section>
+      <section class="screen" data-screen="detail" hidden aria-labelledby="h-detail">
+        <h1 id="h-detail">Detail</h1>
+        <button data-go="settings" type="button">Settings</button>
+        <button data-go="home" type="button">Back</button>
+      </section>
+      <section class="screen" data-screen="settings" hidden aria-labelledby="h-settings">
+        <h1 id="h-settings">Settings</h1>
+        <button data-go="home" type="button">Done</button>
+      </section>
+    </div>
+    <script type="module" src="./src/main.ts"></script>
+  </body>
+</html>

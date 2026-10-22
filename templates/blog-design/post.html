@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Post title · {{title}}</title>
+    <link rel="stylesheet" href="./src/style.css" />
+  </head>
+  <body data-page="post">
+    <a class="skip" href="#main">Skip to content</a>
+    <header class="site-header">
+      <a href="./" class="brand">{{title}}</a>
+      <nav aria-label="Primary"><a href="./archive.html">Archive</a> <a href="./about.html">About</a></nav>
+      <button id="theme" type="button" aria-label="Toggle dark mode">◐</button>
+    </header>
+    <main id="main">
+      <h1>Post title</h1>
+      <article id="article" class="prose"></article>
+    </main>
+    <script type="module" src="./src/main.ts"></script>
+  </body>
+</html>
