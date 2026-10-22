@@ -2,11 +2,22 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#0a0a0b" />
+    <meta name="color-scheme" content="dark" />
+    <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
     <title>Notes · coolstuff</title>
   </head>
   <body>
-    <main id="notes"></main>
+    <a class="skip" href="#notes">Skip to notes</a>
+    <header class="top">
+      <a class="wordmark" href="./" aria-label="coolstuff home">cool<span>stuff</span><i aria-hidden="true"></i></a>
+      <a class="mono back" href="./">← All projects</a>
+    </header>
+    <main class="notes-page">
+      <header class="notes-head" id="head"></header>
+      <article class="prose" id="notes"><p class="mono">Loading notes…</p></article>
+    </main>
     <script type="module" src="./src/showcase/notes.ts"></script>
   </body>
 </html>
