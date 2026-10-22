@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#07050a" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="description" content="A million slime-mold agents sniff, turn and weave living transport networks on your GPU." />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%2307050a'/%3E%3Cpath d='M16 4c-2 6-8 7-9 13s5 11 9 11 10-4 9-11-7-7-9-13z' fill='none' stroke='%23ffb547' stroke-width='2.4'/%3E%3Cpath d='M16 10v14M11 17l5 4 5-6' fill='none' stroke='%23ff3f6c' stroke-width='2'/%3E%3C/svg%3E"
+    />
+    <title>Physarum · coolstuff</title>
+  </head>
+  <body>
+    <canvas id="view" role="img" aria-label="A live simulation of slime-mold agents weaving glowing networks of veins"></canvas>
+
+    <header class="hud" id="hud">
+      <a class="back mono" href="../../">← coolstuff</a>
+      <h1 class="title">Physarum</h1>
+      <p class="stats mono" id="stats" aria-live="off">warming up…</p>
+    </header>
+
+    <p class="hint mono" id="hint" aria-hidden="true"></p>
+
+    <div class="gui-wrap" id="gui-wrap" hidden></div>
+
+    <nav class="dock" id="dock" aria-label="Simulation controls">
+      <button type="button" class="chip" id="btn-preset" title="Next preset (N)">
+        <span class="chip-kicker mono">preset</span>
+        <span class="chip-name" id="preset-name">Veins</span>
+        <svg class="chip-arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6" /></svg>
+      </button>
+      <button type="button" class="icon" id="btn-shuffle" aria-label="Randomize parameters" title="Randomize (R)">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <rect x="4" y="4" width="16" height="16" rx="4" />
+          <circle class="dot" cx="9" cy="9" r="1.3" />
+          <circle class="dot" cx="15" cy="15" r="1.3" />
+          <circle class="dot" cx="15" cy="9" r="1.3" />
+          <circle class="dot" cx="9" cy="15" r="1.3" />
+        </svg>
+      </button>
+      <button type="button" class="icon" id="btn-seed" aria-label="Reseed" title="Reseed (S)">
+        <svg viewBox="0 0 24 24" aria-hidden="true" id="seed-icon"></svg>
+      </button>
+      <button type="button" class="icon" id="btn-pause" aria-label="Pause" aria-pressed="false" title="Pause (Space)">
+        <svg viewBox="0 0 24 24" aria-hidden="true" id="pause-icon"><path d="M9 6v12M15 6v12" /></svg>
+      </button>
+      <button type="button" class="icon" id="btn-tune" aria-label="Show parameters" aria-expanded="false" aria-controls="gui-wrap" title="Parameters (G)">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M5 7h14M5 17h14" />
+          <circle class="knob" cx="9" cy="7" r="2.4" />
+          <circle class="knob" cx="15" cy="17" r="2.4" />
+        </svg>
+      </button>
+      <button type="button" class="icon" id="btn-about" aria-label="How it works" aria-haspopup="dialog" title="How it works (?)">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="12" cy="12" r="8.5" />
+          <path d="M9.6 9.6a2.5 2.5 0 1 1 3.4 2.3c-.7.3-1 .8-1 1.5v.4" />
+          <circle class="dot" cx="12" cy="16.9" r="1" />
+        </svg>
+      </button>
+    </nav>
+
+    <div class="fallback" id="fallback" hidden>
+      <div>
+        <p class="mono kicker">physarum</p>
+        <h2 id="fallback-title">This mold needs a GPU.</h2>
+        <p id="fallback-text"></p>
+        <a class="mono" href="../../">← Back to coolstuff</a>
+      </div>
+    </div>
+
+    <dialog class="about" id="about" aria-labelledby="about-title">
+      <div class="about-inner">
+        <button type="button" class="close" id="about-close" aria-label="Close">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
+        </button>
+        <p class="mono kicker">how it works</p>
+        <h2 id="about-title">A brainless blob that builds road networks</h2>
+        <p class="lede">
+          <em>Physarum polycephalum</em> is a single-celled slime mould with no nervous system, yet it finds
+          short paths through mazes and, given oat flakes placed like the cities around Tokyo, grows a network
+          strikingly close to the real rail map. Everything you see here comes from the same trick: lots of
+          dumb parts, one shared chemical memory.
+        </p>
+
+        <figure class="diagram">
+          <svg viewBox="0 0 320 160" role="img" aria-labelledby="diag-cap">
+            <defs>
+              <radialGradient id="trailGrad" cx="50%" cy="50%" r="50%">
+                <stop offset="0" stop-color="var(--accent)" stop-opacity=".6" />
+                <stop offset="1" stop-color="var(--accent)" stop-opacity="0" />
+              </radialGradient>
+            </defs>
+            <ellipse cx="214" cy="26" rx="84" ry="22" fill="url(#trailGrad)" />
+            <path class="d-ray" d="M76 80 L196 80" />
+            <path class="d-ray" d="M76 80 L180 22" />
+            <path class="d-ray" d="M76 80 L180 138" />
+            <path class="d-arc" d="M136 80 A60 60 0 0 0 128 51" />
+            <text class="d-label" x="140" y="70">θ</text>
+            <text class="d-label" x="126" y="98">d</text>
+            <circle class="d-sensor" cx="196" cy="80" r="9" />
+            <circle class="d-sensor hot" cx="180" cy="22" r="9" />
+            <circle class="d-sensor" cx="180" cy="138" r="9" />
+            <text class="d-tag" x="212" y="85">F</text>
+            <text class="d-tag" x="196" y="27">FL</text>
+            <text class="d-tag" x="196" y="143">FR</text>
+            <path class="d-agent" d="M56 71 L78 80 L56 89 Z" />
+            <path class="d-turn" d="M60 62 q14 -22 40 -26" />
+          </svg>
+          <figcaption id="diag-cap" class="mono">
+            each agent sniffs three points ahead and turns toward the strongest smell (here: FL)
+          </figcaption>
+        </figure>
+
+        <h3>One agent, four rules</h3>
+        <ol>
+          <li><strong>Sense.</strong> Sample the trail map at distance <i>d</i>, straight ahead and at ±<i>θ</i>: F, FL, FR.</li>
+          <li><strong>Rotate.</strong> If F is strongest, keep going. If FL or FR wins, turn that way by the turn speed. If both sides beat the centre, pick one at random.</li>
+          <li><strong>Move.</strong> Step forward. The world wraps around like a torus.</li>
+          <li><strong>Deposit.</strong> Drop a little pheromone where you land.</li>
+        </ol>
+        <h3>The map remembers, then forgets</h3>
+        <p>
+          After every step the whole trail map is blurred a little (diffusion) and multiplied by a number just
+          below one (decay):
+        </p>
+        <p class="math mono">T ← λ · ( (1 − k)·T + k·blur₃ₓ₃(T) ) + deposits</p>
+        <p>
+          That is the entire model. Busy trails attract more agents, which makes them busier; quiet trails
+          evaporate. Positive feedback plus forgetting prunes the chaos into a <em>transport network</em>: thick
+          highways, thin capillaries, loops that keep everything connected. Nobody plans it.
+        </p>
+        <h3>Rival species</h3>
+        <p>
+          Each colour is a species that follows its own pheromone and treats the others' as a repellent
+          (weight −<i>repulsion</i>). They carve out territories and braid around each other instead of merging.
+        </p>
+        <h3>Why it runs at a million agents</h3>
+        <p>
+          Every agent is one pixel of a 1024-wide float texture (x, y, heading, species). A fragment shader
+          updates all of them in parallel; a second pass draws each agent as a single additive point into the
+          trail map; a third blurs and decays it. The glow is the trail map's own mip-map pyramid. Nothing is
+          ever read back to the CPU, and the population shrinks automatically if your GPU can't hold 55 fps.
+        </p>
+        <h3>Play</h3>
+        <ul class="keys">
+          <li><span class="mono">drag</span> lay food, agents swarm to it</li>
+          <li><span class="mono">right-drag / ⇧ drag</span> lay repellent</li>
+          <li><span class="mono">N</span> next preset · <span class="mono">R</span> randomize · <span class="mono">S</span> reseed</li>
+          <li><span class="mono">G</span> parameters · <span class="mono">space</span> pause · <span class="mono">H</span> hide interface</li>
+        </ul>
+        <h3>Read more</h3>
+        <ul class="refs">
+          <li>
+            Jeff Jones (2010), “Characteristics of pattern formation and evolution in approximations of
+            <i>Physarum</i> transport networks”, <i>Artificial Life</i> 16(2). The agent model used here.
+          </li>
+          <li>
+            Tero et al. (2010), “Rules for biologically inspired adaptive network design”, <i>Science</i> 327.
+            The Tokyo rail experiment.
+          </li>
+          <li><a href="../../notes.html?p=physarum">Full build notes →</a></li>
+        </ul>
+      </div>
+    </dialog>
+
+    <script type="module" src="./src/main.ts"></script>
+  </body>
+</html>

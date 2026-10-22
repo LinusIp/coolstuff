@@ -1,0 +1,10 @@
+{
+  "title": "Physarum",
+  "tagline": "A million slime-mould agents sniff, turn and braid living vein networks — rival species, one GPU.",
+  "category": "experiment",
+  "tags": ["artificial life", "slime mould", "agent-based", "emergence", "generative", "gpu"],
+  "tech": ["typescript", "webgl2", "glsl", "lil-gui", "vite"],
+  "date": "2026-10-22",
+  "status": "shipped",
+  "mobile": true
+}
