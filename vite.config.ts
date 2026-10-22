@@ -5,11 +5,15 @@ import { defineConfig, type Plugin } from 'vite';
 const root = import.meta.dirname;
 const projectsDir = join(root, 'projects');
 
+// COOLSTUFF_ONLY=slug[,slug] limits the build to some projects (handy while others are mid-edit).
+const only = process.env.COOLSTUFF_ONLY?.split(',').filter(Boolean);
+
 /** Every project folder that has an index.html. */
 function projectSlugs(): string[] {
   if (!existsSync(projectsDir)) return [];
   return readdirSync(projectsDir)
     .filter((slug) => existsSync(join(projectsDir, slug, 'index.html')))
+    .filter((slug) => !only || only.includes(slug))
     .sort();
 }
 

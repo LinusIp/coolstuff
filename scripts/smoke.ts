@@ -246,7 +246,7 @@ await new Promise<void>((resolve) => server.httpServer.close(() => resolve()));
 if (failures.length) {
   console.error(`\n✗ ${failures.length} problem(s):`);
   for (const f of failures) console.error(`  • ${f.page}: ${f.problem}`);
-  console.error(`\nScreenshots: smoke-report/`);
+  console.error(`\nScreenshots: ${reportDir}`);
   process.exit(1);
 }
-console.log(`\n✓ ${targets.length} page(s) × ${Object.keys(VIEWPORTS).length} viewports clean. Screenshots: smoke-report/`);
+console.log(`\n✓ ${targets.length} page(s) × ${Object.keys(VIEWPORTS).length} viewports clean. Screenshots: ${reportDir}`);
