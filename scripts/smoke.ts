@@ -5,23 +5,25 @@
  *   npm run smoke -- --only=flipline  # one project
  *   npm run smoke -- --thumbs         # also (re)capture thumb.webp for every project
  *   npm run smoke -- --thumbs=flipline
+ *   npm run smoke -- --dist=/tmp/out --report=/tmp/shots   # custom build/report folders
  *
  * Fails on: console errors or warnings, uncaught exceptions, same-origin 4xx/5xx,
  * blank screens, horizontal scroll on a phone, and shipped projects missing
  * meta.json / NOTES.md / a thumb.webp of the right size.
  */
 import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
 import { chromium, type Browser, type Page } from 'playwright';
 import { preview } from 'vite';
 import { validateMeta, type ProjectMeta } from './meta.ts';
 
 const root = join(import.meta.dirname, '..');
-const dist = join(root, 'dist');
-const reportDir = join(root, 'smoke-report');
 const args = process.argv.slice(2);
 const flag = (name: string) => args.find((a) => a === `--${name}` || a.startsWith(`--${name}=`));
 const flagValue = (name: string) => flag(name)?.split('=')[1];
+// --dist lets parallel work build into separate folders without clobbering dist/.
+const dist = resolve(root, flagValue('dist') ?? 'dist');
+const reportDir = resolve(root, flagValue('report') ?? 'smoke-report');
 const only = flagValue('only');
 const thumbsFlag = flag('thumbs');
 const thumbsFor = flagValue('thumbs');
@@ -86,7 +88,7 @@ for (const slug of readdirSync(join(root, 'projects')).sort()) {
 
 // ── Browser checks ───────────────────────────────────────────────────────────
 
-const server = await preview({ root, logLevel: 'silent', preview: { port: 0, host: '127.0.0.1' } });
+const server = await preview({ root, logLevel: 'silent', preview: { port: 0, host: '127.0.0.1' }, build: { outDir: dist } });
 const address = server.httpServer.address();
 const origin = `http://127.0.0.1:${typeof address === 'object' && address ? address.port : 4173}`;
 
