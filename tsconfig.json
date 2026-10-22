@@ -3,8 +3,10 @@
     "target": "ES2022",
     "module": "ESNext",
     "moduleResolution": "bundler",
-    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "lib": ["ES2022", "DOM", "DOM.Iterable", "WebWorker.ImportScripts"],
     "types": ["vite/client"],
+    "jsx": "react-jsx",
+    "jsxImportSource": "preact",
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
@@ -15,7 +17,14 @@
     "moduleDetection": "force",
     "verbatimModuleSyntax": true,
     "skipLibCheck": true,
-    "noEmit": true
+    "noEmit": true,
+    "baseUrl": ".",
+    "paths": {
+      "@kit": ["src/kit/index.ts"],
+      "@kit/*": ["src/kit/*"],
+      "@content/*": ["src/content/*"]
+    }
   },
-  "include": ["src", "projects/*/src", "templates/*/src"]
+  "include": ["src", "lessons"],
+  "exclude": ["src/**/vite-*.ts"]
 }

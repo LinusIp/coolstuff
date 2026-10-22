@@ -1,45 +1,39 @@
-import { createReadStream, existsSync, readdirSync, statSync, cpSync, mkdirSync, copyFileSync } from 'node:fs';
+import { copyFileSync, cpSync, createReadStream, existsSync, mkdirSync, readdirSync, statSync } from 'node:fs';
 import { extname, join, resolve, sep } from 'node:path';
 import { defineConfig, type Plugin } from 'vite';
 
 const root = import.meta.dirname;
-const projectsDir = join(root, 'projects');
+const lessonsDir = join(root, 'lessons');
 
-// COOLSTUFF_ONLY=slug[,slug] limits the build to some projects (handy while others are mid-edit).
+// COOLSTUFF_ONLY=linalg/eigenvectors[,calc1/derivative] limits which lessons are
+// built (handy while other lessons are mid-edit). Site pages are always built.
 const only = process.env.COOLSTUFF_ONLY?.split(',').filter(Boolean);
 
-/** Every project folder that has an index.html. */
-function projectSlugs(): string[] {
-  if (!existsSync(projectsDir)) return [];
-  return readdirSync(projectsDir)
-    .filter((slug) => existsSync(join(projectsDir, slug, 'index.html')))
-    .filter((slug) => !only || only.includes(slug))
-    .sort();
+/** Every lesson folder (`<subject>/<slug>`) that has an index.html. */
+export function lessonIds(): string[] {
+  if (!existsSync(lessonsDir)) return [];
+  const ids: string[] = [];
+  for (const subject of readdirSync(lessonsDir)) {
+    const subjectDir = join(lessonsDir, subject);
+    if (!statSync(subjectDir).isDirectory()) continue;
+    for (const slug of readdirSync(subjectDir)) {
+      if (existsSync(join(subjectDir, slug, 'index.html'))) ids.push(`${subject}/${slug}`);
+    }
+  }
+  return ids.filter((id) => !only || only.includes(id)).sort();
 }
 
 /**
- * Build inputs: the showcase pages plus every top-level .html file inside each
- * project (blogs and websites ship several pages, not just index.html).
+ * Build inputs: every top-level .html page (home, subject, graph, practice…),
+ * the /kit gallery, and one page per lesson.
  */
 function discoverInputs(): Record<string, string> {
-  const inputs: Record<string, string> = {
-    main: join(root, 'index.html'),
-    notes: join(root, 'notes.html'),
-  };
-  // The /learn hub's pages live in learn/*.html.
-  const learnDir = join(root, 'learn');
-  if (existsSync(learnDir)) {
-    for (const file of readdirSync(learnDir)) {
-      if (file.endsWith('.html')) inputs[`learn/${file.replace(/\.html$/, '')}`] = join(learnDir, file);
-    }
+  const inputs: Record<string, string> = {};
+  for (const file of readdirSync(root)) {
+    if (file.endsWith('.html')) inputs[file.replace(/\.html$/, '')] = join(root, file);
   }
-  for (const slug of projectSlugs()) {
-    for (const file of readdirSync(join(projectsDir, slug))) {
-      if (file.endsWith('.html')) {
-        inputs[`projects/${slug}/${file.replace(/\.html$/, '')}`] = join(projectsDir, slug, file);
-      }
-    }
-  }
+  if (existsSync(join(root, 'kit/index.html'))) inputs['kit/index'] = join(root, 'kit/index.html');
+  for (const id of lessonIds()) inputs[`lessons/${id}/index`] = join(lessonsDir, id, 'index.html');
   return inputs;
 }
 
@@ -49,58 +43,58 @@ const MIME: Record<string, string> = {
   '.jpg': 'image/jpeg',
   '.svg': 'image/svg+xml',
   '.json': 'application/json',
-  '.webmanifest': 'application/manifest+json',
-  '.js': 'text/javascript',
   '.txt': 'text/plain',
-  '.mp3': 'audio/mpeg',
-  '.ogg': 'audio/ogg',
   '.wav': 'audio/wav',
-  '.woff2': 'font/woff2',
+  '.mp3': 'audio/mpeg',
 };
 
 /**
- * Vite has one global publicDir, but each project keeps its own `public/`.
- * In dev we serve `projects/<slug>/public/*` at `/projects/<slug>/*`; at build
- * time we copy it (and the showcase thumbnail) next to the project's HTML.
+ * Lessons keep their own assets: `lessons/<s>/<slug>/public/*` and the
+ * thumbnail are served next to the lesson page in dev and copied there at
+ * build time (Vite only knows one global public/ folder).
  */
-function projectAssets(): Plugin {
+function lessonAssets(): Plugin {
   let outDir = 'dist';
   return {
-    name: 'coolstuff:project-assets',
+    name: 'coolstuff:lesson-assets',
     configResolved(config) {
       outDir = resolve(config.root, config.build.outDir);
     },
     configureServer(server) {
       server.middlewares.use((req, res, next) => {
-        const match = /^\/projects\/([^/]+)\/(.+)$/.exec((req.url ?? '').split('?')[0]);
+        const match = /^\/lessons\/([^/]+)\/([^/]+)\/(.+)$/.exec((req.url ?? '').split('?')[0]);
         if (!match) return next();
-        const [, slug, rest] = match;
-        const candidates = [join(projectsDir, slug, 'public', rest)];
-        if (rest === 'thumb.webp') candidates.push(join(projectsDir, slug, 'thumb.webp'));
-        const file = candidates.find((p) => p.startsWith(projectsDir + sep) && existsSync(p) && statSync(p).isFile());
+        const [, subject, slug, rest] = match;
+        const dir = join(lessonsDir, subject, slug);
+        const candidates = [join(dir, 'public', rest)];
+        if (rest === 'thumb.webp') candidates.push(join(dir, 'thumb.webp'));
+        const file = candidates.find((p) => p.startsWith(lessonsDir + sep) && existsSync(p) && statSync(p).isFile());
         if (!file) return next();
         res.setHeader('Content-Type', MIME[extname(file)] ?? 'application/octet-stream');
         createReadStream(file).pipe(res);
       });
     },
     writeBundle() {
-      for (const slug of projectSlugs()) {
-        const dest = join(outDir, 'projects', slug);
+      for (const id of lessonIds()) {
+        const src = join(lessonsDir, id);
+        const dest = join(outDir, 'lessons', id);
         mkdirSync(dest, { recursive: true });
-        const pub = join(projectsDir, slug, 'public');
-        if (existsSync(pub)) cpSync(pub, dest, { recursive: true });
-        const thumb = join(projectsDir, slug, 'thumb.webp');
-        if (existsSync(thumb)) copyFileSync(thumb, join(dest, 'thumb.webp'));
+        if (existsSync(join(src, 'public'))) cpSync(join(src, 'public'), dest, { recursive: true });
+        if (existsSync(join(src, 'thumb.webp'))) copyFileSync(join(src, 'thumb.webp'), join(dest, 'thumb.webp'));
       }
     },
   };
 }
 
 export default defineConfig({
-  // Relative base keeps every page portable: the site works at a GitHub Pages
-  // sub-path, at a custom domain root, or opened from `vite preview`.
+  // A relative base keeps every page portable: GitHub Pages sub-path, custom
+  // domain root, or `vite preview` all work unchanged.
   base: './',
-  plugins: [projectAssets()],
+  plugins: [lessonAssets()],
+  esbuild: { jsx: 'automatic', jsxImportSource: 'preact' },
+  resolve: {
+    alias: { '@kit': join(root, 'src/kit'), '@content': join(root, 'src/content') },
+  },
   build: {
     target: 'es2022',
     outDir: 'dist',

@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "description": "A lab and showcase of finished, ambitious little projects.",
+  "description": "A free, interactive, visual-first textbook for university STEM and CS.",
   "engines": {
     "node": ">=22"
   },
@@ -12,11 +12,12 @@
     "build": "tsx scripts/build-index.ts && vite build",
     "preview": "vite preview",
     "index": "tsx scripts/build-index.ts",
-    "new": "tsx scripts/new-project.ts",
+    "new": "tsx scripts/new-lesson.ts",
     "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.node.json",
     "lint": "eslint .",
     "test": "vitest run",
-    "smoke": "tsx scripts/smoke.ts"
+    "smoke": "tsx scripts/smoke.ts",
+    "progress:sync": "tsx scripts/build-index.ts && tsx scripts/sync-progress.ts"
   },
   "devDependencies": {
     "@eslint/js": "9.39.5",
@@ -31,16 +32,14 @@
     "vitest": "4.1.12"
   },
   "dependencies": {
-    "@fontsource-variable/fraunces": "5.3.0",
+    "@fontsource-variable/inter": "5.3.0",
     "@fontsource-variable/inter-tight": "5.3.0",
-    "@fontsource-variable/space-grotesk": "5.3.0",
-    "@fontsource/chakra-petch": "5.3.0",
-    "@fontsource/ibm-plex-mono": "5.3.0",
+    "@fontsource-variable/literata": "5.3.0",
+    "@fontsource-variable/source-serif-4": "5.3.1",
     "@fontsource/jetbrains-mono": "5.3.0",
-    "@fontsource/shippori-mincho": "5.3.0",
-    "@fontsource/zen-kaku-gothic-new": "5.3.1",
+    "@preact/signals": "2.11.3",
     "katex": "0.18.11",
-    "lil-gui": "0.21.0",
-    "marked": "18.1.1"
+    "marked": "18.1.1",
+    "preact": "10.29.8"
   }
 }

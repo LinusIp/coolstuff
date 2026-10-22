@@ -3,7 +3,8 @@ import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
-  { ignores: ['dist/**', 'node_modules/**', '**/public/**', 'smoke-report/**'] },
+  // projects/ only exists in old checkouts (the pre-pivot showcase lives on the archive/lab branch).
+  { ignores: ['dist/**', 'node_modules/**', '**/public/**', 'smoke-report/**', 'projects/**'] },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
@@ -20,7 +21,7 @@ export default tseslint.config(
     },
   },
   {
-    files: ['scripts/**', 'vite.config.ts', 'vitest.config.ts', 'eslint.config.js'],
+    files: ['scripts/**', 'vite.config.ts', 'vitest.config.ts', 'eslint.config.js', 'src/**/vite-*.ts'],
     languageOptions: { globals: { ...globals.node } },
     rules: { 'no-console': 'off' },
   },

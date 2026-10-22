@@ -3,7 +3,7 @@
     "target": "ES2022",
     "module": "ESNext",
     "moduleResolution": "bundler",
-    "lib": ["ES2022", "DOM"],
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "types": ["node"],
     "strict": true,
     "noUnusedLocals": true,
@@ -16,5 +16,5 @@
     "skipLibCheck": true,
     "noEmit": true
   },
-  "include": ["vite.config.ts", "vitest.config.ts", "scripts", "eslint.config.js"]
+  "include": ["vite.config.ts", "vitest.config.ts", "scripts", "eslint.config.js", "src/**/vite-*.ts"]
 }

@@ -1,23 +1,27 @@
 /**
- * The full /learn curriculum (CLAUDE.md §8.4) as data. It is the single source
- * of truth for the hub's subject pages, the prerequisite graph, learning paths
- * and for build-index's prerequisite validation. Shipped lessons are matched
- * to entries here by slug: `learn-<subject>-<topic>`.
+ * The curriculum (CLAUDE.md §9) as data: the single source of truth for
+ * subjects, units, lessons and prerequisites. The home page, subject pages,
+ * prerequisite graph, learning paths, search, build-index validation and
+ * PROGRESS.md are all generated from this file.
  *
+ * A lesson's id is `<subject>/<slug>`, and it lives in `lessons/<subject>/<slug>/`.
  * Pure data, no DOM: imported by both the browser and Node scripts.
  */
 
 export type Level = 'intro' | 'core' | 'advanced';
 
 export interface CurriculumLesson {
-  slug: string;
+  /** `<subject>/<slug>`, e.g. `linalg/eigenvectors`. */
+  id: string;
   subject: string;
+  slug: string;
   unit: string;
   /** 1-based position within the subject. */
   order: number;
   title: string;
   /** Suggested central interactive, if the curriculum names one. */
   interactive?: string;
+  /** Lesson ids that should be understood first. */
   prerequisites: string[];
 }
 
@@ -25,37 +29,37 @@ export interface Subject {
   id: string;
   title: string;
   blurb: string;
-  /** Hue (0–360) used for this subject across the hub and the graph. */
+  /** Hue (0–360) used for this subject across the site and the graph. */
   hue: number;
   /** Later-expansion subjects are listed but not on the main map yet. */
   later?: boolean;
   units: { title: string; lessons: CurriculumLesson[] }[];
 }
 
-type Row = [topic: string, title: string, interactive?: string];
+type Row = [slug: string, title: string, interactive?: string];
 type UnitSpec = [title: string, rows: Row[]];
 
 const subjects: Subject[] = [];
 
-function subject(id: string, title: string, hue: number, blurb: string, units: UnitSpec[], later = false): void {
+function subject(subjectId: string, title: string, hue: number, blurb: string, units: UnitSpec[], later = false): void {
   let order = 0;
   let prev: string | null = null;
-  const s: Subject = { id, title, hue, blurb, later, units: [] };
+  const s: Subject = { id: subjectId, title, hue, blurb, later, units: [] };
   for (const [unitTitle, rows] of units) {
     const lessons: CurriculumLesson[] = [];
-    for (const [topic, lessonTitle, interactive] of rows) {
-      const slug = `learn-${id}-${topic}`;
+    for (const [slug, lessonTitle, interactive] of rows) {
+      const id = `${subjectId}/${slug}`;
       order++;
       // Default: each lesson builds on the one before it in the same subject.
-      lessons.push({ slug, subject: id, unit: unitTitle, order, title: lessonTitle, interactive, prerequisites: prev ? [prev] : [] });
-      prev = slug;
+      lessons.push({ id, subject: subjectId, slug, unit: unitTitle, order, title: lessonTitle, interactive, prerequisites: prev ? [prev] : [] });
+      prev = id;
     }
     s.units.push({ title: unitTitle, lessons });
   }
   subjects.push(s);
 }
 
-subject('calc1', 'Calculus I', 12, 'Limits and derivatives: how things change, one instant at a time.', [
+subject('calc1', 'Calculus I', 15, 'Limits and derivatives: how things change, one instant at a time.', [
   [
     'Limits and continuity',
     [
@@ -85,7 +89,7 @@ subject('calc1', 'Calculus I', 12, 'Limits and derivatives: how things change, o
   ],
 ]);
 
-subject('calc2', 'Calculus II', 28, 'Integrals and series: adding up infinitely many tiny pieces.', [
+subject('calc2', 'Calculus II', 36, 'Integrals and series: adding up infinitely many tiny pieces.', [
   [
     'Integration',
     [
@@ -115,7 +119,7 @@ subject('calc2', 'Calculus II', 28, 'Integrals and series: adding up infinitely 
   ],
 ]);
 
-subject('calc3', 'Calculus III', 44, 'Multivariable calculus: slopes, volumes and flows in more than one dimension.', [
+subject('calc3', 'Calculus III', 57, 'Multivariable calculus: slopes, volumes and flows in more than one dimension.', [
   [
     'Surfaces and derivatives',
     [
@@ -145,7 +149,7 @@ subject('calc3', 'Calculus III', 44, 'Multivariable calculus: slopes, volumes an
   ],
 ]);
 
-subject('diffeq', 'Differential equations', 60, 'Rules for change, and the motion they produce.', [
+subject('diffeq', 'Differential equations', 80, 'Rules for change, and the motion they produce.', [
   [
     'First-order equations',
     [
@@ -172,7 +176,7 @@ subject('diffeq', 'Differential equations', 60, 'Rules for change, and the motio
   ],
 ]);
 
-subject('linalg', 'Linear algebra', 210, 'Vectors, matrices and the geometry of linear maps — the language of ML and physics.', [
+subject('linalg', 'Linear algebra', 228, 'Vectors, matrices and the geometry of linear maps — the language of ML and physics.', [
   [
     'Vectors and spaces',
     [
@@ -215,7 +219,7 @@ subject('linalg', 'Linear algebra', 210, 'Vectors, matrices and the geometry of 
   ],
 ]);
 
-subject('prob', 'Probability and statistics', 280, 'Reasoning under uncertainty, from coin flips to Bayesian inference.', [
+subject('prob', 'Probability and statistics', 292, 'Reasoning under uncertainty, from coin flips to Bayesian inference.', [
   [
     'Foundations',
     [
@@ -251,7 +255,7 @@ subject('prob', 'Probability and statistics', 280, 'Reasoning under uncertainty,
   ],
 ]);
 
-subject('discrete', 'Discrete math', 330, 'Proofs, counting and graphs: the mathematics of computer science.', [
+subject('discrete', 'Discrete math', 312, 'Proofs, counting and graphs: the mathematics of computer science.', [
   [
     'Reasoning',
     [
@@ -270,7 +274,7 @@ subject('discrete', 'Discrete math', 330, 'Proofs, counting and graphs: the math
   ],
 ]);
 
-subject('dsa', 'Data structures and algorithms', 160, 'How to organise data and solve problems fast — and prove it.', [
+subject('dsa', 'Data structures and algorithms', 145, 'How to organise data and solve problems fast — and prove it.', [
   [
     'Basics',
     [
@@ -325,7 +329,7 @@ subject('dsa', 'Data structures and algorithms', 160, 'How to organise data and 
   ],
 ]);
 
-subject('sysdesign', 'System design', 190, 'How real systems survive millions of users, failures and the speed of light.', [
+subject('sysdesign', 'System design', 185, 'How real systems survive millions of users, failures and the speed of light.', [
   [
     'Foundations',
     [
@@ -361,7 +365,7 @@ subject('sysdesign', 'System design', 190, 'How real systems survive millions of
   ],
 ]);
 
-subject('systems', 'Computer systems', 100, 'What actually happens inside the machine: CPUs, operating systems, networks, databases.', [
+subject('systems', 'Computer systems', 102, 'What actually happens inside the machine: CPUs, operating systems, networks, databases.', [
   [
     'Hardware and the OS',
     [
@@ -390,7 +394,7 @@ subject('systems', 'Computer systems', 100, 'What actually happens inside the ma
   ],
 ]);
 
-subject('ml', 'Machine learning', 135, 'Learning from data: models, losses, and how to tell if they work.', [
+subject('ml', 'Machine learning', 165, 'Learning from data: models, losses, and how to tell if they work.', [
   [
     'Learning from data',
     [
@@ -431,7 +435,7 @@ subject('ml', 'Machine learning', 135, 'Learning from data: models, losses, and 
   ],
 ]);
 
-subject('dl', 'Deep learning', 300, 'Neural networks from one neuron to transformers, built from the chain rule up.', [
+subject('dl', 'Deep learning', 270, 'Neural networks from one neuron to transformers, built from the chain rule up.', [
   [
     'Neural network basics',
     [
@@ -476,7 +480,7 @@ subject('dl', 'Deep learning', 300, 'Neural networks from one neuron to transfor
   ],
 ]);
 
-subject('diffusion', 'Diffusion models', 320, 'How image generators turn pure noise into pictures, one denoising step at a time.', [
+subject('diffusion', 'Diffusion models', 335, 'How image generators turn pure noise into pictures, one denoising step at a time.', [
   [
     'Noise and denoising',
     [
@@ -550,7 +554,7 @@ subject('llm', 'Large language models', 250, 'Next-token prediction at scale: to
   ],
 ]);
 
-subject('phys1', 'Physics 1: mechanics', 190, 'Motion, forces, energy and waves — Newton to thermodynamics.', [
+subject('phys1', 'Physics 1: mechanics', 205, 'Motion, forces, energy and waves — Newton to thermodynamics.', [
   [
     'Motion',
     [
@@ -598,7 +602,7 @@ subject('phys1', 'Physics 1: mechanics', 190, 'Motion, forces, energy and waves 
   ],
 ]);
 
-subject('phys2', 'Physics 2: electricity and magnetism', 50, 'Charges, fields, circuits and light — all the way to Maxwell.', [
+subject('phys2', 'Physics 2: electricity and magnetism', 124, 'Charges, fields, circuits and light — all the way to Maxwell.', [
   [
     'Electrostatics',
     [
@@ -639,10 +643,7 @@ subject('phys2', 'Physics 2: electricity and magnetism', 50, 'Charges, fields, c
   ],
 ]);
 
-subject(
-  'beyond',
-  'Beyond',
-  0,
+subject('beyond', 'Beyond', 0,
   'Later expansion: modern physics, signals, numerics, graphics, deep RL, compilers and cryptography.',
   [
     [
@@ -706,93 +707,120 @@ subject(
  * diffusion models visibly depend on Gaussians, KL divergence, U-Nets and SDEs.
  */
 const EXTRA: Record<string, string[]> = {
-  'learn-calc1-functions': [],
-  'learn-calc3-surfaces': ['learn-calc2-parametric-polar'],
-  'learn-calc3-gradient': ['learn-linalg-dot-product'],
-  'learn-calc3-lagrange': ['learn-calc1-optimization'],
-  'learn-diffeq-slope-fields': ['learn-calc2-ftc'],
-  'learn-diffeq-phase-portraits': ['learn-linalg-matrix-transformations'],
-  'learn-diffeq-stability': ['learn-linalg-eigenvectors'],
-  'learn-diffeq-pdes': ['learn-calc3-partial-derivatives'],
-  'learn-linalg-least-squares': ['learn-calc1-optimization'],
-  'learn-linalg-pca': ['learn-prob-joint'],
-  'learn-linalg-positive-definite': ['learn-calc3-gradient'],
-  'learn-prob-random-variables': ['learn-calc2-riemann-sums'],
-  'learn-prob-multivariate-gaussian': ['learn-linalg-eigenvectors'],
-  'learn-prob-mle': ['learn-calc1-optimization'],
-  'learn-prob-entropy': ['learn-calc1-functions'],
-  'learn-prob-markov-chains': ['learn-linalg-diagonalization'],
-  'learn-discrete-graphs': ['learn-discrete-sets'],
-  'learn-dsa-big-o': ['learn-discrete-proofs'],
-  'learn-dsa-recursion': ['learn-discrete-recurrences'],
-  'learn-dsa-bfs-dfs': ['learn-discrete-graphs', 'learn-dsa-stacks-queues'],
-  'learn-dsa-heaps': ['learn-dsa-recursion'],
-  'learn-dsa-p-vs-np': ['learn-discrete-proofs'],
-  'learn-sysdesign-databases': ['learn-dsa-b-trees'],
-  'learn-sysdesign-consistent-hashing': ['learn-dsa-hash-tables'],
-  'learn-sysdesign-caching': ['learn-systems-memory-hierarchy'],
-  'learn-sysdesign-client-server': ['learn-systems-tcp'],
-  'learn-systems-cpu': [],
-  'learn-systems-transactions': ['learn-systems-concurrency'],
-  'learn-systems-query-planning': ['learn-dsa-b-trees'],
-  'learn-ml-what-is-learning': ['learn-prob-random-variables'],
-  'learn-ml-linear-regression': ['learn-linalg-least-squares'],
-  'learn-ml-gradient-descent': ['learn-calc3-gradient'],
-  'learn-ml-logistic-regression': ['learn-prob-mle'],
-  'learn-ml-naive-bayes': ['learn-prob-bayes'],
-  'learn-ml-gmm-em': ['learn-prob-multivariate-gaussian'],
-  'learn-ml-dim-reduction': ['learn-linalg-pca'],
-  'learn-ml-svm': ['learn-linalg-dot-product'],
-  'learn-ml-intro-rl': ['learn-prob-markov-chains'],
-  'learn-dl-perceptron': ['learn-ml-logistic-regression'],
-  'learn-dl-backprop': ['learn-calc3-chain-rule', 'learn-calc1-chain-rule'],
-  'learn-dl-losses': ['learn-prob-entropy'],
-  'learn-dl-optimizers': ['learn-ml-gradient-descent'],
-  'learn-dl-embeddings': ['learn-linalg-dot-product'],
-  'learn-dl-attention': ['learn-linalg-matrix-multiplication'],
-  'learn-dl-vaes': ['learn-prob-entropy', 'learn-prob-multivariate-gaussian'],
-  'learn-dl-scale': ['learn-linalg-tensors'],
-  'learn-diffusion-generative-modeling': ['learn-dl-vaes', 'learn-prob-multivariate-gaussian'],
-  'learn-diffusion-forward-process': ['learn-prob-clt'],
-  'learn-diffusion-reverse-process': ['learn-dl-unets', 'learn-prob-entropy'],
-  'learn-diffusion-score-matching': ['learn-calc3-gradient'],
-  'learn-diffusion-sde-ode': ['learn-diffeq-euler-method'],
-  'learn-diffusion-latent-diffusion': ['learn-dl-vaes'],
-  'learn-diffusion-text-to-image': ['learn-dl-attention'],
-  'learn-llm-next-token': ['learn-prob-entropy', 'learn-dl-losses'],
-  'learn-llm-positional': ['learn-dl-embeddings'],
-  'learn-llm-self-attention': ['learn-dl-attention'],
-  'learn-llm-decoder': ['learn-dl-transformers', 'learn-dl-normalization'],
-  'learn-llm-training': ['learn-dl-optimizers'],
-  'learn-llm-kv-cache': ['learn-systems-memory-hierarchy'],
-  'learn-llm-lora': ['learn-linalg-svd'],
-  'learn-llm-rag': ['learn-dl-embeddings'],
-  'learn-llm-rlhf-dpo': ['learn-ml-intro-rl'],
-  'learn-phys1-units-vectors': ['learn-linalg-vectors'],
-  'learn-phys1-kinematics': ['learn-calc1-derivative'],
-  'learn-phys1-work-energy': ['learn-calc2-riemann-sums'],
-  'learn-phys1-shm': ['learn-diffeq-spring-mass-damper'],
-  'learn-phys1-waves': ['learn-calc3-partial-derivatives'],
-  'learn-phys1-ideal-gas': ['learn-prob-distributions'],
-  'learn-phys2-coulomb': ['learn-phys1-newtons-laws'],
-  'learn-phys2-electric-fields': ['learn-calc3-vector-fields'],
-  'learn-phys2-gauss': ['learn-calc3-big-theorems'],
-  'learn-phys2-rc-circuits': ['learn-diffeq-separable'],
-  'learn-phys2-inductance': ['learn-diffeq-spring-mass-damper'],
-  'learn-phys2-maxwell': ['learn-calc3-div-curl'],
-  'learn-phys2-em-waves': ['learn-phys1-waves'],
-  'learn-beyond-fourier': ['learn-calc2-taylor-series'],
-  'learn-beyond-relativity': ['learn-phys1-momentum'],
-  'learn-beyond-quantum-intro': ['learn-phys2-wave-optics', 'learn-prob-distributions'],
-  'learn-beyond-policy-gradients': ['learn-ml-intro-rl', 'learn-dl-backprop'],
-  'learn-beyond-public-key': ['learn-discrete-modular-rsa'],
-  'learn-beyond-ray-tracing': ['learn-linalg-dot-product'],
+  'calc1/functions': [],
+  // Calculus II builds on Calculus I: integrals are limits of sums, the FTC
+  // links them to derivatives, and substitution is the chain rule run backwards.
+  'calc2/riemann-sums': ['calc1/limits'],
+  'calc2/ftc': ['calc1/derivative'],
+  'calc2/substitution': ['calc1/chain-rule'],
+  'calc3/surfaces': ['calc2/parametric-polar'],
+  'calc3/gradient': ['linalg/dot-product'],
+  'calc3/lagrange': ['calc1/optimization'],
+  'diffeq/slope-fields': ['calc2/ftc'],
+  'diffeq/phase-portraits': ['linalg/matrix-transformations'],
+  'diffeq/stability': ['linalg/eigenvectors'],
+  'diffeq/pdes': ['calc3/partial-derivatives'],
+  'linalg/least-squares': ['calc1/optimization'],
+  'linalg/pca': ['prob/joint'],
+  'linalg/positive-definite': ['calc3/gradient'],
+  'prob/random-variables': ['calc2/riemann-sums'],
+  'prob/multivariate-gaussian': ['linalg/eigenvectors'],
+  'prob/mle': ['calc1/optimization'],
+  'prob/entropy': ['calc1/functions'],
+  'prob/markov-chains': ['linalg/diagonalization'],
+  'discrete/graphs': ['discrete/sets'],
+  'dsa/big-o': ['discrete/proofs'],
+  'dsa/recursion': ['discrete/recurrences'],
+  'dsa/bfs-dfs': ['discrete/graphs', 'dsa/stacks-queues'],
+  'dsa/heaps': ['dsa/recursion'],
+  'dsa/p-vs-np': ['discrete/proofs'],
+  'sysdesign/databases': ['dsa/b-trees'],
+  'sysdesign/consistent-hashing': ['dsa/hash-tables'],
+  'sysdesign/caching': ['systems/memory-hierarchy'],
+  'sysdesign/client-server': ['systems/tcp'],
+  'systems/cpu': [],
+  'systems/transactions': ['systems/concurrency'],
+  'systems/query-planning': ['dsa/b-trees'],
+  'ml/what-is-learning': ['prob/random-variables'],
+  'ml/linear-regression': ['linalg/least-squares'],
+  'ml/gradient-descent': ['calc3/gradient'],
+  'ml/logistic-regression': ['prob/mle'],
+  'ml/naive-bayes': ['prob/bayes'],
+  'ml/gmm-em': ['prob/multivariate-gaussian'],
+  'ml/dim-reduction': ['linalg/pca'],
+  'ml/svm': ['linalg/dot-product'],
+  'ml/intro-rl': ['prob/markov-chains'],
+  'dl/perceptron': ['ml/logistic-regression'],
+  'dl/backprop': ['calc3/chain-rule', 'calc1/chain-rule'],
+  'dl/losses': ['prob/entropy'],
+  'dl/optimizers': ['ml/gradient-descent'],
+  'dl/embeddings': ['linalg/dot-product'],
+  'dl/attention': ['linalg/matrix-multiplication'],
+  'dl/vaes': ['prob/entropy', 'prob/multivariate-gaussian'],
+  'dl/scale': ['linalg/tensors'],
+  'diffusion/generative-modeling': ['dl/vaes', 'prob/multivariate-gaussian'],
+  'diffusion/forward-process': ['prob/clt'],
+  'diffusion/reverse-process': ['dl/unets', 'prob/entropy'],
+  'diffusion/score-matching': ['calc3/gradient'],
+  'diffusion/sde-ode': ['diffeq/euler-method'],
+  'diffusion/latent-diffusion': ['dl/vaes'],
+  'diffusion/text-to-image': ['dl/attention'],
+  'llm/next-token': ['prob/entropy', 'dl/losses'],
+  'llm/positional': ['dl/embeddings'],
+  'llm/self-attention': ['dl/attention'],
+  'llm/decoder': ['dl/transformers', 'dl/normalization'],
+  'llm/training': ['dl/optimizers'],
+  'llm/kv-cache': ['systems/memory-hierarchy'],
+  'llm/lora': ['linalg/svd'],
+  'llm/rag': ['dl/embeddings'],
+  'llm/rlhf-dpo': ['ml/intro-rl'],
+  'phys1/units-vectors': ['linalg/vectors'],
+  'phys1/kinematics': ['calc1/derivative'],
+  'phys1/work-energy': ['calc2/riemann-sums'],
+  'phys1/shm': ['diffeq/spring-mass-damper'],
+  'phys1/waves': ['calc3/partial-derivatives'],
+  'phys1/ideal-gas': ['prob/distributions'],
+  'phys2/coulomb': ['phys1/newtons-laws'],
+  'phys2/electric-fields': ['calc3/vector-fields'],
+  'phys2/gauss': ['calc3/big-theorems'],
+  'phys2/rc-circuits': ['diffeq/separable'],
+  'phys2/inductance': ['diffeq/spring-mass-damper'],
+  'phys2/maxwell': ['calc3/div-curl'],
+  'phys2/em-waves': ['phys1/waves'],
+  'beyond/fourier': ['calc2/taylor-series'],
+  'beyond/relativity': ['phys1/momentum'],
+  'beyond/quantum-intro': ['phys2/wave-optics', 'prob/distributions'],
+  'beyond/information-theory': ['prob/entropy'],
+  'beyond/numerical-methods': ['calc1/linear-approximation', 'linalg/gaussian-elimination'],
+  'beyond/optimization': ['calc3/lagrange'],
+  'beyond/rasterization': ['linalg/matrix-transformations'],
+  'beyond/policy-gradients': ['ml/intro-rl', 'dl/backprop'],
+  'beyond/compilers': ['dsa/recursion'],
+  'beyond/hashing': ['dsa/hash-tables'],
+  'beyond/public-key': ['discrete/modular-rsa'],
+  'beyond/ray-tracing': ['linalg/dot-product'],
 };
+
+/**
+ * Lessons that don't build on the lesson listed before them. "Beyond" is a
+ * grab-bag of separate topics, so its default chain would claim e.g. that
+ * Fourier series need quantum mechanics; these start fresh instead.
+ */
+const STANDALONE = new Set([
+  'beyond/fourier',
+  'beyond/information-theory',
+  'beyond/numerical-methods',
+  'beyond/rasterization',
+  'beyond/policy-gradients',
+  'beyond/compilers',
+  'beyond/hashing',
+]);
 
 for (const s of subjects) {
   for (const u of s.units) {
     for (const l of u.lessons) {
-      for (const p of EXTRA[l.slug] ?? []) if (!l.prerequisites.includes(p)) l.prerequisites.push(p);
+      if (STANDALONE.has(l.id)) l.prerequisites.length = 0;
+      for (const p of EXTRA[l.id] ?? []) if (!l.prerequisites.includes(p)) l.prerequisites.push(p);
     }
   }
 }
@@ -801,7 +829,12 @@ export const SUBJECTS: readonly Subject[] = subjects;
 
 export const LESSONS: readonly CurriculumLesson[] = subjects.flatMap((s) => s.units.flatMap((u) => u.lessons));
 
-export const LESSON_BY_SLUG: ReadonlyMap<string, CurriculumLesson> = new Map(LESSONS.map((l) => [l.slug, l]));
+export const LESSON_BY_ID: ReadonlyMap<string, CurriculumLesson> = new Map(LESSONS.map((l) => [l.id, l]));
+
+export const SUBJECT_BY_ID: ReadonlyMap<string, Subject> = new Map(subjects.map((s) => [s.id, s]));
+
+/** Site-relative folder of a lesson, e.g. `lessons/linalg/eigenvectors/`. */
+export const lessonPath = (id: string): string => `lessons/${id}/`;
 
 export interface LearningPath {
   id: string;
@@ -813,55 +846,19 @@ export interface LearningPath {
 
 export const PATHS: readonly LearningPath[] = [
   {
-    id: 'zero-to-llms',
-    title: 'Zero to LLMs',
-    blurb: 'From vectors and probability to a tiny GPT you train yourself.',
+    id: 'calculus-from-zero',
+    title: 'Calculus from zero',
+    blurb: 'Functions, limits and derivatives, then integrals and series, built up one picture at a time.',
     lessons: [
-      'learn-linalg-matrix-multiplication',
-      'learn-prob-entropy',
-      'learn-calc1-chain-rule',
-      'learn-ml-gradient-descent',
-      'learn-dl-backprop',
-      'learn-dl-attention',
-      'learn-llm-tokenization',
-      'learn-llm-self-attention',
-      'learn-llm-decoder',
-      'learn-llm-sampling',
-      'learn-llm-tiny-gpt',
-    ],
-  },
-  {
-    id: 'physics-for-engineers',
-    title: 'Physics for engineers',
-    blurb: 'Mechanics, oscillations and circuits with the calculus you need along the way.',
-    lessons: [
-      'learn-calc1-derivative',
-      'learn-phys1-kinematics',
-      'learn-phys1-newtons-laws',
-      'learn-phys1-conservation-of-energy',
-      'learn-diffeq-spring-mass-damper',
-      'learn-phys1-shm',
-      'learn-phys2-kirchhoff',
-      'learn-phys2-rc-circuits',
-      'learn-phys2-faraday',
-      'learn-phys2-ac-circuits',
-    ],
-  },
-  {
-    id: 'interview-ready-dsa',
-    title: 'Interview-ready DSA',
-    blurb: 'The data structures and patterns that come up again and again.',
-    lessons: [
-      'learn-dsa-big-o',
-      'learn-dsa-hash-tables',
-      'learn-dsa-two-pointers',
-      'learn-dsa-binary-search',
-      'learn-dsa-heaps',
-      'learn-dsa-bfs-dfs',
-      'learn-dsa-topological-sort',
-      'learn-dsa-shortest-paths',
-      'learn-dsa-dynamic-programming',
-      'learn-dsa-backtracking',
+      'calc1/functions',
+      'calc1/limits',
+      'calc1/derivative',
+      'calc1/chain-rule',
+      'calc1/optimization',
+      'calc2/riemann-sums',
+      'calc2/ftc',
+      'calc2/substitution',
+      'calc2/taylor-series',
     ],
   },
   {
@@ -869,15 +866,103 @@ export const PATHS: readonly LearningPath[] = [
     title: 'ML math foundations',
     blurb: 'Exactly the linear algebra, calculus and probability that machine learning leans on.',
     lessons: [
-      'learn-linalg-matrix-transformations',
-      'learn-linalg-eigenvectors',
-      'learn-linalg-svd',
-      'learn-calc3-gradient',
-      'learn-calc3-lagrange',
-      'learn-prob-bayes',
-      'learn-prob-multivariate-gaussian',
-      'learn-prob-mle',
-      'learn-prob-entropy',
+      'linalg/matrix-transformations',
+      'linalg/eigenvectors',
+      'linalg/svd',
+      'calc3/gradient',
+      'calc3/lagrange',
+      'prob/bayes',
+      'prob/multivariate-gaussian',
+      'prob/mle',
+      'prob/entropy',
+    ],
+  },
+  {
+    id: 'zero-to-llms',
+    title: 'Zero to LLMs',
+    blurb: 'From vectors and probability to a tiny GPT you train yourself.',
+    lessons: [
+      'linalg/matrix-multiplication',
+      'prob/entropy',
+      'calc1/chain-rule',
+      'ml/gradient-descent',
+      'dl/backprop',
+      'dl/attention',
+      'llm/tokenization',
+      'llm/self-attention',
+      'llm/decoder',
+      'llm/sampling',
+      'llm/tiny-gpt',
+    ],
+  },
+  {
+    id: 'interview-ready-dsa',
+    title: 'Interview-ready DSA',
+    blurb: 'The data structures and patterns that come up again and again.',
+    lessons: [
+      'dsa/big-o',
+      'dsa/hash-tables',
+      'dsa/two-pointers',
+      'dsa/binary-search',
+      'dsa/heaps',
+      'dsa/bfs-dfs',
+      'dsa/topological-sort',
+      'dsa/shortest-paths',
+      'dsa/dynamic-programming',
+      'dsa/backtracking',
+    ],
+  },
+  {
+    id: 'system-design',
+    title: 'System design',
+    blurb: 'How real systems survive millions of users: caching, replication, sharding, queues and consensus.',
+    lessons: [
+      'sysdesign/client-server',
+      'sysdesign/latency-numbers',
+      'sysdesign/load-balancing',
+      'sysdesign/caching',
+      'sysdesign/databases',
+      'sysdesign/replication',
+      'sysdesign/sharding',
+      'sysdesign/consistent-hashing',
+      'sysdesign/cap',
+      'sysdesign/queues',
+      'sysdesign/raft',
+      'sysdesign/case-studies',
+    ],
+  },
+  {
+    id: 'physics-for-engineers',
+    title: 'Physics for engineers',
+    blurb: 'Mechanics, oscillations and circuits, with the calculus you need along the way.',
+    lessons: [
+      'calc1/derivative',
+      'phys1/kinematics',
+      'phys1/newtons-laws',
+      'phys1/conservation-of-energy',
+      'diffeq/spring-mass-damper',
+      'phys1/shm',
+      'phys2/kirchhoff',
+      'phys2/rc-circuits',
+      'phys2/faraday',
+      'phys2/ac-circuits',
     ],
   },
 ];
+
+/**
+ * Every lesson needed to reach `targets`, prerequisites first (a topological
+ * order that keeps each subject's own sequence where it can).
+ */
+export function expandPath(targets: readonly string[]): string[] {
+  const out: string[] = [];
+  const seen = new Set<string>();
+  const visit = (id: string): void => {
+    if (seen.has(id)) return;
+    seen.add(id);
+    for (const p of LESSON_BY_ID.get(id)?.prerequisites ?? []) visit(p);
+    out.push(id);
+  };
+  for (const t of targets) visit(t);
+  return out;
+}

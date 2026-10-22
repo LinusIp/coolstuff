@@ -1,257 +1,223 @@
 # CLAUDE.md — coolstuff
 
-You are the sole builder of **coolstuff**: a lab and showcase of finished, ambitious projects across many kinds of work, including mobile games, stunning blog and website designs, UI concepts, tools, simulations, AI demos, and a full library of **visual, intuitive explainers** for university STEM and CS subjects. Every project should make someone say *"wait, one person built this?"*
+You are the sole builder of **coolstuff**: a free, beautiful, interactive learning site covering the core of a university STEM and CS degree, from calculus and linear algebra through data structures, system design, ML, deep learning, diffusion models and LLMs to Physics 1 and 2.
 
-The repo starts empty. You build everything: the showcase site, every project, the tooling and the deploy pipeline. Read this whole file before your first commit, and re-read **§6 The Loop** at the start of every session.
+Every lesson combines three things:
+1. **Visuals you can touch.** Drag, scrub, slide, and watch the idea move.
+2. **Formulas that are beautiful and alive.** Every symbol is color-linked to the picture, and derivations unfold step by step.
+3. **Worked examples and problems with full solutions.** You see it done, then you do it yourself, with hints and step-by-step answers.
 
----
+The bar: a student who opens a lesson *the night before an exam* finally gets it and can solve the problems, and a student who already knew it sees it in a new way.
 
-## 1. Mission
-
-Ship a steady stream of complete, polished, self-contained projects, each in a different direction. Variety is the point: a game one session, a blog theme the next, then a physics sim, then a productivity tool.
-
-Optimize for, in order:
-1. **Wow.** It's striking within 3 seconds, whether through visuals, feel, or a clever idea.
-2. **It actually works.** Real interactions, no dead buttons, no console errors, smooth on a mid-range phone.
-3. **Craft.** Typography, spacing, motion and sound are deliberate, so nothing looks like a default template.
-4. **Breadth.** The showcase should cover every category in §3. Don't ship five of one kind in a row.
-5. **Understandability.** Every project has a write-up explaining the design choices and the clever parts.
+The repo starts empty. You build everything: the site, the component kit, every lesson, the tooling and the deploy pipeline. Read this whole file before your first commit, and re-read **§8 The Loop** at the start of every session.
 
 ---
 
-## 2. Stack and constraints
+## 1. Stack and constraints
 
-- **Static site deployed to GitHub Pages** from `main` via GitHub Actions. No backend, no paid APIs, no secrets. When a project "needs" a backend, fake it convincingly with local data and `localStorage`, and say so in its notes.
-- **Vite + TypeScript** monorepo-style, with one build entry per project. Each project picks its own approach:
-  - vanilla TS for experiments and lightweight pages
-  - Preact or Svelte for app-like UIs and tools
-  - Phaser, PixiJS, or a custom canvas/WebGL loop for games
-  - Three.js or raw WebGPU/WebGL2 for 3D
-- Allowed libraries (pin versions): `phaser`, `pixi.js`, `three`, `preact`, `svelte`, `gsap`, `motion`, `lenis`, `howler`, `tone`, `matter-js`, `rapier3d-compat`, `d3`, `@tensorflow/tfjs`, `onnxruntime-web`, `simplex-noise`, `lil-gui`, `marked`, `katex`, `vitest` (dev). Anything else heavier than 100 KB gzipped needs a one-line justification in the project's `NOTES.md`.
-- **No runtime network calls** beyond the project's own assets. Fonts are self-hosted, using OFL or similarly licensed families (e.g. from Fontsource).
-- **Mobile-first everywhere.** Every project must be usable on a 390px-wide phone. Games are touch-first.
-- Every project works **offline after first load**. Games ship as installable **PWAs** (manifest + service worker) so they launch fullscreen from a phone's home screen.
+- **Static site on GitHub Pages**, deployed from `main` via GitHub Actions. No backend, no paid APIs, no secrets, no accounts. Progress is stored in `localStorage`.
+- **Vite + TypeScript** (strict), multi-page build, with one page per lesson. Use **Preact** for UI components and vanilla canvas/SVG/WebGL for visuals.
+- Allowed libraries (pin versions): `preact`, `katex`, `d3` (scales, shapes, force layouts), `three` (3D scenes), `gsap` (choreographed animation), `@tensorflow/tfjs` (live training in ML/DL lessons), `simplex-noise`, `marked`, plus `vitest` and `playwright` as dev dependencies. Anything else heavier than 100 KB gzipped needs a one-line justification in the lesson's `NOTES.md`.
+- **No runtime network calls.** Fonts are self-hosted (OFL, via Fontsource). The whole site works **offline** after the first visit (service worker) and is installable as a PWA.
+- **Mobile-first.** Every lesson must be fully usable on a 390px-wide phone with touch.
+- Everything is **original**: your own prose, diagrams, examples and problems. No copied textbook problems, figures or solutions. Cite sources for ideas.
 
 ---
 
-## 3. Project categories
-
-Every project has exactly one primary `category` in its `meta.json`. Keep the showcase balanced across them.
-
-| Category | What it is | Done looks like |
-|---|---|---|
-| `game` | Mobile-first web games: arcade, puzzle, roguelite, idle, rhythm, physics | Full loop (title → play → game over → retry), touch + keyboard, sound, juice (screen shake, particles, easing), high score saved, PWA installable, ≥ 5 minutes of genuine fun |
-| `blog-design` | Complete blog themes / editorial designs | Home, article, archive/tag pages, about page; real-feeling sample content (original, not lorem ipsum); dark/light mode; beautiful long-form typography; reading progress; responsive images; ships as a reusable template with a short "use this theme" guide |
-| `website` | Landing pages, portfolios, product sites for imaginary brands | A coherent fictional brand (name, logo, palette, voice); hero that stops the scroll; scroll-driven motion that stays readable; fast (Lighthouse ≥ 90 performance and accessibility) |
-| `ui-concept` | App screens and interaction ideas: a music player, a weather app, a banking dashboard, a new kind of calendar | Clickable prototype with realistic fake data, 3+ connected screens, transitions with intent, a design-rationale write-up |
-| `tool` | Small genuinely useful utilities: a color-palette generator, markdown slide maker, pomodoro with stats, regex visualizer | Solves one real problem well; state persists; import/export where it makes sense; keyboard shortcuts |
-| `experiment` | Simulations and generative graphics: fluids, fractals, artificial life, physics toys | Beautiful with zero interaction, ≥ 55 fps on integrated GPU, controls for curious people, explains the math |
-| `ai` | ML running fully in the browser: tiny models trained live, on-device vision, visualized internals | Runs on-device with no uploads, models < 25 MB, makes the model's behavior visible |
-| `audio` | Synths, music toys, sound-reactive visuals | Starts on a tap (autoplay rules), no clipping, sounds good on phone speakers |
-| `explainer` | Visual, interactive lessons that build real intuition for one concept of a university subject (see §8) | Meets the explainer standard in §8.2: intuition first, every key idea manipulable, a "check yourself" section, and correct math |
-
-Fictional brands must be clearly original. Never imitate a real company's name, logo, or look.
-
----
-
-## 4. Repository layout
-
-```
-coolstuff/
-├── CLAUDE.md                  ← this file
-├── README.md                  ← public-facing: what this is, live link, project grid by category
-├── package.json
-├── vite.config.ts             ← multi-page build, auto-discovers projects/*/index.html
-├── index.html                 ← showcase home
-├── src/
-│   ├── showcase/              ← home: category tabs, cards, search, "random project" button
-│   ├── learn/                 ← /learn hub: subject pages, curriculum maps, prerequisite graph, progress
-│   ├── explain-kit/           ← shared explainer components (§8.3); the one allowed shared library
-│   └── shared/                ← tiny helpers only: capability checks, fps meter, PWA register (~300 lines max)
-├── projects/
-│   └── <slug>/                ← explainers use learn-<subject>-<topic>, e.g. learn-linalg-eigenvectors
-│       ├── index.html         ← entry (blog/website projects may have several .html pages)
-│       ├── src/
-│       ├── public/            ← project-local assets
-│       ├── meta.json          ← { title, tagline, category, tags[], tech[], date, status, mobile: true }
-│       ├── NOTES.md           ← design rationale + how the clever parts work + credits
-│       └── thumb.webp         ← 1200×750 screenshot, < 120 KB
-├── templates/                 ← starter scaffolds per category (game, blog-design, website, …)
-├── scripts/
-│   ├── new-project.ts         ← `npm run new -- <category> <slug>` copies the right template
-│   ├── build-index.ts         ← collects all meta.json → src/showcase/projects.json
-│   └── smoke.ts               ← Playwright: desktop + mobile viewport, fails on console errors / blank page, captures thumbs
-├── IDEAS.md                   ← backlog by category (§7); you maintain it
-├── LOG.md                     ← one dated entry per session; "## Needs owner" section at top
-└── .github/workflows/
-    ├── ci.yml                 ← typecheck, lint, test, build, smoke test
-    └── pages.yml              ← deploy dist/ to GitHub Pages on push to main
-```
-
-Explainer `meta.json` adds `{ subject, unit, order, prerequisites: [slugs], minutes, level }`. `build-index.ts` validates that every prerequisite exists or is listed in the curriculum.
-
-Projects **never import from each other**. If two projects want the same thing, copy it: independence beats DRY here. The single exception is `src/explain-kit/`, which every explainer uses so lessons look and behave consistently.
-
----
-
-## 5. Bootstrap (first session only)
-
-Commit after each step:
-
-1. Scaffold Vite + TS with a multi-page config that auto-discovers `projects/*/index.html` and any extra `.html` pages inside a project.
-2. Write `scripts/new-project.ts`, `scripts/build-index.ts`, and one template per category in `templates/`.
-3. Build the showcase home. It should itself be a design piece, with category tabs, a card grid, search, and a "surprise me" button. Each card shows the category, the tagline and the thumbnail.
-4. Add `ci.yml` and `pages.yml`. If the deploy fails because Pages isn't enabled, note it under `## Needs owner` in `LOG.md` (owner sets Settings → Pages → Source → GitHub Actions) and continue.
-5. Write `scripts/smoke.ts` (Playwright, Chromium with WebGPU flag, plus a 390×844 mobile viewport).
-6. Build `src/explain-kit/` (§8.3) and the `/learn` hub with a subject page for every subject in §8.4, each showing its full curriculum map, with unshipped lessons greyed out as "coming soon".
-7. Ship **four starter projects**: one `game`, one `blog-design`, one `experiment`, and one `explainer` (suggested: *Eigenvectors: the directions a matrix doesn't turn*). Together they prove the pipeline end to end.
-8. Write `README.md`. Seed `IDEAS.md` with at least 8 ideas per non-explainer category, and copy the full curriculum from §8.4 into an `## Explainers` section as a checklist.
-
----
-
-## 6. The Loop (every session)
-
-1. **Read** the last entries of `LOG.md` and `IDEAS.md`. Run `npm ci && npm run build`. If `main` is broken, fixing it is the only task.
-2. **Pick** one idea. **Every other project is an explainer.** For explainers, pick the next lesson whose prerequisites are already shipped, rotating subjects. For everything else, prefer the category with the fewest shipped projects, then the highest wow-per-effort. Mark it `[in progress]`.
-3. **Define it in five lines** at the top of `NOTES.md`: the one-sentence pitch, the target feeling, the core mechanic or layout, the visual direction (palette, type, mood), and what "done" means for this one.
-4. **Prototype the core**:
-   - game: the main mechanic with grey boxes. Is it fun in 30 seconds? If not, change the mechanic or drop it.
-   - blog-design / website: one key page at full fidelity (hero or article page). Does it look premium? If not, rethink the direction.
-   - experiment / ai / audio: the raw effect. Is it amazing before polish?
-   - tool / ui-concept: the main flow end to end with fake data.
-   - explainer: the **one central interactive** (the "aha" visual). Drag it around. Does the concept click with no text at all? If not, find a better visual metaphor before writing any prose.
-   If the core doesn't hold up, record why in `IDEAS.md` and pick another idea.
-5. **Build it out** to the category's "done" column in §3.
-6. **Polish**: loading state, empty states, error states, motion timing, sound levels, focus styles, dark mode, resize, pause on tab hidden.
-7. **Write `NOTES.md`**: why it looks and works the way it does, the hardest problem and how you solved it, the techniques a student could reuse, and credits for every asset and reference.
-8. **Verify** (§10). Everything passes.
-9. **Ship**: one commit per project, `feat(<category>/<slug>): <tagline>`. Update `meta.json`, move the idea to Shipped in `IDEAS.md`, and append to `LOG.md`.
-10. Time left? Go back to step 2, in a **different category**. Explainers are the exception: you may ship two in a row, as long as they're from different subjects.
-
----
-
-## 7. Idea backlog seeds
-
-Put these in `IDEAS.md` and keep adding your own. Scope each one down to a core that fits in one session, then layer on.
-
-**game (mobile-first)**
-- One-thumb gravity-flip runner with procedurally generated neon levels and a synthwave soundtrack.
-- Physics stacking puzzle: drop odd-shaped blocks onto a wobbling tower in a storm.
-- Tiny roguelite deckbuilder with 3-minute runs and daily seeded challenge.
-- Rhythm game where the level is generated from audio you play into the mic.
-- Cozy idle garden: plants grow in real time, crossbreed for rare colors.
-- Slingshot orbital golf: fling a ball through planets' gravity wells.
-- Pixel-art "falling sand" sandbox with challenge levels.
-- Swipe-to-slice fruit-style game with juicy particle explosions and combo system.
-- Minimalist logic puzzle with 50 hand-tuned levels and a procedurally generated endless mode.
-- Two-player same-phone game: split screen, each player holds one edge.
-
-**blog-design**
-- Brutalist zine: raw grid, giant type, monospaced captions, ink-bleed images.
-- Swiss editorial: strict grid, Helvetica-like grotesk, red accent, perfect rhythm.
-- Japanese-minimal long-reads with vertical-text pull quotes and generous whitespace.
-- Terminal/hacker blog: command-palette nav, typewriter titles, but still beautiful to read.
-- Magazine-style photo essay with scroll-driven full-bleed image transitions.
-- Developer notebook: code blocks with runnable snippets, margin notes, footnote popovers.
-- Retro-print newspaper with multi-column layout that collapses gracefully on mobile.
-- Dreamy gradient journal with grain textures and soft serif type.
-
-**website**
-- Landing page for an imaginary space-tourism startup with a 3D scroll-through of the ship.
-- Portfolio for a fictional architect: drag-to-explore building cross-sections.
-- Product page for an invented mechanical keyboard with a type-test you can try in the hero.
-- Event microsite for a fictional music festival with a lineup that reacts to audio.
-- Restaurant site with an interactive menu that plates dishes as you choose them.
-
-**ui-concept**
-- Music player where the album art's palette restyles the whole UI.
-- Weather app that renders the actual sky (clouds, sun angle, rain) for the forecast.
-- Calendar that shows your week as a landscape instead of a grid.
-- Habit tracker built around a growing tree.
-- Finance dashboard concept with legible, honest charts.
-
-**tool**
-- Palette generator from an uploaded image, with contrast checks and CSS/Tailwind export.
-- Markdown → slide deck in the browser, with presenter mode.
-- Regex visualizer with railroad diagrams and live test cases.
-- Pomodoro with focus stats and ambient generated soundscapes.
-- SVG pattern / background generator with export.
-
-**experiment**
-- Real-time 2D fluid you paint into; 3D SPH water in WebGPU; black hole with lensing.
-- Physarum slime mold, Particle Life, Lenia, reaction–diffusion on a 3D mesh.
-- Procedural planet zoom from orbit to surface; raymarched fractal flythrough.
-
-**ai**
-- Train a tiny MLP live and watch the decision boundary move as you drag points.
-- Character-level transformer trained in-tab on pasted text, with attention visualized.
-- Webcam pose → 3D puppet; neural cellular automata that regrow a drawing.
-
-**audio**
-- Modular synth with draggable patch cables; Karplus–Strong string you pluck.
-- Draw a waveform, hear it, watch Fourier epicycles redraw it.
-
----
-
-## 8. Explainers: the `/learn` library
-
-A complete, free, visual-first library of interactive lessons covering the core of a university STEM/CS degree. The bar is that a student who reads a lesson *the night before an exam* finally gets it, and a student who already knew it sees it in a new way.
-
-### 8.1 Philosophy
+## 2. Teaching philosophy
 
 - **Intuition before formalism.** Show the picture, let the learner play with it, *then* name it and write the equation. Never open with a definition.
 - **Every key idea is something you can touch.** If a sentence says "as h shrinks, the secant becomes the tangent", there's a slider for h right there.
-- **One lesson = one concept.** Aim for 10–20 minutes. Split anything bigger.
+- **One lesson = one concept.** Aim for 15–30 minutes, including problems. Split anything bigger.
 - **Predict → reveal.** Before showing a result, ask the learner to guess (drag a point, pick an option). Being wrong is where learning happens.
-- **Linked representations.** Visual, equation, code and words all show the same thing, and hovering a term in the equation highlights it in the picture (color-coded consistently).
+- **Linked representations.** Visual, formula, code and words all show the same thing, and hovering a term highlights it everywhere.
+- **See one, do one.** Every concept goes from a fully worked example, to a guided problem, to an independent problem.
 - **Name the misconceptions.** Each lesson has a "common traps" section built from real student mistakes.
-- **Correct, always.** A beautiful wrong explanation is worse than none. The math must be right, the code must run, and the simulations must obey the actual equations.
+- **Correct, always.** A beautiful wrong explanation is worse than none (§10).
 
-### 8.2 Lesson structure (the explainer standard)
+---
 
-Every explainer follows this arc. Sections can be scrollytelling or stepped, but all of them are present:
+## 3. Visual and formula design system
 
-1. **Hook.** A question, puzzle or surprising visual that makes the concept feel necessary (≤ 1 screen).
-2. **Play.** The central interactive with no formulas. The learner explores freely.
-3. **Build the idea.** 3–6 short steps, each pairing a sentence or two with a focused interactive, from concrete to general.
-4. **Formalize.** The definition, theorem or equation with every symbol linked to the visual. Include a worked example with numbers.
-5. **Code it.** (CS/ML/DL subjects) a short, runnable, editable snippet in TS or Python-like pseudocode whose output updates the visual.
-6. **Common traps.** 2–4 misconceptions, each with a visual counterexample.
-7. **Check yourself.** 4–8 questions mixing multiple choice, drag-to-answer and numeric input, with explanations for wrong answers. Progress is saved locally.
-8. **Where this goes next.** Links to the lessons that build on this one and to the lessons it builds on, plus 2–4 real references (textbook sections, papers, lecture notes).
+The site should look like a premium interactive textbook, not a template. Decide the system once, document it in `src/kit/DESIGN.md`, and use it everywhere.
 
-Also required:
-- A **TL;DR card** at the top: 3 bullets plus the key equation, printable as a revision sheet.
-- Works at 390px. Interactives use touch-friendly handles (≥ 44px hit area).
-- Math rendered with **KaTeX**, prerendered at build time where possible.
-- Keyboard-accessible interactives, with a text description of what each visual shows for screen readers.
-- `minutes`, `level` (`intro` / `core` / `advanced`) and `prerequisites` filled in `meta.json`.
+**Typography**
+- Reading text: a high-quality serif for long-form prose (e.g. Source Serif 4 or Literata), 18–20px on desktop and 17px on mobile, with a line length of 60–75 characters.
+- UI and labels: a clean sans. Code: a monospace with good math glyphs (e.g. JetBrains Mono).
+- Math: KaTeX, sized slightly larger than body text for display equations, with generous vertical breathing room.
 
-### 8.3 `src/explain-kit/`
+**Color semantics** (`src/kit/theme.ts`), shared by every lesson in light and dark mode:
+- Each lesson defines 3–5 named **concept colors** (e.g. `input`, `output`, `rate`, `error`, `probability`). The same concept wears the same color in the visual, the formula, the prose and the code.
+- A consistent global meaning: blue = input/independent, orange = output/dependent, red = error/gradient/force, green = correct/solution, purple = probability/uncertainty.
+- Every color pairing passes WCAG AA contrast, and color is never the only signal (pair it with labels, shapes or patterns).
 
-Build these once and reuse them in every lesson. Keep the API small and documented in `src/explain-kit/README.md`:
+**Formulas that come alive** (`Formula` component)
+- Terms are tagged and colored by concept: `\colorTerm{rate}{\frac{dy}{dx}}`. Hovering or tapping a term highlights the matching part of the visual and the prose.
+- **Derivations animate step by step**: each step shows what changed (the moved term slides, the cancelled terms fade out) with a one-line justification beside it ("multiply both sides by dx").
+- **Live values**: formulas can display the current numbers from the interactive under the symbols (e.g. under `F = ma`, show `= 2.0 kg × 3.1 m/s²`).
+- Every important formula has an "explain this" toggle that annotates each symbol in plain words.
+
+**Visuals**
+- Clean, quiet backgrounds, crisp 1.5–2px strokes, generous whitespace, and a single focal point per figure.
+- Motion has meaning: animate only to show change, causality or sequence. Use easing, keep durations of 200–600ms, and respect `prefers-reduced-motion`.
+- Draggable handles look draggable (a subtle ring and a cursor change) and have a hit area of at least 44px.
+- Every figure has a short caption and a text description for screen readers.
+- 3D is used only when the concept is genuinely 3D (surfaces, fields, rotations), with orbit controls and a sensible default camera.
+
+---
+
+## 4. Lesson structure
+
+Every lesson follows this arc. Sections can be scrollytelling or stepped, but all of them are present:
+
+1. **TL;DR card.** 3 bullets plus the key formula, printable as a revision sheet.
+2. **Hook.** A question, puzzle or surprising visual that makes the concept feel necessary (≤ 1 screen).
+3. **Play.** The central interactive with no formulas. The learner explores freely.
+4. **Build the idea.** 3–6 short steps, each pairing a sentence or two with a focused interactive, going from concrete to general.
+5. **Formalize.** The definition, theorem or equation, with every symbol linked to the visual, plus an animated derivation where there's one worth seeing.
+6. **Worked examples** (§5). At least 3, ranging from easy to exam-level.
+7. **Code it.** (CS/ML/DL/system design) a short, editable, runnable snippet whose output updates the visual. Physics and math lessons may include a small "simulate it" cell instead.
+8. **Common traps.** 2–4 misconceptions, each with a visual counterexample.
+9. **Practice problems** (§5). At least 8, with hints and full solutions.
+10. **Quick check.** 4–6 fast concept questions (multiple choice, drag-to-answer) with explanations for wrong answers.
+11. **Where this goes next.** Links to the lessons it builds on and the ones that build on it, plus 2–4 real references (textbook sections, papers, lecture notes).
+
+---
+
+## 5. Worked examples, problems and solutions
+
+This is half the value of the site. Treat it with the same care as the visuals.
+
+**Worked examples**
+- At least **3 per lesson**: one direct application, one that combines this concept with an earlier one, and one at **exam level**.
+- Each one is a stepped `WorkedExample`: problem statement → "what do we know / what do we want" → strategy in one sentence → solution steps, revealed one at a time → final answer boxed → a **sanity check** (units, limiting cases, does the picture agree?).
+- Every step has a short justification ("by the chain rule", "conservation of momentum, since no external forces act").
+- Where possible, the example has its own small interactive. Change the numbers, and the steps and answer recompute live.
+- Before each step reveal, offer a "try the next step yourself" pause.
+
+**Practice problems**
+- At least **8 per lesson**, tagged by difficulty: ★ warm-up (×3), ★★ standard (×3), ★★★ exam-level or challenge (×2+).
+- Mix the types: numeric answer, symbolic answer (checked by evaluating at random points, so equivalent forms are accepted), multiple choice with reasoning, drag-to-answer on a visual, proof/explanation (self-checked against a model answer), and for CS lessons, trace-the-algorithm or write-the-code (run against test cases in a Worker).
+- Each problem has:
+  - **Hint 1** (a nudge), **Hint 2** (the strategy), and **Hint 3** (the first step)
+  - a **full step-by-step solution**, written like a worked example, that stays hidden until the learner submits or gives up
+  - a **"why the common wrong answer is wrong"** note for the most likely mistake
+- **Parameterized problems**: where it makes sense, problems are generated from templates with random but well-chosen values, so "give me another one" works indefinitely. The generator lives in `problems.ts` and is unit-tested so it never produces degenerate or ugly cases (division by zero, 17-digit decimals, trivial instances).
+- Numeric answers accept a sensible tolerance and state the expected precision. Units are checked in physics problems.
+
+**Per-subject problem banks**
+- Each subject also gets a **mixed practice page** that draws problems from all its shipped lessons, and an **exam-style set** of timed, mixed problems with a full solutions walkthrough at the end.
+- Progress (attempted / solved / needed hints) is saved locally and shown on the subject page.
+
+---
+
+## 6. The component kit (`src/kit/`)
+
+Build these once and reuse them in every lesson. Keep the API small and documented in `src/kit/README.md`, with a live **kit gallery page** (`/kit`) showing every component and its states.
 
 - `Stage2D` / `Stage3D`: coordinate system with pan/zoom, grid, axes and draggable handles (points, vectors, sliders on curves).
 - `Slider`, `Toggle`, `Stepper`, `PlayScrub`: controls, including a timeline scrubber for stepping through algorithms and simulations frame by frame.
 - `Plot`: functions, parametric curves, vector fields, surfaces, histograms and live-updating series.
-- `MatrixGrid`: shows a 2×2/3×3 transform acting on the plane or space with basis vectors highlighted.
-- `GraphView` / `TreeView` / `ArrayView`: data-structure renderers with animated operations and highlighting.
-- `LinkedEq`: KaTeX equation whose terms are color-tagged and hover-linked to elements in a Stage.
-- `CodeCell`: small editable code block that runs in a sandboxed Worker and pipes values into visuals.
+- `MatrixGrid`: a 2×2/3×3 transform acting on the plane or space, with basis vectors highlighted.
+- `GraphView` / `TreeView` / `ArrayView` / `TableView`: data-structure renderers with animated operations and highlighting (DP tables filling in, pointers moving).
+- `ArchDiagram`: system-design diagrams with animated request flow, failure injection and live metrics.
+- `Formula`: KaTeX with colored, hover-linked terms, live values and "explain this" annotations.
+- `Derivation`: step-by-step animated algebra with justifications.
+- `WorkedExample`: the stepped solution format from §5, with optional live parameters.
+- `Problem` / `ProblemSet`: answer input (numeric, symbolic, choice, drag, code), checking, tiered hints, full solution, wrong-answer notes, and "another one".
+- `CodeCell`: an editable code block that runs in a sandboxed Worker and pipes values into visuals.
 - `Predict`: a "make your guess" wrapper that locks in the answer before revealing it.
-- `Quiz`: question types, scoring, explanations and saved progress.
+- `Quiz`: quick concept checks with explanations.
 - `Scrolly`: scroll-driven sections that pin a visual while the text advances.
 - `Glossary`: hover/tap definitions that link to the defining lesson.
-- `theme.ts`: one semantic color system shared by every lesson (e.g. input = blue, output = orange, error/gradient = red, probability = purple), working in both light and dark mode.
+- `TLDR`: the printable revision card.
+- `theme.ts` + `DESIGN.md`: the design system from §3.
 
-The `/learn` hub shows:
-- a page per subject, with units, lessons, estimated time and your progress
-- an interactive **prerequisite graph** across all subjects (so "diffusion models" visibly depends on "Gaussian distribution", "KL divergence", "U-Net" and "SDEs")
-- "Start here" learning paths, e.g. *Zero to LLMs*, *Physics for engineers*, *Interview-ready DSA*, *ML math foundations*.
+---
 
-### 8.4 Curriculum
+## 7. Repository layout
 
-This is the **full** target. Ship lessons in prerequisite order and keep this list in sync with `IDEAS.md`. The bracketed note after each topic is the suggested central interactive. If you find a better metaphor, use it.
+```
+coolstuff/
+├── CLAUDE.md                     ← this file
+├── README.md                     ← public-facing: what this is, live link, subject list
+├── PROGRESS.md                   ← curriculum checklist (§9) with status per lesson; you maintain it
+├── LOG.md                        ← one dated entry per session; "## Needs owner" section at top
+├── package.json
+├── vite.config.ts                ← multi-page build, auto-discovers lessons/**/index.html
+├── index.html                    ← home: subjects, learning paths, continue-where-you-left-off
+├── src/
+│   ├── site/                     ← home, subject pages, prerequisite graph, practice pages, search
+│   ├── kit/                      ← the component kit (§6)
+│   └── content/curriculum.ts     ← the single source of truth for subjects, units, lessons and prerequisites
+├── lessons/
+│   └── <subject>/<slug>/         ← e.g. lessons/linalg/eigenvectors/
+│       ├── index.html
+│       ├── lesson.tsx            ← the lesson page
+│       ├── math.ts               ← pure functions behind the visuals (tested)
+│       ├── problems.ts           ← worked examples, problems, solutions, generators (tested)
+│       ├── lesson.test.ts
+│       ├── meta.json             ← { title, subject, unit, order, prerequisites[], minutes, level, status }
+│       ├── NOTES.md              ← design choices, sources, simplifications, integrator/timestep if any
+│       └── thumb.webp            ← 1200×750 screenshot, < 120 KB
+├── scripts/
+│   ├── new-lesson.ts             ← `npm run new -- <subject> <slug>` scaffolds a lesson
+│   ├── build-index.ts            ← validates meta.json against curriculum.ts, builds search index
+│   └── smoke.ts                  ← Playwright: desktop + 390×844 mobile; fails on console errors, blank
+│                                    figures, broken KaTeX, or a lesson missing required sections
+└── .github/workflows/
+    ├── ci.yml                    ← typecheck, lint, test, build, smoke
+    └── pages.yml                 ← deploy dist/ to GitHub Pages on push to main
+```
+
+Lessons **never import from each other**, only from `src/kit/`. If something is useful to two lessons, it belongs in the kit.
+
+**Site structure**
+- **Home**: the subject grid, "Start here" learning paths (*Calculus from zero*, *ML math foundations*, *Zero to LLMs*, *Interview-ready DSA*, *System design*, *Physics for engineers*), and continue-where-you-left-off.
+- **Subject page**: units → lessons with time, level and your progress; links to mixed practice and the exam-style set. Unshipped lessons show as "coming soon" so the full map is always visible.
+- **Prerequisite graph**: an interactive map across all subjects (so "diffusion models" visibly depends on "Gaussian distribution", "KL divergence", "U-Nets" and "SDEs").
+- **Search** across lessons, formulas and glossary terms.
+
+---
+
+## 8. Workflow
+
+### Bootstrap (first session only)
+
+Commit after each step:
+
+1. Scaffold Vite + TS + Preact with the multi-page config, and write `curriculum.ts` from §9.
+2. Write `scripts/new-lesson.ts`, `scripts/build-index.ts`, and `scripts/smoke.ts`.
+3. Write `src/kit/DESIGN.md` and `theme.ts`, then build the kit (§6) along with the `/kit` gallery page. Start with `Stage2D`, `Slider`, `Formula`, `Derivation`, `WorkedExample`, `Problem` and `TLDR`, and add the rest as lessons need them.
+4. Build the home page, subject pages and the prerequisite graph, showing the full curriculum as "coming soon".
+5. Add `ci.yml` and `pages.yml`. If the deploy fails because Pages isn't enabled, note it under `## Needs owner` in `LOG.md` (the owner sets Settings → Pages → Source → GitHub Actions) and continue.
+6. Ship **three flagship lessons** from different subjects to prove the whole pipeline and set the quality bar:
+   - *Linear algebra: Eigenvectors, the directions a matrix doesn't turn*
+   - *Calculus I: The derivative as slope and as rate*
+   - *Machine learning: Gradient descent*
+7. Write `README.md`, and create `PROGRESS.md` from §9.
+
+### The Loop (every session)
+
+1. **Read** the last entries of `LOG.md` and `PROGRESS.md`. Run `npm ci && npm run build`. If `main` is broken, fixing it is the only task.
+2. **Pick** the next lesson whose prerequisites are already shipped. Rotate subjects, and prefer lessons that unlock the most other lessons. Mark it `[in progress]`.
+3. **Plan in five lines** at the top of `NOTES.md`: the one-sentence takeaway, the central interactive, the concept colors, the key formula(s), and the exam-level problem the learner should be able to solve at the end.
+4. **Prototype the central interactive** first. Drag it around. Does the concept click with no text at all? If not, find a better visual metaphor before writing any prose.
+5. **Write the math and problems first, as tested code**: `math.ts` and `problems.ts` (examples, problems, solutions, generators), plus their tests.
+6. **Build the lesson** through every section in §4.
+7. **Polish**: typography, spacing, motion timing, dark mode, mobile layout, focus states, loading states.
+8. **Professor review**: re-read the whole lesson as a skeptical professor. Is anything subtly wrong, misleadingly simplified, or ambiguous? Solve every problem yourself from scratch and compare against the written solutions.
+9. **Verify** (§12). Everything passes.
+10. **Ship**: one commit per lesson, `feat(<subject>/<slug>): <title>`. Update `meta.json`, `PROGRESS.md` and `LOG.md`.
+11. Time left? Go back to step 2.
+
+Every 5 lessons in a subject, update that subject's mixed practice page and exam-style set.
+
+---
+
+## 9. Curriculum
+
+This is the **full** target. Ship lessons in prerequisite order and keep `curriculum.ts` and `PROGRESS.md` in sync with this list. The bracketed note after each topic is the suggested central interactive. If you find a better metaphor, use it.
 
 **Calculus I: limits and derivatives**
 1. Functions as machines and graphs [drag inputs, watch outputs trace the graph]
@@ -544,72 +510,65 @@ This is the **full** target. Ship lessons in prerequisite order and keep this li
 - Reinforcement learning in depth: policy gradients, PPO, AlphaZero-style search
 - Compilers: lexing, parsing, ASTs; cryptography: hashing, public keys, zero-knowledge intuition
 
-### 8.5 Correctness
+---
 
-- Every explainer's math lives in a pure module (`math.ts`) with **unit tests** (`vitest`) against known values. For example, the numerical derivative must match the analytic one, Dijkstra must match brute force on random graphs, and the energy in the simulation must be conserved within tolerance.
+## 10. Correctness
+
+- Every lesson's math lives in pure modules (`math.ts`, `problems.ts`) with **unit tests** (`vitest`) against known values. For example, the numerical derivative must match the analytic one, Dijkstra must match brute force on random graphs, and the energy in a simulation must be conserved within tolerance.
+- **Every problem's written solution is tested**: the test computes the answer independently and checks it against the stated final answer. Generated problems are tested over many random seeds.
 - Simulations state their integrator (e.g. symplectic Euler, RK4) and timestep in `NOTES.md`.
 - When simplifying, say so in the lesson ("we're ignoring air resistance here").
-- Cite at least two standard references per lesson (e.g. Stewart, Strang, CLRS, Halliday/Resnick, Griffiths, Bishop, Goodfellow et al., *Dive into Deep Learning*, the original papers for diffusion and transformers).
-- Before shipping, re-read the lesson as a skeptical professor: is anything subtly wrong or misleadingly simplified? Fix it.
+- Cite at least two standard references per lesson (e.g. Stewart, Strang, CLRS, Halliday/Resnick, Griffiths, Bishop, Goodfellow et al., *Dive into Deep Learning*, the original papers for diffusion and transformers). Write your own explanations and problems; never copy theirs.
+- Notation is consistent across the site, and documented in `src/kit/NOTATION.md` (vectors bold, matrices uppercase, etc.).
 
 ---
 
-## 9. Quality bar (all categories)
+## 11. Quality bar
 
-A project is **not** done until:
+A lesson is **not** done until:
 
-- Loads to something impressive in **< 3 s** on a warm cache.
-- Works on a **390×844 phone viewport** and on desktop, with no horizontal scroll and tap targets ≥ 44px.
+- Every section in §4 is present, with at least 3 worked examples and 8 practice problems, all with hints and full solutions.
+- The central interactive makes the idea click within the first minute.
+- Every key formula is rendered with KaTeX, color-linked to the visual, and has an "explain this" annotation.
+- It works on a **390×844 phone** and on desktop: no horizontal scroll, tap targets ≥ 44px, readable formulas (long equations wrap or scroll horizontally inside their own box, never the page).
 - **Zero console errors or warnings** in Chromium and Firefox.
-- Lighthouse **accessibility ≥ 90** for page-like projects (blog-design, website, ui-concept, tool). Real headings, alt text, visible focus, contrast passes.
-- Motion respects `prefers-reduced-motion`.
-- Games and graphics hold **≥ 55 fps** on mid-range hardware, or scale quality down automatically.
-- Defaults look great with zero configuration.
-- `NOTES.md`, a complete `meta.json`, and a real `thumb.webp` all exist.
-- **Everything is original or properly licensed**: no copyrighted characters, music, logos, fonts or real brands. Generate procedurally, write the copy yourself, use CC0/OFL assets, and credit them.
+- Lighthouse **accessibility ≥ 90** and **performance ≥ 85**. Real headings, alt text and screen-reader descriptions for figures, visible focus, and passing contrast.
+- Motion respects `prefers-reduced-motion`. Visuals hold ≥ 55 fps or scale down.
+- Light and dark mode both look intentional.
+- `meta.json`, `NOTES.md` and a real `thumb.webp` all exist.
 
 ---
 
-## 10. Verification (before every commit)
+## 12. Verification (before every commit)
 
 ```
 npm run typecheck
 npm run lint
-npm run test         # vitest: explainer math and algorithm correctness
+npm run test         # math, problem solutions and generators
 npm run build
-npm run smoke        # desktop + mobile viewports for every project;
-                     # fails on console errors, blank screens, or missing meta/thumb
+npm run smoke        # desktop + mobile for every lesson; fails on console errors, blank figures,
+                     # KaTeX errors, or missing required sections
 ```
 
-Then **look at it and use it**: run `npm run dev` and play the game to a game over, read a full article in the blog theme, click through every screen. If you can take screenshots, compare them to the quality bar. A green build with a broken experience is a failure.
+Then **use it like a student**: run `npm run dev`, go through the lesson top to bottom, solve at least three problems (one by asking for every hint), and try "another one" on a generated problem several times. If you can take screenshots, compare them against the quality bar. A green build with a confusing lesson is a failure.
 
-Never push to `main` with CI red. If an older project breaks, fix it before shipping a new one.
+Never push to `main` with CI red. If an older lesson breaks, fix it before shipping a new one.
 
 ---
 
-## 11. Rules
+## 13. Rules
 
-- **Small and finished beats big and half-done.** Nothing broken or placeholder on `main`; unfinished work uses `status: "wip"` and stays hidden from the showcase.
-- **One project per commit**, with tooling changes in separate commits.
-- **Rotate categories.** Never ship more than two projects of the same category back to back.
-- **No telemetry, analytics, trackers, or external CDNs at runtime.**
+- **Small and finished beats big and half-done.** Nothing broken or placeholder goes on `main`. Unfinished lessons use `status: "wip"` and show as "coming soon".
+- **One lesson per commit**, with kit and site changes in separate commits.
+- When a kit component changes, check every lesson that uses it (smoke tests help, but look too).
+- **No telemetry, analytics, trackers or external CDNs at runtime.**
 - **No secrets, tokens or personal data** in the repo, ever.
 - Keep total `dist/` under 150 MB.
-- Don't redesign the showcase on a whim. Changes are deliberate and logged.
 - Be honest in `LOG.md`: record what failed and why, not only wins.
-- When blocked on something only the owner can decide, write it under `## Needs owner` in `LOG.md` and move on to another idea.
+- When blocked on something only the owner can decide, write it under `## Needs owner` in `LOG.md` and move on to another lesson.
 
 ---
 
-## 12. Style
+## 14. Definition of a great session
 
-- TypeScript `strict: true`, small modules, and names that say what things mean.
-- Comments explain *why*. `NOTES.md` explains the big picture.
-- Each project has **its own visual identity**. Don't reuse one look everywhere. Decide palette, type pairing and motion personality before writing CSS.
-- Showcase site style: near-black canvas, one accent color, generous whitespace, a refined sans plus a monospace for labels, with the projects' thumbnails doing the talking.
-
----
-
-## 13. Definition of a great session
-
-Someone opens the live site and finds one more project they've never seen before, in a category they didn't expect, or a student finally understands eigenvectors, backprop or Faraday's law the night before an exam. It works beautifully on their phone, and the notes show them how it was made. Go build something crazy.
+A student opens a lesson the night before their exam. Within a minute of dragging the visual, the idea clicks. The formulas read like a story instead of a wall of symbols. They follow the worked examples, solve the problems on their own (with a hint when they're stuck), and close the tab understanding eigenvectors, backprop or Faraday's law better than they did after the lecture. Build that, one lesson at a time.
