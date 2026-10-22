@@ -1,1 +1,50 @@
-[]
+[
+  {
+    "title": "Flipline",
+    "tagline": "A one-thumb gravity-flip runner through procedurally generated neon sunsets.",
+    "category": "game",
+    "tags": [
+      "runner",
+      "one-thumb",
+      "synthwave",
+      "procedural",
+      "pwa"
+    ],
+    "tech": [
+      "typescript",
+      "canvas 2d",
+      "web audio",
+      "service worker"
+    ],
+    "date": "2026-10-22",
+    "status": "shipped",
+    "mobile": true,
+    "slug": "flipline",
+    "hasThumb": true
+  },
+  {
+    "title": "Ma",
+    "tagline": "A Japanese-minimal long-read blog theme where pull quotes turn vertical and hang in the margin like brushed verse.",
+    "category": "blog-design",
+    "tags": [
+      "typography",
+      "vertical text",
+      "long-form",
+      "dark mode",
+      "markdown",
+      "procedural ink-wash art"
+    ],
+    "tech": [
+      "typescript",
+      "vite",
+      "marked",
+      "css writing-mode",
+      "python pillow"
+    ],
+    "date": "2026-10-22",
+    "status": "shipped",
+    "mobile": true,
+    "slug": "ma",
+    "hasThumb": true
+  }
+]

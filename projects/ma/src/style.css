@@ -1,0 +1,1757 @@
+/*
+ * Ma: a Japanese-minimal long-read theme.
+ *
+ * Palette: paper-white and warm ink-black, with one accent, shu (朱), the
+ * vermilion of seal paste. Everything else is a tint of ink on paper.
+ * Type: Shippori Mincho (display), Fraunces (text), Zen Kaku Gothic New (labels).
+ */
+
+/* ── tokens ─────────────────────────────────────────────────────────────── */
+
+:root {
+  --paper: #f7f4ee;
+  --paper-2: #efebe2;
+  --ink: #1d1c1a;
+  --ink-2: #57524a; /* secondary text: 7.0:1 on paper */
+  --ink-3: #7b7468; /* large/decorative only: 4.4:1 */
+  --rule: #ddd6ca;
+  --shu: #b0391f; /* accent text and links: 5.6:1 on paper */
+  --seal: #c8432b; /* the stamp itself: graphic, not text */
+  --selection: rgb(200 67 43 / 0.18);
+  --img-filter: none;
+  --grain-opacity: 0.55;
+
+  --display: 'Shippori Mincho', 'Hiragino Mincho ProN', 'Yu Mincho', 'Noto Serif JP', Georgia, serif;
+  --text: 'Fraunces Variable', 'Shippori Mincho', 'Iowan Old Style', Georgia, serif;
+  --sans: 'Zen Kaku Gothic New', 'Hiragino Sans', system-ui, sans-serif;
+  --mono: 'IBM Plex Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+
+  --measure: 34em;
+  --gutter: clamp(1.25rem, 5vw, 4rem);
+  --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+  color-scheme: light;
+}
+
+:root[data-theme='dark'] {
+  --paper: #161513;
+  --paper-2: #1f1d1a;
+  --ink: #ebe5d9;
+  --ink-2: #b2aa9c; /* 8.4:1 on paper */
+  --ink-3: #8a8274;
+  --rule: #34312b;
+  --shu: #ec7c5c; /* 6.3:1 on paper */
+  --seal: #c94a31;
+  --selection: rgb(236 124 92 / 0.25);
+  /* Prints under lamplight: generated paintings are on light paper, so dim them a touch at night. */
+  --img-filter: brightness(0.84) contrast(1.04) saturate(0.92);
+  --grain-opacity: 0.35;
+  color-scheme: dark;
+}
+
+/* ── base ───────────────────────────────────────────────────────────────── */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  scroll-padding-top: 2rem;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--text);
+  font-size: 1.0625rem;
+  line-height: 1.7;
+  font-optical-sizing: auto;
+  font-kerning: normal;
+  font-variant-ligatures: common-ligatures;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  overflow-wrap: break-word;
+}
+
+/* Paper grain: an SVG noise tile behind everything, fixed so it doesn't swim on scroll. */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: var(--grain-opacity);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .45 0 0 0 0 .4 0 0 0 0 .32 0 0 0 .09 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+main {
+  flex: 1;
+}
+
+::selection {
+  background: var(--selection);
+}
+
+a {
+  color: inherit;
+}
+
+img {
+  max-width: 100%;
+}
+
+:focus-visible {
+  outline: 2px solid var(--shu);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+.wrap {
+  width: 100%;
+  max-width: 78rem;
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+.sprite {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
+
+.seal {
+  display: block;
+  width: 2rem;
+  height: 2rem;
+  flex: none;
+}
+
+.skip {
+  position: absolute;
+  top: 0.75rem;
+  left: 0.75rem;
+  z-index: 100;
+  padding: 0.75rem 1.1rem;
+  background: var(--ink);
+  color: var(--paper);
+  font: 500 0.875rem/1 var(--sans);
+  text-decoration: none;
+  border-radius: 2px;
+  transform: translateY(-200%);
+}
+
+.skip:focus {
+  transform: none;
+}
+
+.theme-changing,
+.theme-changing *,
+.theme-changing *::before {
+  transition:
+    background-color 0.45s var(--ease),
+    color 0.45s var(--ease),
+    border-color 0.45s var(--ease) !important;
+}
+
+/* ── header ─────────────────────────────────────────────────────────────── */
+
+.site-header-inner {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 5.25rem;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.7rem;
+  min-height: 44px;
+  margin-right: auto;
+  text-decoration: none;
+}
+
+.brand .seal {
+  width: 1.9rem;
+  height: 1.9rem;
+  transform: rotate(-2deg);
+}
+
+.brand-name {
+  font: 600 1.45rem/1 var(--display);
+  letter-spacing: 0.02em;
+}
+
+.brand-sub {
+  display: none;
+  padding-left: 0.85rem;
+  border-left: 1px solid var(--rule);
+  color: var(--ink-2);
+  font: 400 0.8125rem/1 var(--sans);
+  letter-spacing: 0.08em;
+}
+
+.site-nav {
+  display: flex;
+  gap: 0.15rem;
+}
+
+.site-nav a {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 0.45rem;
+  color: var(--ink-2);
+  font: 500 0.8125rem/1 var(--sans);
+  letter-spacing: 0.06em;
+  text-decoration: none;
+}
+
+.site-nav a:hover {
+  color: var(--ink);
+}
+
+.site-nav a[aria-current='page'] {
+  color: var(--ink);
+}
+
+/* Current page: a small vermilion dot under the label, like a reading mark. */
+.site-nav a[aria-current='page']::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: 6px;
+  width: 4px;
+  height: 4px;
+  margin-left: -2px;
+  border-radius: 50%;
+  background: var(--shu);
+}
+
+.theme-toggle {
+  display: inline-grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  margin-right: -0.5rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--ink);
+  cursor: pointer;
+  border-radius: 50%;
+}
+
+.theme-toggle svg {
+  width: 1.25rem;
+  height: 1.25rem;
+  transition: transform 0.6s var(--ease);
+}
+
+[data-theme='dark'] .theme-toggle svg {
+  transform: rotate(180deg);
+}
+
+.theme-toggle:hover {
+  background: var(--paper-2);
+}
+
+@media (min-width: 560px) {
+  .site-nav {
+    gap: 0.75rem;
+  }
+
+  .site-nav a {
+    padding: 0 0.6rem;
+    letter-spacing: 0.12em;
+  }
+}
+
+@media (min-width: 760px) {
+  .brand-sub {
+    display: inline;
+  }
+
+  .site-header-inner {
+    gap: 1.5rem;
+  }
+}
+
+/* ── shared bits ────────────────────────────────────────────────────────── */
+
+.eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  margin: 0 0 1.75rem;
+  color: var(--ink-2);
+  font: 500 0.75rem/1.4 var(--sans);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.eyebrow-mark {
+  width: 0.55rem;
+  height: 0.55rem;
+  background: var(--seal);
+  flex: none;
+}
+
+.text-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 44px;
+  color: var(--ink);
+  font: 500 0.875rem/1.3 var(--sans);
+  letter-spacing: 0.04em;
+  text-decoration: underline;
+  text-decoration-color: var(--shu);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.35em;
+}
+
+.text-link:hover {
+  color: var(--shu);
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  min-height: 48px;
+  padding: 0 1.5rem;
+  background: var(--ink);
+  color: var(--paper);
+  font: 500 0.875rem/1 var(--sans);
+  letter-spacing: 0.06em;
+  text-decoration: none;
+  border-radius: 1px;
+  transition: background-color 0.25s var(--ease);
+}
+
+.button:hover {
+  background: var(--shu);
+}
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 0.15rem;
+  color: var(--ink-2);
+  font: 500 0.75rem/1 var(--sans);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-decoration: none;
+}
+
+.tag::before {
+  content: '#';
+  margin-right: 0.15em;
+  color: var(--shu);
+}
+
+.tag:hover {
+  color: var(--ink);
+}
+
+/* Dim generated paintings in dark mode. */
+.figure img,
+.cover img,
+.feature-media img,
+.essay-thumb img {
+  filter: var(--img-filter);
+}
+
+/* ── home: hero ─────────────────────────────────────────────────────────── */
+
+.hero {
+  display: grid;
+  gap: 3rem;
+  padding-block: 2.5rem 4.5rem;
+}
+
+.hero-title {
+  margin: 0;
+  font: 500 clamp(2.35rem, 1.2rem + 3.6vw, 4.35rem) / 1.16 var(--display);
+  letter-spacing: -0.005em;
+  text-wrap: balance;
+}
+
+.hero-lede {
+  max-width: 30em;
+  margin: 1.75rem 0 0;
+  color: var(--ink-2);
+  font-size: 1.125rem;
+  font-style: italic;
+  line-height: 1.6;
+}
+
+.hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1.75rem;
+  margin: 2.25rem 0 0;
+}
+
+.feature-link {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 1.1rem;
+  color: inherit;
+  text-decoration: none;
+}
+
+.feature-media {
+  position: relative;
+  align-self: start;
+  margin: 0;
+}
+
+.hero-feature {
+  --feature-h: min(30rem, 118vw);
+}
+
+.feature-media img {
+  display: block;
+  width: 100%;
+  height: var(--feature-h);
+  object-fit: cover;
+  object-position: 68% 50%;
+  transition: transform 1.2s var(--ease);
+}
+
+.feature-frame {
+  overflow: hidden;
+}
+
+.feature-link:hover .feature-media img {
+  transform: scale(1.025);
+}
+
+/* The essay's kanji, stamped over the corner of the picture like a collector's seal. */
+.feature-stamp {
+  position: absolute;
+  left: -0.9rem;
+  bottom: 1.6rem;
+  display: grid;
+  place-items: center;
+  width: 3.3rem;
+  height: 3.3rem;
+  background: var(--seal);
+  color: #fbf6ee;
+  font: 400 1.95rem/1 var(--display);
+  border-radius: 3px;
+  transform: rotate(-3deg);
+  box-shadow: 0 0 0 0.35rem var(--paper);
+}
+
+/*
+ * Vertical text and an image side by side form a sizing loop (the column's
+ * width depends on its height, which would depend on the picture). Giving the
+ * feature one definite height breaks the loop: the vertical title wraps into
+ * as many columns as that height needs, and the picture fills what is left.
+ */
+.feature-v {
+  writing-mode: vertical-rl;
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  gap: 0.9rem;
+  height: var(--feature-h);
+  padding-top: 0.15rem;
+}
+
+.feature-label {
+  color: var(--shu);
+  font: 500 0.75rem/1.2 var(--sans);
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+.feature-title {
+  margin: 0;
+  font: 500 1.6rem/1.35 var(--display);
+  letter-spacing: 0.06em;
+}
+
+.feature-link:hover .feature-title {
+  color: var(--shu);
+}
+
+.feature-meta {
+  color: var(--ink-2);
+  font: 400 0.8125rem/1.2 var(--sans);
+  letter-spacing: 0.1em;
+}
+
+@media (min-width: 900px) {
+  .hero {
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    column-gap: clamp(1rem, 2.4vw, 2.5rem);
+    align-items: center;
+    padding-block: 1.5rem 6rem;
+  }
+
+  .hero-text {
+    grid-column: 1 / span 6;
+    padding-bottom: 2rem;
+  }
+
+  .hero-feature {
+    grid-column: 8 / -1;
+  }
+
+  .hero-feature {
+    --feature-h: clamp(26rem, calc(100vh - 9rem), 38rem);
+  }
+}
+
+@media (min-width: 900px) and (max-height: 820px) {
+  .hero {
+    padding-top: 0.5rem;
+  }
+}
+
+/* ── home: essay list ───────────────────────────────────────────────────── */
+
+.section-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem 2rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--ink);
+}
+
+.section-head h2 {
+  margin: 0;
+  font: 500 0.8125rem/1.4 var(--sans);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.essay-list {
+  margin: 0 0 5rem;
+  padding: 0;
+  list-style: none;
+}
+
+.essay-link {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 6.5rem;
+  gap: 1.25rem;
+  padding-block: 1.75rem;
+  border-bottom: 1px solid var(--rule);
+  color: inherit;
+  text-decoration: none;
+}
+
+.essay-kanji {
+  display: none;
+  color: var(--ink-3);
+  font: 400 2.75rem/1 var(--display);
+  transition: color 0.3s var(--ease);
+}
+
+.essay-meta {
+  margin: 0 0 0.55rem;
+  color: var(--ink-2);
+  font: 400 0.8125rem/1.4 var(--sans);
+  letter-spacing: 0.06em;
+}
+
+.essay-title {
+  margin: 0;
+  font: 500 1.375rem/1.3 var(--display);
+  text-wrap: balance;
+}
+
+.essay-excerpt {
+  margin: 0.6rem 0 0;
+  color: var(--ink-2);
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+.essay-thumb {
+  overflow: hidden;
+  align-self: start;
+  margin-top: 0.3rem;
+}
+
+.essay-thumb img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1;
+  object-fit: cover;
+  transition: transform 0.9s var(--ease);
+}
+
+.essay-link:hover .essay-title {
+  text-decoration: underline;
+  text-decoration-color: var(--shu);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+}
+
+.essay-link:hover .essay-kanji {
+  color: var(--shu);
+}
+
+.essay-link:hover .essay-thumb img {
+  transform: scale(1.04);
+}
+
+@media (min-width: 760px) {
+  .essay-link {
+    grid-template-columns: 5rem minmax(0, 1fr) 13rem;
+    gap: 2.5rem;
+    padding-block: 2.25rem;
+  }
+
+  .essay-kanji {
+    display: block;
+    padding-top: 0.2rem;
+  }
+
+  .essay-title {
+    font-size: 1.75rem;
+  }
+
+  .essay-excerpt {
+    max-width: 36em;
+    font-size: 1.0625rem;
+  }
+
+  .essay-thumb img {
+    aspect-ratio: 3 / 2;
+  }
+}
+
+/* ── home: band ─────────────────────────────────────────────────────────── */
+
+.band {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 1.5rem;
+  margin-bottom: 5rem;
+}
+
+.band-vertical {
+  writing-mode: vertical-rl;
+  margin: 0;
+  padding-left: 1.25rem;
+  border-left: 1px solid var(--rule);
+  color: var(--shu);
+  font: 400 1.25rem/1 var(--display);
+  letter-spacing: 0.3em;
+}
+
+.band-title {
+  margin: 0 0 0.75rem;
+  font: 500 1.5rem/1.3 var(--display);
+}
+
+.band-body p {
+  max-width: 36em;
+  margin: 0 0 0.75rem;
+  color: var(--ink-2);
+}
+
+@media (min-width: 900px) {
+  .band {
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    column-gap: clamp(1rem, 2.4vw, 2.5rem);
+    padding-block: 2rem;
+  }
+
+  .band-vertical {
+    grid-column: 3;
+    justify-self: end;
+    font-size: 1.5rem;
+  }
+
+  .band-body {
+    grid-column: 4 / span 7;
+  }
+
+  .band-body p {
+    font-size: 1.1875rem;
+  }
+}
+
+/* ── article ────────────────────────────────────────────────────────────── */
+
+.progress {
+  position: fixed;
+  inset: 0 0 auto;
+  z-index: 50;
+  height: 3px;
+  pointer-events: none;
+}
+
+.progress-bar {
+  display: block;
+  height: 100%;
+  background: var(--shu);
+  transform-origin: 0 50%;
+  transform: scaleX(var(--progress, 0));
+}
+
+.loading {
+  padding-block: 6rem;
+  color: var(--ink-2);
+  font-style: italic;
+}
+
+.article-head {
+  position: relative;
+  max-width: calc(var(--measure) + 2 * var(--gutter));
+  margin-inline: auto;
+  padding-top: 2rem;
+}
+
+.article-mark {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  margin: 0 0 1.5rem;
+}
+
+.article-kanji {
+  display: grid;
+  place-items: center;
+  width: 3rem;
+  height: 3rem;
+  background: var(--seal);
+  color: #fbf6ee;
+  font: 400 1.75rem/1 var(--display);
+  border-radius: 3px;
+  transform: rotate(-2deg);
+}
+
+.article-reading {
+  color: var(--ink-2);
+  font: 400 0.8125rem/1.3 var(--sans);
+  letter-spacing: 0.14em;
+}
+
+.article-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 1rem;
+  margin: 0 0 0.5rem;
+}
+
+.article-title {
+  margin: 0;
+  font: 500 clamp(2.2rem, 1.3rem + 3vw, 3.6rem) / 1.16 var(--display);
+  letter-spacing: -0.005em;
+  text-wrap: balance;
+}
+
+.article-dek {
+  margin: 1.25rem 0 0;
+  color: var(--ink-2);
+  font-size: 1.1875rem;
+  font-style: italic;
+  line-height: 1.55;
+  text-wrap: pretty;
+}
+
+.article-byline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.9rem;
+  margin: 1.75rem 0 0;
+  padding-top: 1.1rem;
+  border-top: 1px solid var(--rule);
+  color: var(--ink-2);
+  font: 400 0.8125rem/1.5 var(--sans);
+  letter-spacing: 0.06em;
+}
+
+.article-byline strong {
+  color: var(--ink);
+  font-weight: 500;
+}
+
+.cover {
+  width: min(100% - 2 * var(--gutter), 66rem);
+  margin: 2.75rem auto 3.25rem;
+}
+
+.cover img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+figcaption {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 0.85rem;
+  color: var(--ink-2);
+  font: 400 0.8125rem/1.55 var(--sans);
+  letter-spacing: 0.03em;
+}
+
+figcaption::before {
+  content: '';
+  flex: none;
+  width: 1.5rem;
+  height: 1px;
+  margin-top: 0.75em;
+  background: var(--shu);
+}
+
+@media (min-width: 1120px) {
+  /* The essay's mark moves into the right margin, vertical, like a seal on a scroll. */
+  .article-mark {
+    position: absolute;
+    top: 2.3rem;
+    left: calc(100% + 2.5rem);
+    flex-direction: column;
+    align-items: center;
+    margin: 0;
+  }
+
+  .article-kanji {
+    width: 3.6rem;
+    height: 3.6rem;
+    font-size: 2.15rem;
+  }
+
+  .article-reading {
+    writing-mode: vertical-rl;
+    letter-spacing: 0.2em;
+  }
+
+  .cover figcaption {
+    justify-content: flex-end;
+  }
+}
+
+/* ── prose: the reading column ──────────────────────────────────────────── */
+
+.prose {
+  position: relative;
+  max-width: calc(var(--measure) + 2 * var(--gutter));
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+  hanging-punctuation: first allow-end last;
+  counter-reset: section;
+  font-variant-numeric: oldstyle-nums proportional-nums;
+}
+
+.about .prose,
+.guide .prose {
+  padding-inline: 0;
+  max-width: var(--measure);
+}
+
+.prose > * {
+  margin-block: 0 1.2em;
+}
+
+.prose p {
+  text-wrap: pretty;
+}
+
+/* First paragraph: a little larger, an opening breath. */
+.article .prose > p:first-child {
+  font-size: 1.12em;
+  line-height: 1.65;
+}
+
+.prose a:not(.fn-back, .fn-ref a) {
+  text-decoration-color: var(--shu);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+}
+
+.prose a:hover {
+  color: var(--shu);
+}
+
+.prose h2 {
+  display: flex;
+  align-items: baseline;
+  gap: 0.85rem;
+  margin: 2.6em 0 0.8em;
+  font: 500 1.45rem/1.3 var(--display);
+  letter-spacing: 0.01em;
+  text-wrap: balance;
+  counter-increment: section;
+}
+
+/* Section numbers in kanji numerals, in vermilion: 一, 二, 三 … */
+.prose h2::before {
+  content: counter(section, cjk-decimal);
+  flex: none;
+  color: var(--shu);
+  font-size: 0.8em;
+  font-weight: 400;
+}
+
+.prose--plain h2::before,
+.prose .footnotes-title::before {
+  content: none;
+}
+
+.prose h3 {
+  margin: 2em 0 0.6em;
+  font: 500 1.2rem/1.35 var(--display);
+}
+
+.prose strong {
+  font-weight: 600;
+}
+
+.prose ul,
+.prose ol {
+  padding-left: 1.4em;
+}
+
+.prose li {
+  margin-bottom: 0.55em;
+  padding-left: 0.3em;
+}
+
+.prose ul {
+  list-style: '・';
+}
+
+.prose li::marker {
+  color: var(--shu);
+  font-family: var(--display);
+}
+
+.prose ol li::marker {
+  font-size: 0.9em;
+}
+
+.prose hr {
+  width: 3rem;
+  margin: 3em auto;
+  border: 0;
+  border-top: 1px solid var(--shu);
+}
+
+.prose code {
+  font-family: var(--mono);
+  font-size: 0.82em;
+  padding: 0.1em 0.35em;
+  background: var(--paper-2);
+  border-radius: 2px;
+}
+
+.prose pre {
+  max-width: 100%;
+  overflow-x: auto;
+  padding: 1.1rem 1.25rem;
+  background: var(--paper-2);
+  border-left: 2px solid var(--shu);
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+
+.prose pre code {
+  padding: 0;
+  background: none;
+  font-size: inherit;
+}
+
+.prose blockquote {
+  margin-left: 0;
+  padding-left: 1.25rem;
+  border-left: 1px solid var(--shu);
+  color: var(--ink-2);
+  font-size: 0.95em;
+}
+
+.prose blockquote p {
+  margin: 0 0 0.75em;
+}
+
+.prose blockquote em {
+  color: var(--ink);
+  font-style: normal;
+  font-family: var(--sans);
+  font-size: 0.82em;
+  letter-spacing: 0.06em;
+  margin-right: 0.35em;
+}
+
+/* ── figures inside essays ──────────────────────────────────────────────── */
+
+.figure {
+  margin-block: 2.5em 2.75em;
+}
+
+.figure img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.figure--wide {
+  --w: min(100vw - 2 * var(--gutter), 52rem);
+  width: var(--w);
+  max-width: none;
+  margin-left: calc((100% - var(--w)) / 2);
+}
+
+.figure--portrait {
+  max-width: 26rem;
+  margin-inline: auto;
+}
+
+/* ── pull quotes: the signature ─────────────────────────────────────────── */
+
+/*
+ * Phones: a horizontal quote between hairlines.
+ * Tablets: vertical, floated into the text column so prose wraps around it.
+ * Desktop: vertical, hung in the right margin; prose runs on uninterrupted.
+ */
+.pull {
+  margin: 2.25em 0;
+  padding: 1.6rem 0 1.5rem;
+  border-block: 1px solid var(--rule);
+  font: 400 1.35rem/1.6 var(--display);
+  letter-spacing: 0.01em;
+  text-wrap: balance;
+}
+
+.pull p {
+  margin: 0;
+}
+
+.pull::before {
+  content: '';
+  display: block;
+  width: 0.55rem;
+  height: 0.55rem;
+  margin-bottom: 1rem;
+  background: var(--seal);
+}
+
+@media (min-width: 760px) {
+  .pull {
+    writing-mode: vertical-rl;
+    float: right;
+    clear: right;
+    inline-size: max-content;
+    max-inline-size: 15em;
+    margin: 0.4em -0.2em 1.2em 2.25rem;
+    padding: 0 1.4rem 0 0;
+    border-block: 0;
+    border-right: 1px solid var(--rule);
+    font-size: 1.3rem;
+    line-height: 1.85;
+    letter-spacing: 0.06em;
+    text-wrap: wrap;
+  }
+
+  .pull::before {
+    margin: 0 0 0 0.9rem;
+  }
+
+}
+
+@media (min-width: 1120px) {
+  .pull {
+    position: absolute;
+    left: calc(100% - var(--gutter) + 3.5rem);
+    float: none;
+    max-inline-size: 17em;
+    margin: 0.2em 0 0;
+    padding: 0 0 0 1.4rem;
+    border-right: 0;
+    border-left: 1px solid var(--rule);
+    font-size: 1.375rem;
+  }
+
+  .pull::before {
+    margin: 0 0 0 0.9rem;
+  }
+}
+
+/* ── footnotes and margin notes ─────────────────────────────────────────── */
+
+.fn-ref {
+  font-size: 0.68em;
+  line-height: 0;
+  font-variant-numeric: lining-nums;
+}
+
+.fn-ref a {
+  display: inline-block;
+  /* A generous invisible hit area around a tiny superscript; negative margins keep the line unchanged. */
+  line-height: 1;
+  padding: 0.9em 0.6em;
+  margin: -0.9em -0.45em -0.9em -0.3em;
+  color: var(--shu);
+  font-family: var(--sans);
+  font-weight: 500;
+  text-align: center;
+  text-decoration: none;
+}
+
+.sidenote {
+  display: none;
+}
+
+.footnotes {
+  margin-top: 3.5em;
+  padding-top: 1.25em;
+  border-top: 1px solid var(--rule);
+  color: var(--ink-2);
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+.prose .footnotes-title {
+  display: block;
+  margin: 0 0 0.75em;
+  color: var(--ink-2);
+  font: 500 0.75rem/1.4 var(--sans);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.footnotes ol {
+  margin: 0;
+  padding-left: 1.25em;
+  list-style: decimal;
+}
+
+.footnotes li::marker {
+  font-family: var(--sans);
+  font-size: 0.85em;
+}
+
+.fn-back {
+  display: inline-grid;
+  place-items: center;
+  min-width: 44px;
+  min-height: 44px;
+  margin: -0.75rem 0;
+  color: var(--shu);
+  /* Colour alone doesn't mark a link inside text; the underline does. */
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+  vertical-align: middle;
+}
+
+.footnotes li:target {
+  color: var(--ink);
+}
+
+@media (min-width: 1120px) {
+  /* Notes sit in the left margin, level with their reference. */
+  .sidenote {
+    position: absolute;
+    right: calc(100% - var(--gutter) + 3rem);
+    /* Stay inline: an absolutely positioned box keeps the static position of its
+       *original* display type, so an inline note lines up with its reference line. */
+    display: inline;
+    width: 11.5rem;
+    margin-top: 0.3rem;
+    color: var(--ink-2);
+    font: 400 0.8125rem/1.55 var(--sans);
+    letter-spacing: 0.01em;
+    text-align: left;
+  }
+
+  .sidenote-n {
+    display: block;
+    margin-bottom: 0.25rem;
+    color: var(--shu);
+    font-weight: 500;
+  }
+
+  .sidenote a {
+    color: inherit;
+  }
+}
+
+/* ── end of essay ───────────────────────────────────────────────────────── */
+
+.end-mark {
+  display: flex;
+  justify-content: center;
+  margin: 3.5rem 0 0;
+}
+
+.end-mark .seal {
+  width: 2.4rem;
+  height: 2.4rem;
+  transform: rotate(-4deg);
+}
+
+.article-foot {
+  max-width: calc(var(--measure) + 2 * var(--gutter));
+  margin: 3rem auto 0;
+  padding-inline: var(--gutter);
+}
+
+.filed {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 1rem;
+  margin: 0;
+  padding-block: 0.5rem;
+  border-block: 1px solid var(--rule);
+  color: var(--ink-2);
+  font: 400 0.8125rem/1 var(--sans);
+  letter-spacing: 0.06em;
+}
+
+.pager {
+  display: grid;
+  margin: 4.5rem auto 5rem;
+  width: min(100% - 2 * var(--gutter), 66rem);
+  border-top: 1px solid var(--ink);
+}
+
+.pager-link {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  column-gap: 1.1rem;
+  padding: 1.6rem 0;
+  color: inherit;
+  text-decoration: none;
+}
+
+.pager-link + .pager-link {
+  border-top: 1px solid var(--rule);
+}
+
+.pager-dir {
+  grid-column: 2;
+  color: var(--ink-2);
+  font: 500 0.75rem/1.4 var(--sans);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.pager-kanji {
+  grid-row: 1 / span 2;
+  color: var(--ink-3);
+  font: 400 2.5rem/1 var(--display);
+  transition: color 0.3s var(--ease);
+}
+
+.pager-title {
+  grid-column: 2;
+  margin-top: 0.35rem;
+  font: 500 1.3rem/1.3 var(--display);
+  text-wrap: balance;
+}
+
+.pager-link:hover .pager-kanji {
+  color: var(--shu);
+}
+
+.pager-link:hover .pager-title {
+  text-decoration: underline;
+  text-decoration-color: var(--shu);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+}
+
+@media (min-width: 760px) {
+  .pager {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .pager-link {
+    padding: 2rem 2.5rem 2rem 0;
+  }
+
+  .pager-link + .pager-link {
+    border-top: 0;
+    border-left: 1px solid var(--rule);
+    padding: 2rem 0 2rem 2.5rem;
+  }
+
+  .pager-next {
+    grid-column: 2;
+    grid-template-columns: minmax(0, 1fr) auto;
+    text-align: right;
+  }
+
+  .pager-next .pager-dir,
+  .pager-next .pager-title {
+    grid-column: 1;
+  }
+
+  .pager-next .pager-kanji {
+    grid-column: 2;
+  }
+}
+
+.not-found {
+  max-width: calc(var(--measure) + 2 * var(--gutter));
+  margin-inline: auto;
+  padding: 4rem var(--gutter) 6rem;
+}
+
+.not-found h1 {
+  font: 500 2.4rem/1.2 var(--display);
+}
+
+/* ── page heads (archive, about) ────────────────────────────────────────── */
+
+.page-head {
+  position: relative;
+  padding-block: 2.5rem 2.5rem;
+}
+
+.page-mark {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  margin: 0 0 1.25rem;
+}
+
+.page-kanji {
+  display: grid;
+  place-items: center;
+  width: 3rem;
+  height: 3rem;
+  border: 1px solid var(--shu);
+  color: var(--shu);
+  font: 400 1.7rem/1 var(--display);
+  border-radius: 3px;
+}
+
+.page-reading {
+  color: var(--ink-2);
+  font: 400 0.8125rem/1.3 var(--sans);
+  letter-spacing: 0.14em;
+}
+
+.page-title {
+  margin: 0;
+  font: 500 clamp(2.6rem, 1.6rem + 3.5vw, 4.5rem) / 1.1 var(--display);
+}
+
+.page-lede {
+  max-width: 34em;
+  min-height: 1.6em;
+  margin: 1rem 0 0;
+  color: var(--ink-2);
+  font-size: 1.125rem;
+  font-style: italic;
+}
+
+/* ── archive ────────────────────────────────────────────────────────────── */
+
+.tag-filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 2rem;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 44px;
+  padding: 0 1rem;
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  color: var(--ink);
+  font: 500 0.8125rem/1 var(--sans);
+  letter-spacing: 0.06em;
+  text-decoration: none;
+  transition:
+    border-color 0.2s var(--ease),
+    background-color 0.2s var(--ease);
+}
+
+.chip:hover {
+  border-color: var(--ink-3);
+}
+
+.chip-count {
+  color: var(--ink-2);
+  font-size: 0.75rem;
+}
+
+.chip[aria-current='page'] {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--paper);
+}
+
+.chip[aria-current='page'] .chip-count {
+  color: inherit;
+  opacity: 0.75;
+}
+
+.archive {
+  padding-bottom: 5rem;
+}
+
+.season {
+  display: grid;
+  gap: 0.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--ink);
+  margin-bottom: 3rem;
+}
+
+.season-head {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  margin: 0;
+  font: 500 0.8125rem/1.3 var(--sans);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.season-kanji {
+  color: var(--shu);
+  font: 400 1.6rem/1 var(--display);
+  letter-spacing: 0;
+}
+
+.archive-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.archive-item {
+  display: grid;
+  /* Phones: date and reading time share the first row, the entry spans below. */
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas: 'date minutes' 'entry entry';
+  gap: 0.25rem 1rem;
+  padding-block: 1.25rem;
+  border-bottom: 1px solid var(--rule);
+}
+
+.archive-item:last-child {
+  border-bottom: 0;
+}
+
+.archive-date {
+  grid-area: date;
+  color: var(--ink-2);
+  font: 400 0.8125rem/1.5 var(--sans);
+  letter-spacing: 0.06em;
+}
+
+.archive-title {
+  display: inline;
+  /* Inline padding enlarges the tap area without moving the text. */
+  padding-block: 0.45rem;
+  font: 500 1.35rem/1.3 var(--display);
+  text-decoration: none;
+}
+
+.archive-title:hover {
+  color: var(--shu);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+}
+
+.archive-excerpt {
+  max-width: 36em;
+  margin: 0.4rem 0 0;
+  color: var(--ink-2);
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+.archive-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 1rem;
+  margin: 0.25rem 0 -0.5rem;
+}
+
+.archive-empty {
+  padding-block: 3rem;
+  color: var(--ink-2);
+  font-style: italic;
+}
+
+@media (min-width: 760px) {
+  .season {
+    grid-template-columns: 10rem minmax(0, 1fr);
+    gap: 2rem;
+  }
+
+  .season-head {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.9rem;
+    padding-top: 1.35rem;
+  }
+
+  .season-kanji {
+    font-size: 2.75rem;
+  }
+
+  .archive-item {
+    grid-template-columns: 7rem minmax(0, 1fr) auto;
+    grid-template-areas: 'date entry minutes';
+    gap: 2rem;
+    padding-block: 1.5rem;
+  }
+
+  .archive-date {
+    padding-top: 0.35rem;
+  }
+
+  .archive-minutes {
+    padding-top: 0.35rem;
+  }
+}
+
+.archive-entry {
+  grid-area: entry;
+}
+
+.archive-minutes {
+  grid-area: minutes;
+  color: var(--ink-2);
+  font: 400 0.8125rem/1.5 var(--sans);
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+
+@media (min-width: 1120px) {
+  .page-mark {
+    position: absolute;
+    top: 2.75rem;
+    right: var(--gutter);
+    flex-direction: column;
+  }
+
+  .page-kanji {
+    width: 4.25rem;
+    height: 4.25rem;
+    font-size: 2.6rem;
+  }
+
+  .page-reading {
+    writing-mode: vertical-rl;
+    letter-spacing: 0.2em;
+  }
+}
+
+/* ── about ──────────────────────────────────────────────────────────────── */
+
+.about {
+  padding-bottom: 5rem;
+}
+
+.about .prose h2 {
+  margin-top: 2.2em;
+  font-size: 1.55rem;
+}
+
+.about .prose > h2:first-child {
+  margin-top: 0;
+}
+
+.guide {
+  margin-top: 4.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--ink);
+}
+
+.guide-inner {
+  padding-top: 2.5rem;
+}
+
+.guide .prose h2 {
+  font-size: 2rem;
+}
+
+.guide .prose h3 {
+  margin-top: 2.2em;
+  color: var(--ink);
+}
+
+@media (min-width: 900px) {
+  .about,
+  .page-head {
+    --col: calc((min(100vw, 78rem) - 2 * var(--gutter)) / 12);
+  }
+
+  .about .prose {
+    margin-left: calc(var(--col) * 2);
+    margin-right: auto;
+  }
+}
+
+/* ── footer ─────────────────────────────────────────────────────────────── */
+
+.site-footer {
+  margin-top: auto;
+  border-top: 1px solid var(--rule);
+  color: var(--ink-2);
+  font: 400 0.875rem/1.6 var(--sans);
+}
+
+.footer-inner {
+  display: grid;
+  gap: 1.5rem;
+  padding-block: 2.75rem 2rem;
+}
+
+.footer-brand {
+  display: flex;
+  gap: 1rem;
+  max-width: 34rem;
+}
+
+.footer-brand p {
+  margin: 0;
+}
+
+.footer-brand strong {
+  color: var(--ink);
+  font: 600 1rem var(--display);
+}
+
+.footer-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 1.25rem;
+}
+
+.footer-nav a,
+.footer-back {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.footer-nav a:hover,
+.footer-back:hover {
+  color: var(--shu);
+}
+
+.footer-small {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0 1.5rem;
+  margin: 0;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--rule);
+  font-size: 0.8125rem;
+}
+
+@media (min-width: 900px) {
+  .footer-inner {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
+  }
+
+  .footer-small {
+    grid-column: 1 / -1;
+  }
+}
+
+/* ── type scale for larger screens ──────────────────────────────────────── */
+
+@media (min-width: 760px) {
+  body {
+    font-size: 1.1875rem;
+    line-height: 1.75;
+  }
+}
+
+/* Hyphenate only where the column is narrow enough to need it. */
+@media (max-width: 559px) {
+  .prose p,
+  .prose li {
+    hyphens: auto;
+  }
+}
+
+/* ── entrance motion ────────────────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: no-preference) {
+  .rise {
+    animation: rise 1s var(--ease) both;
+    animation-delay: calc(var(--i, 0) * 90ms);
+  }
+
+  .ink-in {
+    animation: ink-in 1.6s var(--ease) both;
+    animation-delay: 0.15s;
+  }
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+}
+
+@keyframes ink-in {
+  from {
+    opacity: 0;
+    filter: blur(6px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}
+
+.archive-heading {
+  margin: 0;
+  font-size: inherit;
+}

@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" content="#f7f4ee" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#161513" media="(prefers-color-scheme: dark)" />
+    <meta name="description" content="Essays on slowness, craft, seasons and the space between things. A Japanese-minimal long-read blog theme." />
+    <title>Ma · a slow journal</title>
+    <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+    <script>
+      // Apply the theme before first paint (saved choice, else the OS setting) so it never flashes.
+      (function () {
+        var t = null;
+        try { t = localStorage.getItem('ma-theme'); } catch (e) {}
+        if (t !== 'light' && t !== 'dark') t = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        document.documentElement.dataset.theme = t;
+      })();
+    </script>
+  </head>
+  <body data-page="home">
+    <svg class="sprite" width="0" height="0" aria-hidden="true" focusable="false">
+      <defs>
+        <filter id="stamp" x="-5%" y="-5%" width="110%" height="110%">
+          <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="4" />
+          <feDisplacementMap in="SourceGraphic" scale="2.4" />
+        </filter>
+      </defs>
+      <!-- The seal: 間 (ma) cut into a vermilion hanko, as carved strokes on a 100-unit grid. -->
+      <symbol id="seal" viewBox="0 0 100 100">
+        <g filter="url(#stamp)">
+          <rect x="3" y="3" width="94" height="94" rx="9" style="fill: var(--seal)" />
+          <path style="fill: var(--paper)" d="M18 16h6v70h-6zM18 16h26v5H18zM18 30h26v4H18zM18 43h26v4H18zM40 16h4v31h-4zM56 16h26v5H56zM56 30h26v4H56zM56 43h26v4H56zM56 16h4v31h-4zM76 16h6v66h-6zM68 80h14v6H68zM38 55h4v25h-4zM58 55h4v25h-4zM38 55h24v4H38zM38 66h24v3H38zM38 76h24v4H38z" />
+        </g>
+      </symbol>
+    </svg>
+    <a class="skip" href="#main">Skip to content</a>
+    <header class="site-header">
+      <div class="wrap site-header-inner">
+        <a class="brand" href="./" aria-label="Ma, a slow journal: home">
+          <svg class="seal" aria-hidden="true"><use href="#seal" /></svg>
+          <span class="brand-name">Ma</span>
+          <span class="brand-sub" aria-hidden="true">a slow journal</span>
+        </a>
+        <nav class="site-nav" aria-label="Primary">
+          <a href="./" data-nav="home">Essays</a>
+          <a href="./archive.html" data-nav="archive">Archive</a>
+          <a href="./about.html" data-nav="about">About</a>
+        </nav>
+        <button class="theme-toggle" type="button" data-theme-toggle aria-label="Switch theme">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="12" cy="12" r="8.25" fill="none" stroke="currentColor" stroke-width="1.4" />
+            <path d="M12 3.75a8.25 8.25 0 0 1 0 16.5z" fill="currentColor" />
+          </svg>
+        </button>
+      </div>
+    </header>
+    <main id="main">
+      <section class="hero wrap" aria-labelledby="hero-title">
+        <div class="hero-text">
+          <p class="eyebrow"><span class="eyebrow-mark" aria-hidden="true"></span>A slow journal · <span id="hero-season">Autumn 2026</span></p>
+          <h1 class="hero-title" id="hero-title">Notes on slowness, craft, and the space between&nbsp;things.</h1>
+          <p class="hero-lede">Essays by Mio Kurasawa, a bookbinder in a valley town at the end of a two-carriage train line. New pieces arrive when they are ready, roughly with the seasons.</p>
+          <p class="hero-actions">
+            <a class="button" id="hero-latest" href="./archive.html">Read the latest essay</a>
+            <a class="text-link" href="./about.html">About the journal</a>
+          </p>
+        </div>
+        <div class="hero-feature" id="feature"></div>
+      </section>
+
+      <section class="essays wrap" aria-labelledby="essays-title">
+        <div class="section-head">
+          <h2 id="essays-title">Recent essays</h2>
+          <a class="text-link" href="./archive.html">The full archive <span aria-hidden="true">→</span></a>
+        </div>
+        <ol class="essay-list" id="essays"></ol>
+      </section>
+
+      <section class="band wrap" aria-labelledby="band-title">
+        <p class="band-vertical" aria-hidden="true">間 · ma</p>
+        <div class="band-body">
+          <h2 class="band-title" id="band-title">Why “Ma”</h2>
+          <p><em>Ma</em> (間) is the Japanese sense of an interval with a shape: the pause that turns two notes into a phrase, the margin that lets a page breathe. This journal tries to leave room in the same way. Few posts, long lines of thought, nothing that refreshes.</p>
+          <a class="text-link" href="./about.html">More about the journal <span aria-hidden="true">→</span></a>
+        </div>
+      </section>
+    </main>
+    <footer class="site-footer">
+      <div class="wrap footer-inner">
+        <div class="footer-brand">
+          <svg class="seal" aria-hidden="true"><use href="#seal" /></svg>
+          <p><strong>Ma</strong> is a fictional journal and a free, reusable blog theme. The writer, the valley and the essays were invented for it; the ink paintings are generated by code.</p>
+        </div>
+        <nav class="footer-nav" aria-label="Footer">
+          <a href="./">Essays</a>
+          <a href="./archive.html">Archive</a>
+          <a href="./about.html">About</a>
+          <a href="./about.html#use-this-theme">Use this theme</a>
+        </nav>
+        <p class="footer-small">
+          <a class="footer-back" href="../../">← coolstuff showcase</a>
+          <span>Set in Shippori Mincho, Fraunces &amp; Zen Kaku Gothic New · <span data-year>2026</span></span>
+        </p>
+      </div>
+    </footer>
+    <script type="module" src="./src/home.ts"></script>
+  </body>
+</html>

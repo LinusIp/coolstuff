@@ -1,0 +1,10 @@
+{
+  "title": "Ma",
+  "tagline": "A Japanese-minimal long-read blog theme where pull quotes turn vertical and hang in the margin like brushed verse.",
+  "category": "blog-design",
+  "tags": ["typography", "vertical text", "long-form", "dark mode", "markdown", "procedural ink-wash art"],
+  "tech": ["typescript", "vite", "marked", "css writing-mode", "python pillow"],
+  "date": "2026-10-22",
+  "status": "shipped",
+  "mobile": true
+}

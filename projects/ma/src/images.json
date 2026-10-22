@@ -1,0 +1,82 @@
+{
+  "enso": {
+    "width": 1600,
+    "height": 1067,
+    "widths": [
+      480,
+      960,
+      1600
+    ],
+    "color": "#dfd9ce"
+  },
+  "gravel": {
+    "width": 1600,
+    "height": 1067,
+    "widths": [
+      480,
+      960,
+      1600
+    ],
+    "color": "#dad7cf"
+  },
+  "hanging-persimmons": {
+    "width": 1600,
+    "height": 2000,
+    "widths": [
+      480,
+      960,
+      1600
+    ],
+    "color": "#e5d8ca"
+  },
+  "knife": {
+    "width": 1600,
+    "height": 1067,
+    "widths": [
+      480,
+      960,
+      1600
+    ],
+    "color": "#dfd2bf"
+  },
+  "moon": {
+    "width": 1600,
+    "height": 1067,
+    "widths": [
+      480,
+      960,
+      1600
+    ],
+    "color": "#8d8b89"
+  },
+  "mountains": {
+    "width": 1600,
+    "height": 1067,
+    "widths": [
+      480,
+      960,
+      1600
+    ],
+    "color": "#d5cfc4"
+  },
+  "persimmon": {
+    "width": 1600,
+    "height": 1067,
+    "widths": [
+      480,
+      960,
+      1600
+    ],
+    "color": "#eaded0"
+  },
+  "rain": {
+    "width": 1600,
+    "height": 1067,
+    "widths": [
+      480,
+      960,
+      1600
+    ],
+    "color": "#dbdad5"
+  }
+}
