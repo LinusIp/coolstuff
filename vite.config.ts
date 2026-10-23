@@ -1,4 +1,4 @@
-import { copyFileSync, cpSync, createReadStream, existsSync, mkdirSync, readdirSync, statSync } from 'node:fs';
+import { copyFileSync, cpSync, createReadStream, existsSync, mkdirSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { extname, join, resolve, sep } from 'node:path';
 import { defineConfig, type Plugin } from 'vite';
 import { katexPrerender } from './src/kit/vite-katex.ts';
@@ -10,6 +10,17 @@ const lessonsDir = join(root, 'lessons');
 // COOLSTUFF_ONLY=linalg/eigenvectors[,calc1/derivative] limits which lessons are
 // built (handy while other lessons are mid-edit). Site pages are always built.
 const only = process.env.COOLSTUFF_ONLY?.split(',').filter(Boolean);
+// COOLSTUFF_SKIP_WIP=1 (set by the Pages deploy) leaves "wip" lessons out of the
+// published site; they show as "coming soon" until they ship.
+const skipWip = process.env.COOLSTUFF_SKIP_WIP === '1';
+
+function isShipped(id: string): boolean {
+  try {
+    return JSON.parse(readFileSync(join(lessonsDir, id, 'meta.json'), 'utf8')).status === 'shipped';
+  } catch {
+    return false;
+  }
+}
 
 /** Every lesson folder (`<subject>/<slug>`) that has an index.html. */
 export function lessonIds(): string[] {
@@ -22,7 +33,10 @@ export function lessonIds(): string[] {
       if (existsSync(join(subjectDir, slug, 'index.html'))) ids.push(`${subject}/${slug}`);
     }
   }
-  return ids.filter((id) => !only || only.includes(id)).sort();
+  return ids
+    .filter((id) => !only || only.includes(id))
+    .filter((id) => !skipWip || isShipped(id))
+    .sort();
 }
 
 /**

@@ -1,0 +1,85 @@
+/* Preview home (until the full site lands). Tokens only, per src/kit/DESIGN.md. */
+.home-lead {
+  font-size: var(--fs-lead);
+  color: var(--ink-2);
+}
+.home-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-3);
+  margin-top: var(--sp-5);
+}
+.home-paths {
+  list-style: none;
+  padding: 0;
+  margin: var(--sp-5) 0 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 16rem), 1fr));
+  gap: var(--sp-4);
+}
+.home-paths li {
+  padding: var(--sp-4);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  background: var(--raised);
+}
+.home-paths h3 {
+  margin: 0 0 var(--sp-2);
+  font-size: var(--fs-h3);
+}
+.home-paths p {
+  margin: 0;
+  color: var(--ink-2);
+  font-size: var(--fs-small);
+}
+.home-paths .meta {
+  margin-top: var(--sp-3);
+  font-family: var(--font-sans);
+  font-size: var(--fs-meta);
+  color: var(--ink-3);
+}
+.home-subject + .home-subject {
+  margin-top: var(--sp-7);
+}
+.home-subject__blurb {
+  color: var(--ink-2);
+}
+.home-unit {
+  margin-top: var(--sp-5);
+}
+.home-unit h4 {
+  margin: 0 0 var(--sp-2);
+  font-family: var(--font-sans);
+  font-size: var(--fs-label);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.home-lessons {
+  margin: 0;
+  padding-left: 2.2em;
+  columns: 2 18rem;
+  column-gap: var(--sp-6);
+  color: var(--ink-2);
+  font-size: var(--fs-small);
+}
+.home-lessons li {
+  break-inside: avoid;
+  padding: var(--sp-1) 0;
+}
+.home-lessons li::marker {
+  font-family: var(--font-sans);
+  color: var(--ink-3);
+}
+.home-later {
+  font-family: var(--font-sans);
+  font-size: var(--fs-meta);
+  color: var(--ink-3);
+}
+.home-foot {
+  margin-top: var(--sp-8);
+  padding-top: var(--sp-5);
+  border-top: 1px solid var(--rule);
+  color: var(--ink-3);
+  font-size: var(--fs-small);
+}

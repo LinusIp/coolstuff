@@ -16,7 +16,7 @@ The full curriculum (CLAUDE.md §9) and the status of every lesson. The checklis
 
 **The derivative**
 
-- [ ] 4. The derivative as slope and as rate — _secant → tangent with h slider_ `calc1/derivative`
+- [ ] 4. The derivative as slope and as rate — _secant → tangent with h slider_ `calc1/derivative` **[in progress]**
 - [ ] 5. Derivative rules: power, product, quotient — _area of a growing rectangle for the product rule_ `calc1/derivative-rules`
 - [ ] 6. Chain rule — _linked gears with different ratios_ `calc1/chain-rule`
 - [ ] 7. Implicit differentiation and related rates — _ladder sliding down a wall_ `calc1/implicit-differentiation`
@@ -121,7 +121,7 @@ The full curriculum (CLAUDE.md §9) and the status of every lesson. The checklis
 **Eigen-everything**
 
 - [ ] 13. Change of basis — _same arrow, different coordinates_ `linalg/change-of-basis`
-- [ ] 14. Eigenvectors and eigenvalues — _directions a matrix doesn't turn_ `linalg/eigenvectors`
+- [ ] 14. Eigenvectors and eigenvalues — _directions a matrix doesn't turn_ `linalg/eigenvectors` **[in progress]**
 - [ ] 15. Diagonalization and matrix powers — _Fibonacci, Markov chains_ `linalg/diagonalization`
 - [ ] 16. Symmetric matrices and the spectral theorem `linalg/spectral-theorem`
 - [ ] 17. Singular value decomposition — _rotate, stretch, rotate; image compression demo_ `linalg/svd`
@@ -271,7 +271,7 @@ The full curriculum (CLAUDE.md §9) and the status of every lesson. The checklis
 
 - [ ] 1. What learning from data means; train/test split `ml/what-is-learning`
 - [ ] 2. Linear regression and the loss landscape — _drag the line, watch loss_ `ml/linear-regression`
-- [ ] 3. Gradient descent — _ball rolling on the loss surface; learning-rate slider_ `ml/gradient-descent`
+- [ ] 3. Gradient descent — _ball rolling on the loss surface; learning-rate slider_ `ml/gradient-descent` **[in progress]**
 - [ ] 4. Logistic regression and decision boundaries `ml/logistic-regression`
 - [ ] 5. Overfitting, underfitting and bias–variance — _polynomial degree slider_ `ml/bias-variance`
 - [ ] 6. Regularization: L1 vs L2 — _diamond vs circle constraints_ `ml/regularization`
