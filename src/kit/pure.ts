@@ -14,6 +14,7 @@
 export * from './theme';
 export * from './notation';
 export * from './types';
+export * from './structures/types';
 export * from './core/rng';
 export * from './core/expr';
 export * from './core/units';

@@ -14,9 +14,9 @@ export interface LessonMeta {
   status: Status;
   /** One-sentence takeaway, shown on cards and in search. */
   summary?: string;
-  /** Key formulas, indexed by site search. */
+  /** Key formulas for search. Prefer exporting FORMULAS from problems.ts (build-index indexes those); this is the fallback. */
   formulas?: { label: string; tex: string }[];
-  /** Terms this lesson defines, indexed by search and used by Glossary links. */
+  /** Terms for search and Glossary popovers. Prefer exporting GLOSSARY from problems.ts; this is the fallback. `definition` is Rich text (TeX allowed; search strips it). */
   glossary?: { term: string; definition: string }[];
 }
 

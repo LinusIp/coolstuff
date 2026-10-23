@@ -6,19 +6,31 @@
  *   npm run smoke -- --thumbs=linalg/eigenvectors  # also capture that lesson's thumb.webp (--thumbs for all)
  *   npm run smoke -- --dist=/tmp/out --report=/tmp/shots
  *
- * Every page fails on: console errors or warnings, uncaught exceptions,
- * same-origin 4xx/5xx, any external request, a blank screen, horizontal scroll
- * on a 390px phone, a missing <title>, or a KaTeX error.
+ * Every page, at 1280×800, at 390×844 (touch) and in a dark + reduced-motion
+ * pass, fails on: console errors or warnings, uncaught exceptions, same-origin
+ * 4xx/5xx, any external request, a blank screen, horizontal scroll on a 390px
+ * phone, a missing <title>, a KaTeX error, heading levels that skip (h2 → h4)
+ * or more than one h1, and (on the phone) a control smaller than 44×44px or
+ * without an accessible name.
  * Lessons also fail on: a missing required section (CLAUDE.md §4), fewer than
- * 3 worked examples / 8 practice problems / 4 quick-check questions, no KaTeX,
- * a blank or collapsed figure, a figure without a caption, and (when shipped)
- * a missing NOTES.md or thumb.webp.
+ * 3 worked examples / 8 practice problems, a quick check outside 4–6
+ * questions, Build steps outside 3–6, traps outside 2–4, fewer than 2 references, no explained key
+ * formula in Formalize, no KaTeX, a blank or collapsed visible figure, a
+ * figure without a caption, a print revision card that doesn't render, and
+ * (when shipped) a missing NOTES.md or thumb.webp. Figures inside hidden
+ * panels (inactive example tabs, non-current problems) are skipped; they are
+ * checked by the gallery and when shown.
+ * Finally, when dist/sw.js exists, the site is loaded once with the service
+ * worker allowed, the network is cut, and a lesson must still open.
+ *
+ *   npm run smoke -- --no-offline     # skip the offline check
  */
 import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { chromium, type Browser, type Page } from 'playwright';
 import { preview } from 'vite';
 import { validateMeta, type LessonMeta } from './meta.ts';
+import { CODE_SUBJECTS, LESSON_SECTION_IDS } from '../src/kit/types.ts';
 
 const root = join(import.meta.dirname, '..');
 const args = process.argv.slice(2);
@@ -29,18 +41,20 @@ const reportDir = resolve(root, flagValue('report') ?? 'smoke-report');
 const only = flagValue('only');
 const thumbsFlag = flag('thumbs');
 const thumbsFor = flagValue('thumbs');
+const offlineCheck = !flag('no-offline');
 
 const THUMB_W = 1200;
 const THUMB_H = 750;
 const THUMB_MAX_BYTES = 120 * 1024;
 
-/** The §4 lesson arc, as `data-section` values. `code` is required for CS-flavoured subjects. */
-const REQUIRED_SECTIONS = ['tldr', 'hook', 'play', 'build', 'formalize', 'examples', 'traps', 'practice', 'quickcheck', 'next'];
-const CODE_SUBJECTS = new Set(['dsa', 'sysdesign', 'systems', 'ml', 'dl', 'diffusion', 'llm']);
+/** The §4 lesson arc, as `data-section` values (src/kit/types.ts). `code` is required for CS-flavoured subjects (CODE_SUBJECTS). */
+const REQUIRED_SECTIONS: readonly string[] = LESSON_SECTION_IDS.filter((id) => id !== 'code');
 
 const VIEWPORTS = {
-  desktop: { viewport: { width: 1280, height: 800 }, deviceScaleFactor: 1 },
-  mobile: { viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true },
+  desktop: { viewport: { width: 1280, height: 800 }, deviceScaleFactor: 1, colorScheme: 'light', reducedMotion: 'no-preference' },
+  mobile: { viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true, colorScheme: 'light', reducedMotion: 'no-preference' },
+  // Dark mode and reduced motion must work too (§11): console, blank screen, KaTeX and figures again.
+  dark: { viewport: { width: 1280, height: 800 }, deviceScaleFactor: 1, colorScheme: 'dark', reducedMotion: 'reduce' },
 } as const;
 type ViewportName = keyof typeof VIEWPORTS;
 
@@ -168,37 +182,131 @@ async function checkLesson(page: Page, helper: Page, name: string, lesson: Lesso
     examples: document.querySelectorAll('[data-section="examples"] [data-worked-example]').length,
     problems: document.querySelectorAll('[data-section="practice"] [data-problem]').length,
     quick: document.querySelectorAll('[data-section="quickcheck"] [data-quiz-question]').length,
+    traps: document.querySelectorAll('[data-section="traps"] [data-trap]').length,
+    refs: document.querySelectorAll('[data-section="next"] [data-ref]').length,
+    formulas: document.querySelectorAll('[data-section="formalize"] [data-formula][data-explain]').length,
+    steps: document.querySelectorAll('[data-section="build"] [data-step]').length,
     katex: document.querySelectorAll('.katex').length,
   }));
   if (counts.examples < 3) fail(name, `only ${counts.examples} worked example(s); need ≥ 3`);
   if (counts.problems < 8) fail(name, `only ${counts.problems} practice problem(s); need ≥ 8`);
-  if (counts.quick < 4) fail(name, `only ${counts.quick} quick-check question(s); need 4–6`);
+  if (counts.quick < 4 || counts.quick > 6) fail(name, `${counts.quick} quick-check question(s); need 4–6`);
+  if (counts.traps < 2 || counts.traps > 4) fail(name, `${counts.traps} common trap(s) [data-trap]; need 2–4`);
+  if (counts.refs < 2) fail(name, `${counts.refs} reference(s) [data-ref] in "next"; need ≥ 2`);
+  if (counts.formulas < 1) fail(name, 'no key formula with "explain this" ([data-formula][data-explain]) in Formalize');
+  if (counts.steps < 3 || counts.steps > 6) fail(name, `${counts.steps} "build the idea" step(s) [data-step]; need 3–6`);
   if (counts.katex === 0) fail(name, 'no KaTeX formulas rendered');
 
-  if (vp !== 'desktop') return; // checking figures at one size is enough
+  if (vp === 'mobile') return; // figures at desktop size, light and dark
   const figures = page.locator('figure[data-figure]');
   const n = await figures.count();
   if (n === 0) fail(name, 'no figures marked with figure[data-figure]');
+  let checked = 0;
   for (let i = 0; i < n; i++) {
     const fig = figures.nth(i);
-    const label = (await fig.getAttribute('data-figure')) || `#${i + 1}`;
-    const hasCaption = await fig.evaluate((el) => !!el.querySelector('figcaption')?.textContent?.trim());
-    if (!hasCaption) fail(name, `figure "${label}" has no <figcaption>`);
-    await fig.scrollIntoViewIfNeeded();
-    await page.waitForTimeout(250);
-    const box = await fig.boundingBox();
-    if (!box || box.width < 40 || box.height < 40) {
-      fail(name, `figure "${label}" is collapsed (${box ? `${Math.round(box.width)}×${Math.round(box.height)}` : 'not rendered'})`);
-      continue;
+    const label = (await fig.getAttribute('data-figure').catch(() => null)) || `#${i + 1}`;
+    try {
+      const hasCaption = await fig.evaluate((el) => !!el.querySelector('figcaption')?.textContent?.trim(), undefined, { timeout: 5000 });
+      if (!hasCaption) fail(name, `figure "${label}" has no <figcaption>`);
+      // Figures inside hidden panels (inactive tabs, non-current problems) can't be measured; they're checked when shown.
+      const shown = await fig.evaluate((el) => (typeof el.checkVisibility === 'function' ? el.checkVisibility() : !el.closest('[hidden]')), undefined, { timeout: 5000 });
+      if (!shown) continue;
+      checked++;
+      await fig.scrollIntoViewIfNeeded({ timeout: 5000 });
+      await page.waitForTimeout(250);
+      const box = await fig.boundingBox({ timeout: 5000 });
+      if (!box || box.width < 40 || box.height < 40) {
+        fail(name, `figure "${label}" is collapsed (${box ? `${Math.round(box.width)}×${Math.round(box.height)}` : 'not rendered'})`);
+        continue;
+      }
+      const v = await variance(helper, await fig.screenshot({ timeout: 10_000 }));
+      if (v < 1.5) fail(name, `figure "${label}" looks blank (luminance std-dev ${v.toFixed(2)})`);
+    } catch (err) {
+      fail(name, `figure "${label}" couldn't be checked: ${(err as Error).message.split('\n')[0]}`);
     }
-    const v = await variance(helper, await fig.screenshot());
-    if (v < 1.5) fail(name, `figure "${label}" looks blank (luminance std-dev ${v.toFixed(2)})`);
   }
+  if (n > 0 && checked === 0) fail(name, 'every figure is hidden; nothing visible to check');
+
+  if (vp !== 'desktop') return;
+  // The TL;DR prints as a one-card revision sheet (§4.1).
+  try {
+    await page.evaluate(() => document.body.classList.add('print-card'));
+    await page.emulateMedia({ media: 'print' });
+    const card = page.locator('[data-section="tldr"] .tldr').first();
+    if ((await card.count()) === 0) fail(name, 'no .tldr revision card in the tldr section');
+    else {
+      const png = await page.screenshot({ fullPage: false });
+      writeFileSync(join(reportDir, `${name.replace(/[^a-z0-9-]+/gi, '_')}-print.png`), png);
+      if (!(await card.isVisible())) fail(name, 'the revision card is hidden in print');
+      else if ((await variance(helper, png)) < 2) fail(name, 'the print view looks blank');
+    }
+  } catch (err) {
+    fail(name, `print check failed: ${(err as Error).message.split('\n')[0]}`);
+  } finally {
+    await page.emulateMedia({ media: 'screen' }).catch(() => {});
+    await page.evaluate(() => document.body.classList.remove('print-card')).catch(() => {});
+  }
+}
+
+/** Runs in the page: every visible control ≥ 44×44 px (radios/checkboxes count their label; `data-hit` opts out) with an accessible name. */
+const TAP_TARGET_AUDIT = `(() => {
+  const out = [];
+  const sel = 'button, input:not([type=hidden]), select, textarea, summary, a.btn, a.icon-btn, [role=button], [role=slider], [role=switch], [role=tab], [role=checkbox], [role=radio], [role=menuitem]';
+  function nameOf(el) {
+    const aria = (el.getAttribute('aria-label') || '').trim();
+    if (aria) return aria;
+    const by = el.getAttribute('aria-labelledby');
+    if (by) return by.split(/\\s+/).map((id) => (document.getElementById(id) || {}).textContent || '').join(' ').trim();
+    if (el.labels && el.labels.length) return Array.from(el.labels).map((l) => l.textContent || '').join(' ').trim();
+    const own = (el.textContent || '').trim() || el.getAttribute('title') || el.placeholder || '';
+    if (own) return own;
+    const t = el.querySelector('svg title');
+    if (t) return t.textContent || '';
+    return el instanceof HTMLInputElement && ['submit', 'button', 'reset'].includes(el.type) ? el.value : '';
+  }
+  function where(el) {
+    const id = el.id ? '#' + el.id : '';
+    const cls = typeof el.className === 'string' && el.className.trim() ? '.' + el.className.trim().split(/\\s+/).slice(0, 2).join('.') : '';
+    const ctx = el.closest('[data-figure], [data-problem], [data-section]');
+    let at = '';
+    if (ctx) at = ctx.getAttribute('data-figure') ? ' in figure ' + ctx.getAttribute('data-figure') : ctx.getAttribute('data-problem') ? ' in problem ' + ctx.getAttribute('data-problem') : ' in section ' + ctx.getAttribute('data-section');
+    return '<' + el.tagName.toLowerCase() + id + cls + '>' + at;
+  }
+  for (const el of document.querySelectorAll(sel)) {
+    if (el.closest('[hidden], [inert], [aria-hidden="true"]')) continue;
+    if (typeof el.checkVisibility === 'function' && !el.checkVisibility({ checkVisibilityCSS: true })) continue;
+    let r = el.getBoundingClientRect();
+    if (r.width === 0 && r.height === 0) continue;
+    const label = el.closest('label');
+    if (label && (el.matches('input[type=radio], input[type=checkbox]') || r.width < 4 || r.height < 4)) r = label.getBoundingClientRect();
+    if (!el.hasAttribute('data-hit') && (r.width < 43.5 || r.height < 43.5)) out.push('tap target ' + Math.round(r.width) + '×' + Math.round(r.height) + ' < 44×44: ' + where(el));
+    if (!nameOf(el)) out.push('no accessible name: ' + where(el));
+  }
+  return out.slice(0, 20);
+})()`;
+
+/**
+ * Cheap §11 checks every page gets: heading order, and on the phone every
+ * control ≥ 44×44 px with an accessible name. A control that enlarges its
+ * hit area with a pseudo-element declares it with `data-hit`; a radio or
+ * checkbox counts its <label>. Inline text links are exempt (WCAG 2.5.8).
+ */
+async function checkQuality(page: Page, name: string, vp: ViewportName): Promise<void> {
+  const headings = await page.evaluate(() => [...document.querySelectorAll('h1, h2, h3, h4, h5, h6')].map((h) => ({ level: Number(h.tagName[1]), text: (h.textContent ?? '').trim().slice(0, 40) })));
+  const h1s = headings.filter((h) => h.level === 1).length;
+  if (h1s > 1) fail(name, `${h1s} <h1> elements; a page has one`);
+  for (let k = 1; k < headings.length; k++) {
+    if (headings[k].level > headings[k - 1].level + 1) fail(name, `heading skips a level: h${headings[k - 1].level} "${headings[k - 1].text}" → h${headings[k].level} "${headings[k].text}"`);
+  }
+  if (vp !== 'mobile') return;
+  // Plain-string browser code: tsx's esbuild would wrap named helpers in `__name()`, which doesn't exist in the page.
+  const problems = (await page.evaluate(TAP_TARGET_AUDIT)) as string[];
+  for (const p of problems) fail(name, p);
 }
 
 async function checkPage(b: Browser, helper: Page, t: (typeof targets)[number], vp: ViewportName): Promise<void> {
   // Service workers are blocked so every run tests what the server sends, not a cache.
-  const context = await b.newContext({ ...VIEWPORTS[vp], reducedMotion: 'no-preference', serviceWorkers: 'block' });
+  const context = await b.newContext({ ...VIEWPORTS[vp], serviceWorkers: 'block' });
   const page = await context.newPage();
   const name = `${t.label} [${vp}]`;
 
@@ -234,6 +342,7 @@ async function checkPage(b: Browser, helper: Page, t: (typeof targets)[number], 
       [...document.querySelectorAll('.katex-error')].map((e) => e.getAttribute('title') ?? e.textContent ?? ''),
     );
     for (const e of texErrors) fail(name, `KaTeX error: ${e}`);
+    await checkQuality(page, name, vp);
     if (t.lesson) await checkLesson(page, helper, name, t.lesson, vp);
   } catch (err) {
     fail(name, `failed to load: ${(err as Error).message.split('\n')[0]}`);
@@ -269,6 +378,61 @@ for (const t of selected) {
     console.log(`${failures.length === before ? '✓' : '✗'} ${t.label} [${vp}]`);
   }
 }
+
+/** Load the site once with the service worker on, cut the network, and open a lesson (CLAUDE.md §1: offline after the first visit). */
+async function checkOffline(b: Browser, helper: Page): Promise<void> {
+  if (!existsSync(join(dist, 'sw.js'))) return;
+  const target = lessons.find((l) => selected.some((t) => t.lesson === l)) ?? lessons[0];
+  const path = target ? `/lessons/${target.id}/` : '/';
+  const name = `offline ${path}`;
+  const context = await b.newContext({ ...VIEWPORTS.desktop, serviceWorkers: 'allow' });
+  const page = await context.newPage();
+  try {
+    // First visit: the page itself registers the worker (registerPWA in mountLesson / site pages).
+    await page.goto(`${origin}${path}`, { waitUntil: 'load', timeout: 45_000 });
+    const registered = await page.evaluate(async () => {
+      for (let k = 0; k < 40; k++) {
+        if (await navigator.serviceWorker.getRegistration()) return true;
+        await new Promise((r) => setTimeout(r, 250));
+      }
+      return false;
+    });
+    if (!registered) {
+      if (target) {
+        fail(name, 'the page never registered the service worker (mountLesson should call registerPWA)');
+        return;
+      }
+      // No lessons yet (placeholder home page): register the generated worker directly so it is still exercised.
+      await page.evaluate(() => navigator.serviceWorker.register('sw.js').then(() => true));
+    }
+    await page.evaluate(() =>
+      Promise.race([navigator.serviceWorker.ready.then(() => true), new Promise((_, no) => setTimeout(() => no(new Error('service worker never became ready')), 20_000))]),
+    );
+    // Wait until the precache holds the page we'll open offline.
+    await page.waitForFunction(
+      async (url) => {
+        for (const key of await caches.keys()) if (await (await caches.open(key)).match(url, { ignoreSearch: true })) return true;
+        return false;
+      },
+      `${origin}${path}${path.endsWith('/') ? 'index.html' : ''}`,
+      { timeout: 30_000, polling: 500 },
+    );
+    await context.setOffline(true);
+    await page.goto(`${origin}${path}`, { waitUntil: 'load', timeout: 30_000 });
+    await page.waitForTimeout(1500);
+    const title = (await page.title()).trim();
+    if (!title || title === 'Offline') fail(name, `the page didn't open offline (title "${title}")`);
+    const v = await variance(helper, await page.screenshot());
+    if (v < 2) fail(name, `blank screen offline (luminance std-dev ${v.toFixed(2)})`);
+  } catch (err) {
+    fail(name, `offline check failed: ${(err as Error).message.split('\n')[0]}`);
+  } finally {
+    await context.close();
+  }
+  console.log(`${failures.some((f) => f.page === name) ? '✗' : '✓'} ${name}`);
+}
+
+if (offlineCheck) await checkOffline(browser, helper);
 
 if (thumbsFlag) {
   for (const l of lessons) if (!thumbsFor || thumbsFor === l.id) await captureThumb(browser, helper, l.id);
