@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { SUBJECTS } from '@content/curriculum';
 import {
+  conceptScopeSelector,
   DEFAULT_LINE,
   GLOBAL_CONCEPTS,
   HUE_NAMES,
@@ -370,5 +371,45 @@ describe('surfaces read as a family', () => {
   it('accepts every hue name as a Hue', () => {
     const all: Hue[] = [...HUE_NAMES];
     expect(all.length).toBe(8);
+  });
+});
+
+describe('scoped concept CSS (pages that mix lessons)', () => {
+  const A = defineConcepts({ rate: { hue: 'teal' } });
+  const B = defineConcepts({ rate: { hue: 'gold' } });
+  it('scopes rules to [data-lesson] so two lessons keep their own inks', () => {
+    const a = A.css('calc1/derivative');
+    expect(a).toContain('[data-lesson="calc1/derivative"]{--ct-rate:var(--hue-teal)}');
+    expect(a).toContain('[data-lesson="calc1/derivative"] .ct-rate{--c:var(--hue-teal)');
+    expect(a).toContain('[data-hl~="rate"] [data-lesson="calc1/derivative"] .ct-rate{--lit:1}');
+    expect(a).not.toContain(':root');
+    expect(B.css('ml/gradient-descent')).toContain('[data-lesson="ml/gradient-descent"] .ct-rate{--c:var(--hue-gold)');
+    expect(conceptScopeSelector('a"b')).toBe('[data-lesson="a\\"b"]');
+  });
+  it('mount is ref-counted per stylesheet', () => {
+    const head: { children: unknown[]; append(el: unknown): void } = {
+      children: [],
+      append(el) {
+        this.children.push(el);
+      },
+    };
+    const doc = {
+      head,
+      createElement: () => {
+        const el = { dataset: {} as Record<string, string>, textContent: '', remove: () => head.children.splice(head.children.indexOf(el), 1) };
+        return el;
+      },
+    } as unknown as Document;
+    const r1 = A.mount(doc, 'calc1/derivative');
+    const r2 = A.mount(doc, 'calc1/derivative');
+    const r3 = B.mount(doc, 'ml/gradient-descent');
+    expect(head.children).toHaveLength(2);
+    r1();
+    r1(); // releasing twice is harmless
+    expect(head.children).toHaveLength(2);
+    r2();
+    expect(head.children).toHaveLength(1);
+    r3();
+    expect(head.children).toHaveLength(0);
   });
 });

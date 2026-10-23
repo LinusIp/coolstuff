@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parseInline, parseRich, richTex, richToHtml, richToPlain, texToPlain } from './richtext';
+import { parseInline, parseRich, richTex, richToHtml, richToPlain, texToPlain, safeHref } from './richtext';
 
 describe('RichText parsing', () => {
   it('inline maths, emphasis, code, links, terms and glossary', () => {
@@ -87,5 +87,21 @@ describe('plain text', () => {
     expect(texToPlain('\\frac{1}{2}\\lambda^2')).toBe('(1)/(2)λ^2');
     expect(richToPlain('**Find** $\\sqrt{x}$ for [v]{input}.')).toBe('Find √(x) for v.');
     expect(richTex('a $x$ b $$y$$ c')).toEqual(['x', 'y']);
+  });
+});
+
+describe('review fixes: safe, balanced links', () => {
+  it('allows relative, http(s) and mailto links only', () => {
+    expect(richToHtml('[x](javascript:alert(1))')).not.toContain('href');
+    expect(richToHtml('[x](javascript:alert(1))')).toContain('x');
+    expect(richToHtml('[x]( JaVaScRiPt:alert(1))')).not.toContain('href');
+    expect(richToHtml('[x](data:text/html,hi)')).not.toContain('href');
+    expect(richToHtml('[x](../calc1/limits/)')).toContain('href="../calc1/limits/"');
+    expect(richToHtml('[x](https://example.org)')).toContain('href="https://example.org"');
+    expect(richToHtml('[mail](mailto:a@b.c)')).toContain('href="mailto:a@b.c"');
+    expect(safeHref('#section-2')).toBe('#section-2');
+  });
+  it('keeps parentheses inside URLs', () => {
+    expect(richToHtml('See [Bessel](https://en.wikipedia.org/wiki/Bessel_(function)).')).toContain('href="https://en.wikipedia.org/wiki/Bessel_(function)"');
   });
 });

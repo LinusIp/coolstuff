@@ -99,6 +99,14 @@ export function formatValue(v: unknown, max = 80): string {
 
 const clone = <T>(x: T): T => (typeof structuredClone === 'function' ? structuredClone(x) : (JSON.parse(JSON.stringify(x)) as T));
 
+/** Freeze a cloned input all the way down, so a snippet can't mutate what the page passed in. */
+function deepFreeze<T>(x: T, seen = new Set<unknown>()): T {
+  if (x === null || typeof x !== 'object' || seen.has(x) || ArrayBuffer.isView(x)) return x;
+  seen.add(x);
+  for (const v of Object.values(x as Record<string, unknown>)) deepFreeze(v, seen);
+  return Object.freeze(x);
+}
+
 /** Hidden source a cell or problem runs before the learner's code. */
 export interface CodePrelude {
   /** Hidden source run before the visible code (datasets, helper functions). Line numbers in errors stay relative to the visible code. */
@@ -332,7 +340,7 @@ export function runSnippet(code: string, opts: SnippetOptions = {}): SnippetResu
   };
 
   const names = ['console', 'emit', ...Object.keys(inputs)];
-  const values = [captureConsole(logs), emit, ...Object.values(inputs).map((v) => (v !== null && typeof v === 'object' ? Object.freeze(clone(v)) : v))];
+  const values = [captureConsole(logs), emit, ...Object.values(inputs).map((v) => (v !== null && typeof v === 'object' ? deepFreeze(clone(v)) : v))];
   const header = `"use strict";\n`;
   const preSrc = pre.src ? `${pre.src}\n` : '';
   const offset = functionWrapperLines() + countLines(header) - 1 + countLines(preSrc.replace(/\n$/, '')) ;

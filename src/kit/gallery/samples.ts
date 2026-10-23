@@ -363,13 +363,15 @@ export const QUIZ: QuizSpec = [
   },
 ];
 
-export const PREDICT: PredictSpec = {
-  id: 'predict-directions',
-  prompt: 'Before you drag: how many directions does $A = \\begin{bmatrix} 2 & 1 \\\\ 1 & 2 \\end{bmatrix}$ leave unturned?',
-  guess: { kind: 'choice', options: ['None', 'One', 'Two', 'Every direction'], answer: 2 },
-  reveal: 'Two: the line $y = x$ (stretched $\\times 3$) and the line $y = -x$ (left as it is). Every other arrow is turned.',
-  wrong: 'Most matrices turn almost every arrow; the unturned directions are rare, which is why they deserve a name.',
-};
+export const PREDICTS: readonly PredictSpec[] = [
+  {
+    id: 'predict-directions',
+    prompt: 'Before you drag: how many directions does $A = \\begin{bmatrix} 2 & 1 \\\\ 1 & 2 \\end{bmatrix}$ leave unturned?',
+    guess: { kind: 'choice', options: ['None', 'One', 'Two', 'Every direction'], answer: 2 },
+    reveal: 'Two: the line $y = x$ (stretched $\\times 3$) and the line $y = -x$ (left as it is). Every other arrow is turned.',
+    wrong: 'Most matrices turn almost every arrow; the unturned directions are rare, which is why they deserve a name.',
+  },
+];
 
 export const TRAPS: readonly TrapSpec[] = [
   {

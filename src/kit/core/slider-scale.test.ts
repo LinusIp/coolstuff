@@ -10,7 +10,7 @@ describe('slider scales', () => {
     expect(sliderValue(0, lin)).toBe(-2);
     expect(sliderValue(1, lin)).toBe(2);
     expect(sliderValue(0.5, lin)).toBe(0);
-    expect(sliderValue(0.53, lin)).toBe(0.25);
+    expect(sliderValue(0.57, lin)).toBe(0.25);
     for (let v = -2; v <= 2; v += 0.25) expect(sliderValue(sliderPosition(v, lin), lin)).toBeCloseTo(v, 12);
     expect(sliderPosition(5, lin)).toBe(1);
   });

@@ -2,6 +2,7 @@ import { copyFileSync, cpSync, createReadStream, existsSync, mkdirSync, readdirS
 import { extname, join, resolve, sep } from 'node:path';
 import { defineConfig, type Plugin } from 'vite';
 import { katexPrerender } from './src/kit/vite-katex.ts';
+import { pwaPlugin } from './src/kit/vite-pwa.ts';
 
 const root = import.meta.dirname;
 const lessonsDir = join(root, 'lessons');
@@ -92,7 +93,8 @@ export default defineConfig({
   // domain root, or `vite preview` all work unchanged.
   base: './',
   // katexPrerender: <span class="tex"> / <div class="tex-block"> in HTML become KaTeX at build time.
-  plugins: [lessonAssets(), katexPrerender()],
+  // pwaPlugin: manifest link in every page; dist/manifest.webmanifest and dist/sw.js (precache of all of dist/).
+  plugins: [lessonAssets(), katexPrerender(), pwaPlugin()],
   esbuild: { jsx: 'automatic', jsxImportSource: 'preact' },
   resolve: {
     alias: { '@kit': join(root, 'src/kit'), '@content': join(root, 'src/content') },
