@@ -1,10 +1,12 @@
 /**
- * Registers a project's service worker (`./sw.js`, scoped to the project
- * folder) and hands it the list of assets this first visit already loaded, so
- * the project works offline right away instead of only after a second visit.
+ * Registers the site's service worker and hands it the list of assets this
+ * first visit already loaded, so the page works offline right away instead of
+ * only after a second visit (CLAUDE.md §1). Pages pass the relative URL of the
+ * root `sw.js` (lessons: '../../../sw.js'). No-op in dev and where service
+ * workers are unavailable. The worker itself is site work, not kit work.
  */
 export function registerPWA(swUrl = './sw.js'): void {
-  if (!('serviceWorker' in navigator) || import.meta.env.DEV) return;
+  if (typeof navigator === 'undefined' || !('serviceWorker' in navigator) || import.meta.env.DEV) return;
   window.addEventListener('load', async () => {
     try {
       const reg = await navigator.serviceWorker.register(swUrl);

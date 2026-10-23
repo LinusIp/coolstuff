@@ -4,7 +4,7 @@ import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
   // projects/ only exists in old checkouts (the pre-pivot showcase lives on the archive/lab branch).
-  { ignores: ['dist/**', 'node_modules/**', '**/public/**', 'smoke-report/**', 'projects/**'] },
+  { ignores: ['dist/**', 'node_modules/**', '**/public/**', 'smoke-report/**', 'projects/**', 'kit/_dev/**'] },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {

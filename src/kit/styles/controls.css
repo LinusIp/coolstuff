@@ -1,0 +1,6 @@
+/* ==========================================================================
+   controls.css
+   Owner: G4 controls & code (Slider, Toggle, Segmented, Stepper, PlayScrub, Scrolly, CodeCell).
+   Start from the classes components.css already defines (DESIGN.md §13);
+   add only what is missing. Tokens only: no raw colours, sizes from --sp-*, motion from --dur-*.
+   ========================================================================== */

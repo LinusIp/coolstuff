@@ -1,0 +1,15 @@
+/* The whole design system, in cascade order. Import once per page: import '@kit/styles/index.css'; */
+@import './fonts.css';
+@import 'katex/dist/katex.min.css';
+@import './tokens.css';
+@import './base.css';
+@import './layout.css';
+@import './components.css';
+/* Kit foundations, then one file per component group (src/kit/PLAN.md). */
+@import './core.css';
+@import './text.css';
+@import './visual.css';
+@import './practice.css';
+@import './controls.css';
+@import './shell.css';
+@import './structures.css';

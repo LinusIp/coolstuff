@@ -1,0 +1,497 @@
+/* ==========================================================================
+   Layout: masthead, the Tufte page grid, lesson head, sections, margin notes,
+   figure widths. Breakpoints: < 700 phone · 700–999 tablet (no margin column)
+   · 1000–1239 text + margin · ≥ 1240 rail + text + margin.
+   ========================================================================== */
+
+/* ── Masthead ──────────────────────────────────────────────────────────── */
+
+.masthead {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: color-mix(in srgb, var(--paper) 90%, transparent);
+  backdrop-filter: blur(10px) saturate(1.1);
+  -webkit-backdrop-filter: blur(10px) saturate(1.1);
+  border-bottom: var(--hair) solid var(--rule);
+}
+.masthead__inner {
+  position: relative;
+  height: var(--masthead-h);
+  max-width: calc(var(--rail) + var(--gutter) + var(--wide) + var(--page-pad) * 2);
+  margin: 0 auto;
+  padding: 0 var(--page-pad);
+  display: flex;
+  align-items: center;
+  gap: var(--sp-5);
+}
+.wordmark {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: var(--hit);
+  flex: none;
+  text-decoration: none;
+  font-family: var(--font-serif);
+  font-size: 22px;
+  font-weight: 640;
+  letter-spacing: -0.015em;
+  line-height: 1;
+  font-variant-numeric: lining-nums;
+}
+.wordmark svg {
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.crumbs {
+  min-width: 0;
+  overflow: hidden;
+}
+.crumbs ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  font-family: var(--font-sans);
+  font-size: var(--fs-meta);
+  line-height: 1.4;
+  color: var(--ink-3);
+}
+.crumbs li + li {
+  margin: 0;
+}
+.crumbs li + li::before {
+  content: '›';
+  margin-right: 6px;
+  color: var(--ink-4);
+}
+.crumbs li:last-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.crumbs a {
+  display: inline-block;
+  padding: 12px 0;
+  text-decoration: none;
+}
+.crumbs a:hover {
+  color: var(--ink);
+}
+.crumbs [aria-current] {
+  color: var(--ink-2);
+}
+.masthead__end {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+}
+
+/* Lesson progress: ink segments, one per section (never a hue). */
+.progress {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  font-family: var(--font-sans);
+}
+.progress__label {
+  font-size: var(--fs-meta);
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums lining-nums;
+  white-space: nowrap;
+}
+.progress__track {
+  display: flex;
+  gap: 3px;
+}
+.progress__track > span {
+  width: 12px;
+  height: 4px;
+  border-radius: 1px;
+  background: var(--rule);
+  transition: background-color var(--dur-2) var(--ease-out);
+}
+.progress__track > .is-done {
+  background: var(--ink-3);
+}
+.progress__track > .is-now {
+  background: var(--ink);
+  box-shadow: 0 0 0 1px var(--paper), 0 0 0 2px var(--ink);
+}
+
+/* ── Page grid ─────────────────────────────────────────────────────────── */
+
+.page {
+  display: grid;
+  grid-template-columns: var(--rail) var(--wide);
+  column-gap: var(--gutter);
+  justify-content: center;
+  padding: 0 var(--page-pad);
+}
+.lesson {
+  min-width: 0;
+  padding-bottom: var(--sp-8);
+}
+/* Flow content sits in the text column; the margin column is for notes. */
+.lesson > *,
+.section > * {
+  max-width: var(--text);
+}
+.section > .is-wide,
+.section > .section__head,
+.lesson > .section {
+  max-width: none;
+}
+
+/* Contents rail (≥ 1240px) */
+.rail {
+  position: sticky;
+  top: calc(var(--masthead-h) + var(--sp-7));
+  align-self: start;
+  margin-top: 150px;
+  font-family: var(--font-sans);
+  font-size: var(--fs-meta);
+  line-height: 1.35;
+}
+.rail__title {
+  margin: 0 0 var(--sp-3);
+}
+.rail ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-left: var(--hair) solid var(--rule);
+}
+.rail li {
+  margin: 0;
+}
+.rail a {
+  display: block;
+  padding: 6px 0 6px 14px;
+  margin-left: -1px;
+  border-left: 2px solid transparent;
+  color: var(--ink-3);
+  text-decoration: none;
+}
+.rail a:hover {
+  color: var(--ink);
+}
+.rail a.is-done {
+  color: var(--ink-2);
+}
+.rail a[aria-current='true'] {
+  color: var(--ink);
+  font-weight: 600;
+  border-left-color: var(--ink);
+}
+
+@media (max-width: 1239px) {
+  .page {
+    grid-template-columns: var(--wide);
+  }
+  .rail {
+    display: none;
+  }
+}
+@media (max-width: 999px) {
+  .page {
+    grid-template-columns: minmax(0, var(--text));
+  }
+}
+@media (max-width: 699px) {
+  .page {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* Generic container for site pages (home, subject, graph, practice) */
+.container {
+  max-width: calc(var(--rail) + var(--gutter) + var(--wide) + var(--page-pad) * 2);
+  margin: 0 auto;
+  padding: 0 var(--page-pad);
+}
+
+/* ── Lesson head ───────────────────────────────────────────────────────── */
+
+.lesson-head {
+  padding-top: var(--sp-8);
+}
+.lesson-title {
+  margin: 0;
+}
+.lesson-title__main {
+  display: block;
+  font-size: var(--fs-h1);
+  font-weight: 620;
+  letter-spacing: -0.022em;
+  line-height: 1.02;
+}
+.lesson-title__sub {
+  display: block;
+  margin-top: 10px;
+  font-size: var(--fs-h1-sub);
+  font-style: italic;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  line-height: 1.15;
+  color: var(--ink-2);
+}
+.lesson-meta {
+  list-style: none;
+  margin: var(--sp-5) 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 18px;
+  font-family: var(--font-sans);
+  font-size: var(--fs-meta);
+  color: var(--ink-3);
+  font-variant-numeric: lining-nums;
+}
+.lesson-meta li {
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.lesson-meta a {
+  color: var(--ink-2);
+}
+
+/* ── Sections and kickers ──────────────────────────────────────────────── */
+
+.section {
+  margin-top: var(--sp-9);
+}
+.section--first {
+  margin-top: var(--sp-7);
+}
+.section__head {
+  border-top: var(--hair) solid var(--rule);
+  padding-top: var(--sp-5);
+  margin-bottom: var(--sp-5);
+}
+.section__head h2 {
+  max-width: var(--text);
+}
+
+/* Labels are set like a book's running heads: serif small caps. */
+.label,
+.kicker {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: var(--fs-label);
+  font-weight: 600;
+  font-variant-caps: all-small-caps;
+  font-variant-numeric: lining-nums tabular-nums;
+  letter-spacing: 0.06em;
+  line-height: 1.25;
+  color: var(--ink-2);
+}
+.kicker {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: var(--sp-3);
+}
+.kicker__num {
+  font-style: italic;
+  font-weight: 500;
+  font-variant-caps: normal;
+  font-variant-numeric: oldstyle-nums;
+  letter-spacing: 0;
+  color: var(--ink-3);
+}
+/* Phones: a short ink rule and darker ink, so a skimming thumb finds "Practice". */
+@media (max-width: 699px) {
+  .kicker {
+    color: var(--ink);
+  }
+  .kicker::before {
+    content: '';
+    flex: none;
+    align-self: center;
+    width: 14px;
+    height: 2px;
+    background: var(--ink);
+  }
+  .kicker__num {
+    color: var(--ink-2);
+  }
+}
+
+/* ── Margin notes (Tufte sidenotes) ────────────────────────────────────── */
+
+.sn-ref {
+  appearance: none;
+  position: relative;
+  margin: 0 0 0 1px;
+  padding: 0 2px;
+  border: 0;
+  background: none;
+  font-family: var(--font-sans);
+  font-size: 0.62em;
+  font-weight: 650;
+  line-height: 1;
+  vertical-align: super;
+  color: var(--ink-2);
+  cursor: pointer;
+}
+.sn-ref::after {
+  /* 44px tap area without moving the text */
+  content: '';
+  position: absolute;
+  inset: -16px -14px;
+}
+.sidenote {
+  float: right;
+  clear: right;
+  width: var(--margin);
+  margin: 0.3em calc(-1 * (var(--margin) + var(--gutter))) var(--sp-4) 0;
+  font-size: var(--fs-note);
+  line-height: var(--lh-note);
+  color: var(--ink-2);
+  hyphens: manual;
+}
+.sidenote__num {
+  margin-right: 6px;
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 650;
+  vertical-align: 2px;
+  color: var(--ink-2);
+}
+@media (max-width: 999px) {
+  /* No margin: notes fold inline and open on tap. */
+  .sidenote {
+    float: none;
+    display: none;
+    width: auto;
+    margin: var(--sp-3) 0;
+    padding: var(--sp-3) var(--sp-4);
+    border-left: 2px solid var(--rule-strong);
+    background: var(--sunk);
+  }
+  .sidenote.is-open,
+  .sidenote--always {
+    display: block;
+  }
+  .sidenote__num {
+    display: none;
+  }
+  .sn-ref {
+    padding: 2px 5px;
+    border-radius: 9px;
+    background: var(--w-ink);
+    font-size: 0.6em;
+  }
+  .sn-ref[aria-expanded='true'] {
+    background: var(--ink);
+    color: var(--on-ink);
+  }
+}
+
+/* ── Figure widths ─────────────────────────────────────────────────────── */
+
+/* Default: the text column. .is-wide: text + margin (912px at ≥ 1000px). */
+.section > .is-wide,
+.lesson > .is-wide {
+  max-width: var(--wide);
+}
+/* A caption beside a text-width figure floats into the margin like a sidenote. */
+@media (min-width: 1000px) {
+  .plate:not(.is-wide) > .caption {
+    float: right;
+    clear: right;
+    width: var(--margin);
+    margin: 0 calc(-1 * (var(--margin) + var(--gutter))) var(--sp-4) 0;
+    padding-top: 2px;
+  }
+  .plate:not(.is-wide) {
+    display: block;
+  }
+}
+/* Phones: plates go full-bleed for a bigger touch area. */
+@media (max-width: 699px) {
+  .plate {
+    margin-inline: calc(-1 * var(--page-pad));
+  }
+  .plate > :not(.plate__stage, .readout) {
+    margin-inline: var(--page-pad);
+  }
+}
+
+/* ── Footer ────────────────────────────────────────────────────────────── */
+
+.colophon {
+  margin-top: var(--sp-9);
+  padding-top: var(--sp-5);
+  border-top: var(--hair) solid var(--rule);
+  font-family: var(--font-sans);
+  font-size: var(--fs-meta);
+  line-height: 1.5;
+  color: var(--ink-3);
+}
+.colophon p {
+  margin: 0 0 4px;
+}
+
+/* ── Phone masthead: wordmark + theme toggle; progress becomes the bottom hairline ── */
+
+@media (max-width: 699px) {
+  .crumbs {
+    display: none;
+  }
+  .wordmark {
+    font-size: 20px;
+  }
+  .masthead__inner {
+    gap: var(--sp-3);
+  }
+  .masthead__end {
+    margin-right: -10px;
+  }
+  .progress {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -1px;
+  }
+  .progress__label {
+    display: none;
+  }
+  .progress__track {
+    flex: 1;
+    gap: 2px;
+  }
+  .progress__track > span {
+    flex: 1;
+    width: auto;
+    height: 3px;
+    border-radius: 0;
+  }
+  .progress__track > .is-now {
+    box-shadow: none;
+  }
+  .lesson-head {
+    padding-top: var(--sp-6);
+  }
+  .section__head {
+    padding-top: var(--sp-4);
+  }
+}
+@media (min-width: 700px) and (max-width: 999px) {
+  /* Tablet: crumbs keep one line and truncate the lesson title. */
+  .crumbs ol li:not(:first-child, :last-child) {
+    display: none;
+  }
+}

@@ -1,7 +1,14 @@
 /**
- * Rolling frame-time meter. Projects call `tick()` once per frame and read
- * `fps` to decide whether to scale quality up or down.
+ * Frame-rate governance (CLAUDE.md §11: visuals hold ≥ 55 fps or scale down).
+ * `FpsMeter` is a rolling frame-time meter; `QualityGovernor` turns it into a
+ * quality level with hysteresis. Pure apart from `performance.now()` defaults,
+ * so tests pass explicit timestamps.
+ *
+ *   const gov = new QualityGovernor(2, 0, 3);   // level 2 of 0..3
+ *   function frame(now) { const next = gov.tick(now); if (next !== null) setDetail(next); … }
  */
+
+/** Rolling frame-time meter: call `tick()` once per frame, read `fps`. */
 export class FpsMeter {
   private samples: number[] = [];
   private last = 0;

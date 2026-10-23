@@ -1,0 +1,2466 @@
+/* ==========================================================================
+   Components: the shared look of every kit component.
+   Ink for structure, hue for meaning. States are plain classes:
+   is-open, is-current, is-correct, is-wrong, is-locked, is-done, is-gone.
+   ========================================================================== */
+
+/* ── 1. Concepts: colour + line style, linked highlighting ─────────────── */
+
+/* Global meanings (lessons add their own with defineConcepts().mount()).
+   --c colour · --w wash · --u underline in the concept's line style. */
+.ct-input {
+  --c: var(--hue-blue);
+  --w: var(--w-blue);
+  --u: linear-gradient(var(--c), var(--c)) 0 100% / 100% 1.5px no-repeat;
+}
+.ct-output {
+  --c: var(--hue-orange);
+  --w: var(--w-orange);
+  --u: repeating-linear-gradient(90deg, var(--c) 0 5px, transparent 5px 8px) 0 100% / 100% 1.5px no-repeat;
+}
+.ct-error {
+  --c: var(--hue-red);
+  --w: var(--w-red);
+  --u: repeating-linear-gradient(90deg, var(--c) 0 6px, transparent 6px 8.5px, var(--c) 8.5px 10px, transparent 10px 12.5px)
+    0 100% / 100% 1.5px no-repeat;
+}
+.ct-prob {
+  --c: var(--hue-purple);
+  --w: var(--w-purple);
+  --u: radial-gradient(circle closest-side, var(--c) 85%, transparent) 0 100% / 4px 2px repeat-x;
+}
+.ct-correct {
+  --c: var(--hue-green);
+  --w: var(--w-green);
+  --u: linear-gradient(var(--c), var(--c)) 0 100% / 100% 1.5px no-repeat;
+}
+:root {
+  --ct-input: var(--hue-blue);
+  --ct-output: var(--hue-orange);
+  --ct-error: var(--hue-red);
+  --ct-prob: var(--hue-purple);
+  --ct-correct: var(--hue-green);
+}
+[data-hl~='input'] .ct-input,
+[data-hl~='output'] .ct-output,
+[data-hl~='error'] .ct-error,
+[data-hl~='prob'] .ct-prob {
+  --lit: 1;
+}
+
+.ct {
+  color: var(--c);
+  border-radius: 2px;
+  transition: background-color var(--dur-1) var(--ease-out), box-shadow var(--dur-1) var(--ease-out);
+}
+/* Linked highlight: hovering a concept anywhere washes it everywhere. */
+.ct:not(svg *) {
+  background-color: color-mix(in srgb, var(--c) calc(var(--lit, 0) * 14%), transparent);
+  box-shadow: 0 0 0 calc(var(--lit, 0) * 2px) color-mix(in srgb, var(--c) 14%, transparent);
+}
+/* …and in figures the concept's marks step forward. */
+svg .ct {
+  color: var(--c);
+  stroke-width: calc(var(--sw, 2px) + var(--lit, 0) * 1px);
+}
+/* A prose term that links to the figure and formula: colour + line-style underline. */
+.term {
+  padding-bottom: 3px;
+  background: var(--u);
+  cursor: default;
+}
+.term.ct {
+  background: var(--u), color-mix(in srgb, var(--c) calc(var(--lit, 0) * 14%), transparent);
+}
+/* A legend swatch drawn in the concept's line style. */
+.swatch {
+  display: inline-block;
+  width: 26px;
+  height: 4px;
+  vertical-align: middle;
+  background: var(--u);
+}
+
+/* ── 2. Buttons ────────────────────────────────────────────────────────── */
+
+.btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: var(--hit);
+  padding: 0 18px;
+  border: var(--hair) solid var(--rule-strong);
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: var(--fs-ui);
+  font-weight: 560;
+  line-height: 1.2;
+  letter-spacing: -0.003em;
+  font-variant-numeric: lining-nums;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color var(--dur-1) var(--ease-out), border-color var(--dur-1) var(--ease-out),
+    color var(--dur-1) var(--ease-out), transform var(--dur-1) var(--ease-out);
+}
+.btn:hover {
+  background: var(--w-ink);
+  border-color: var(--ink-3);
+}
+.btn:active {
+  transform: translateY(1px);
+}
+.btn:disabled,
+.btn[aria-disabled='true'] {
+  color: var(--ink-4);
+  border-color: var(--rule);
+  background: transparent;
+  cursor: not-allowed;
+  transform: none;
+}
+.btn svg {
+  width: 16px;
+  height: 16px;
+  flex: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.btn--primary {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--on-ink);
+}
+.btn--primary:hover {
+  background: color-mix(in srgb, var(--ink) 86%, var(--paper));
+  border-color: transparent;
+}
+.btn--primary:disabled {
+  background: var(--rule);
+  border-color: var(--rule);
+  color: var(--ink-3);
+}
+.btn--quiet {
+  border-color: transparent;
+  color: var(--ink-2);
+  padding: 0 12px;
+}
+.btn--quiet:hover {
+  color: var(--ink);
+  border-color: transparent;
+}
+/* Compact: 36px to look at, 44px to hit. */
+.btn--sm {
+  min-height: 36px;
+  padding: 0 12px;
+  font-size: var(--fs-meta);
+}
+.btn--sm::after {
+  content: '';
+  position: absolute;
+  inset: -4px 0;
+}
+@media (pointer: coarse) {
+  .btn--sm {
+    min-height: var(--hit);
+  }
+}
+.btn--block {
+  width: 100%;
+}
+.btn-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.icon-btn {
+  display: inline-grid;
+  place-items: center;
+  width: var(--hit);
+  height: var(--hit);
+  padding: 0;
+  border: var(--hair) solid transparent;
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--ink-2);
+  cursor: pointer;
+  transition: background-color var(--dur-1) var(--ease-out), color var(--dur-1) var(--ease-out);
+}
+.icon-btn:hover {
+  background: var(--w-ink);
+  color: var(--ink);
+}
+.icon-btn:disabled {
+  color: var(--ink-4);
+  background: none;
+  cursor: default;
+}
+.icon-btn svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+/* Theme toggle shows the theme you would switch to. */
+.theme-toggle .i-sun {
+  display: none;
+}
+:root[data-theme='dark'] .theme-toggle .i-sun {
+  display: block;
+}
+:root[data-theme='dark'] .theme-toggle .i-moon {
+  display: none;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .theme-toggle .i-sun {
+    display: block;
+  }
+  :root:not([data-theme='light']) .theme-toggle .i-moon {
+    display: none;
+  }
+}
+
+/* ── 3. Controls ───────────────────────────────────────────────────────── */
+
+/* Switch (role="switch"): "Explain this", "Live values" */
+.switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: var(--hit);
+  padding: 0 4px;
+  border: 0;
+  background: none;
+  font-family: var(--font-sans);
+  font-size: var(--fs-meta);
+  font-weight: 540;
+  color: var(--ink-2);
+  cursor: pointer;
+}
+.switch__track {
+  position: relative;
+  flex: none;
+  width: 34px;
+  height: 20px;
+  border: 1.5px solid var(--ink-3);
+  border-radius: 999px;
+  transition: background-color var(--dur-2) var(--ease-out), border-color var(--dur-2) var(--ease-out);
+}
+.switch__track::after {
+  content: '';
+  position: absolute;
+  top: 2.5px;
+  left: 2.5px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--ink-3);
+  transition: transform var(--dur-2) var(--ease-out), background-color var(--dur-2) var(--ease-out);
+}
+.switch[aria-checked='true'] {
+  color: var(--ink);
+}
+.switch[aria-checked='true'] .switch__track {
+  background: var(--ink);
+  border-color: var(--ink);
+}
+.switch[aria-checked='true'] .switch__track::after {
+  transform: translateX(14px);
+  background: var(--on-ink);
+}
+
+/* Segmented control: hint ladder, example tabs, choices of view */
+.seg {
+  display: grid;
+  grid-auto-columns: minmax(0, 1fr);
+  grid-auto-flow: column;
+  border: var(--hair) solid var(--rule-strong);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.seg__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: var(--hit);
+  padding: 4px 10px;
+  border: 0;
+  background: transparent;
+  font-family: var(--font-sans);
+  font-size: var(--fs-meta);
+  font-weight: 560;
+  line-height: 1.2;
+  color: var(--ink-2);
+  cursor: pointer;
+  transition: background-color var(--dur-1) var(--ease-out), color var(--dur-1) var(--ease-out);
+}
+.seg__btn + .seg__btn {
+  border-left: var(--hair) solid var(--rule-strong);
+}
+.seg__btn:hover:not(:disabled) {
+  background: var(--w-ink);
+  color: var(--ink);
+}
+.seg__btn:focus-visible {
+  outline-offset: -3px;
+}
+.seg__btn[aria-pressed='true'],
+.seg__btn[aria-selected='true'],
+.seg__btn.is-open {
+  background: var(--ink);
+  color: var(--on-ink);
+}
+.seg__btn:disabled,
+.seg__btn.is-locked {
+  color: var(--ink-4);
+  cursor: not-allowed;
+}
+.seg__n {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 20px;
+  height: 20px;
+  border: var(--hair) solid currentColor;
+  border-radius: 50%;
+  font-size: 11.5px;
+  font-weight: 650;
+  font-variant-numeric: lining-nums;
+}
+
+/* Slider: the thumb looks like a figure handle in the concept's ink (set --c). */
+.slider {
+  --c: var(--ink-2);
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--sp-3);
+  min-width: 0;
+}
+.slider__label {
+  font-size: 1.05em;
+}
+.slider__value {
+  min-width: 3.6em;
+  text-align: right;
+  color: var(--c);
+  font-family: var(--font-mono);
+  font-size: var(--fs-ui);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+.slider__track {
+  position: relative;
+}
+.slider__track:has(.slider__ticks) {
+  padding-bottom: 14px;
+}
+.slider input[type='range'] {
+  --fill: 50%;
+  -webkit-appearance: none;
+  appearance: none;
+  display: block;
+  width: 100%;
+  height: var(--hit);
+  margin: 0;
+  background: transparent;
+  cursor: pointer;
+}
+.slider input[type='range']::-webkit-slider-runnable-track {
+  height: 2px;
+  border-radius: 1px;
+  background: linear-gradient(to right, var(--c) var(--fill), var(--rule-strong) var(--fill));
+}
+.slider input[type='range']::-moz-range-track {
+  height: 2px;
+  background: var(--rule-strong);
+}
+.slider input[type='range']::-moz-range-progress {
+  height: 2px;
+  background: var(--c);
+}
+.slider input[type='range']::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 20px;
+  height: 20px;
+  margin-top: -9px;
+  border: 3px solid var(--raised);
+  border-radius: 50%;
+  background: var(--c);
+  box-shadow: 0 0 0 1.5px var(--c), 0 0 0 7px color-mix(in srgb, var(--c) 13%, transparent);
+  transition: box-shadow var(--dur-1) var(--ease-out);
+}
+.slider input[type='range']::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border: 3px solid var(--raised);
+  border-radius: 50%;
+  background: var(--c);
+  box-shadow: 0 0 0 1.5px var(--c), 0 0 0 7px color-mix(in srgb, var(--c) 13%, transparent);
+}
+.slider input[type='range']:hover::-webkit-slider-thumb {
+  box-shadow: 0 0 0 1.5px var(--c), 0 0 0 10px color-mix(in srgb, var(--c) 13%, transparent);
+}
+.slider input[type='range']:focus-visible {
+  outline: none;
+}
+.slider input[type='range']:focus-visible::-webkit-slider-thumb {
+  box-shadow: 0 0 0 1.5px var(--c), 0 0 0 4px var(--raised), 0 0 0 6px var(--focus);
+}
+.slider input[type='range']:focus-visible::-moz-range-thumb {
+  box-shadow: 0 0 0 1.5px var(--c), 0 0 0 4px var(--raised), 0 0 0 6px var(--focus);
+}
+/* Detents: tick marks at meaningful values (e.g. the eigenvalues), labelled below the track. */
+.slider__ticks {
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  top: 0;
+  bottom: 0;
+  pointer-events: none;
+}
+.slider__tick {
+  position: absolute;
+  bottom: 0;
+  transform: translateX(-50%);
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 560;
+  line-height: 1;
+  color: var(--ink-3);
+  font-variant-numeric: lining-nums;
+}
+.slider__tick::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: 30px;
+  width: 1.5px;
+  height: 8px;
+  margin-left: -0.75px;
+  background: var(--ink-3);
+}
+
+/* Text / numeric answer field */
+.field {
+  width: 150px;
+  height: 46px;
+  padding: 0 12px;
+  border: 1.5px solid var(--ui-line);
+  border-radius: var(--radius);
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-size: 17px;
+  font-variant-numeric: tabular-nums;
+  transition: border-color var(--dur-1) var(--ease-out);
+}
+.field::placeholder {
+  color: var(--ink-4);
+}
+.field:hover {
+  border-color: var(--ink-3);
+}
+.field:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 1px;
+  border-color: var(--ink);
+}
+.field.is-wrong {
+  border-color: var(--c-error);
+  box-shadow: inset 0 -2px 0 var(--c-error);
+}
+.field.is-correct {
+  border-color: var(--c-correct);
+  box-shadow: inset 0 -2px 0 var(--c-correct);
+}
+.field:disabled {
+  color: var(--ink-3);
+  border-color: var(--rule-strong);
+  background: var(--sunk);
+}
+
+/* Stepper (‹ Step 2 of 3 ›) */
+.stepper {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-family: var(--font-sans);
+  font-size: var(--fs-meta);
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums lining-nums;
+}
+.stepper__label {
+  padding: 0 6px;
+}
+
+/* ── 4. Chips, badges, stars ───────────────────────────────────────────── */
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 10px 3px;
+  border: var(--hair) solid var(--rule-strong);
+  border-radius: 999px;
+  font-family: var(--font-sans);
+  font-size: var(--fs-meta);
+  font-weight: 540;
+  line-height: 1.35;
+  color: var(--ink-2);
+  font-variant-numeric: lining-nums;
+}
+/* A concept chip: the concept's ink on its wash, with its line-style swatch. */
+.chip.ct {
+  border-color: transparent;
+  background: var(--w);
+  color: var(--c);
+}
+.pill {
+  display: inline-block;
+  padding: 1px 8px 2px;
+  border: var(--hair) solid var(--rule-strong);
+  border-radius: 999px;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 620;
+  letter-spacing: 0.06em;
+  line-height: 1.4;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px 3px 8px;
+  border-radius: var(--radius);
+  font-family: var(--font-sans);
+  font-size: var(--fs-meta);
+  font-weight: 560;
+  line-height: 1.3;
+  background: var(--w-ink);
+  color: var(--ink-2);
+}
+.badge svg,
+.icon {
+  width: 14px;
+  height: 14px;
+  flex: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.badge--correct {
+  color: var(--c-correct);
+  background: var(--w-green);
+}
+.badge--wrong {
+  color: var(--c-error);
+  background: var(--w-red);
+}
+/* Difficulty: ink stars with a word, never a hue. */
+.difficulty {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-sans);
+  font-size: var(--fs-meta);
+  color: var(--ink-2);
+}
+.stars {
+  font-size: 13px;
+  letter-spacing: 1px;
+  color: var(--ink);
+}
+.stars__off {
+  color: var(--ink-4);
+}
+
+/* ── 5. Callouts ───────────────────────────────────────────────────────── */
+
+.callout {
+  margin: var(--sp-5) 0;
+  padding: var(--sp-3) var(--sp-4) var(--sp-4);
+  border-left: 2px solid var(--ink-2);
+  background: var(--sunk);
+  font-size: var(--fs-small);
+}
+.callout > :last-child {
+  margin-bottom: 0;
+}
+.callout__label {
+  display: block;
+  margin-bottom: 2px;
+}
+/* Key idea: heavier ink rule, no fill — the sentence to remember. */
+.callout--key {
+  background: none;
+  border-left: var(--rule-heavy) solid var(--ink);
+  padding-block: var(--sp-1);
+  font-size: var(--fs-body);
+}
+/* Simplification: "we're ignoring air resistance here." */
+.callout--simplify {
+  background: none;
+  border: 1.5px dashed var(--rule-strong);
+  border-radius: var(--radius);
+}
+/* "In words": a plain sentence under a key formula, terms in their inks. */
+.in-words {
+  margin: var(--sp-4) 0 0;
+  font-size: var(--fs-body);
+  font-style: italic;
+  color: var(--ink-2);
+  text-align: center;
+  text-wrap: balance;
+}
+.in-words .ct {
+  font-style: normal;
+  font-weight: 560;
+}
+
+/* ── 6. Cards ──────────────────────────────────────────────────────────── */
+
+.card {
+  position: relative;
+  margin: var(--sp-6) 0;
+  padding: var(--sp-5) var(--sp-6) var(--sp-6);
+  background: var(--raised);
+  border: var(--hair) solid var(--rule);
+  border-radius: var(--radius);
+}
+.card__head {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px var(--sp-4);
+  margin: 0 0 var(--sp-4);
+  padding-bottom: var(--sp-3);
+  border-bottom: var(--hair) solid var(--rule);
+}
+.card__meta {
+  margin-left: auto;
+  font-family: var(--font-sans);
+  font-size: var(--fs-meta);
+  color: var(--ink-3);
+  font-variant-numeric: lining-nums;
+}
+.card p:last-child {
+  margin-bottom: 0;
+}
+.label__sep {
+  margin: 0 0.25em;
+  color: var(--ink-4);
+}
+.lead {
+  font-size: var(--fs-lead);
+  line-height: 1.5;
+  margin-bottom: var(--sp-5);
+}
+
+/* ── 7. TL;DR / revision card ──────────────────────────────────────────── */
+
+.tldr {
+  border-top: var(--rule-heavy) solid var(--ink);
+  padding: var(--sp-4) var(--sp-6) var(--sp-6);
+}
+.tldr__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-4);
+  margin-bottom: var(--sp-4);
+}
+.tldr__head .label {
+  color: var(--ink);
+}
+.tldr__body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 260px;
+  gap: var(--sp-6);
+}
+.tldr__points {
+  list-style: none;
+  counter-reset: pt;
+  margin: 0;
+  padding: 0;
+  font-size: var(--fs-small);
+  line-height: 1.55;
+}
+.tldr__points li {
+  counter-increment: pt;
+  position: relative;
+  margin: 0 0 var(--sp-3);
+  padding-left: 34px;
+}
+.tldr__points li:last-child {
+  margin-bottom: 0;
+}
+.tldr__points li::before {
+  content: counter(pt);
+  position: absolute;
+  left: 0;
+  top: -0.05em;
+  font-size: 1.35em;
+  font-style: italic;
+  color: var(--ink-3);
+  font-variant-numeric: oldstyle-nums;
+}
+.tldr__formula {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--sp-4);
+  padding-left: var(--sp-6);
+  border-left: var(--hair) solid var(--rule);
+}
+.key {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: var(--fs-meta);
+  color: var(--ink-2);
+}
+.key > div {
+  display: grid;
+  grid-template-columns: 30px 1fr;
+  align-items: baseline;
+}
+.key dt {
+  text-align: center;
+}
+.key dd {
+  margin: 0;
+}
+@media (max-width: 999px) {
+  .tldr__body {
+    grid-template-columns: 1fr;
+    gap: var(--sp-5);
+  }
+  .tldr__formula {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-around;
+    padding: var(--sp-5) 0 0;
+    border-left: 0;
+    border-top: var(--hair) solid var(--rule);
+  }
+}
+
+/* ── 8. Figures: the plate grammar ─────────────────────────────────────── */
+
+.plate {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  margin: var(--sp-6) 0 var(--sp-5);
+}
+.plate > .caption {
+  order: 9;
+}
+.plate__stage {
+  position: relative;
+  background: var(--plate);
+  border: var(--hair) solid var(--rule);
+  border-radius: var(--radius-plate);
+  overflow: hidden;
+  touch-action: pan-y; /* the page still scrolls; only the handle captures the pointer */
+}
+/* Two stacked layers: a static plane rasterised once, a light dynamic layer that repaints. */
+.plate__layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.plate__layer--static {
+  contain: strict;
+  will-change: transform; /* own compositor layer: never repainted during a drag */
+}
+.plate__svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+/* Stage height comes from an aspect ratio; layers fill it. */
+.plate__stage--wide {
+  aspect-ratio: 16 / 9;
+}
+@media (max-width: 699px) {
+  .plate__stage--wide {
+    aspect-ratio: 1 / 0.94;
+  }
+}
+/* Under a wide plate: mission and keys in the text column, key and caption in the margin. */
+.plate__below {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  column-gap: var(--gutter);
+  order: 9;
+}
+@media (min-width: 1000px) {
+  .plate.is-wide .plate__below {
+    grid-template-columns: minmax(0, var(--text)) var(--margin);
+  }
+  .plate.is-wide .plate__side {
+    padding-top: var(--sp-4);
+  }
+  .plate.is-wide .plate__side .legend {
+    display: grid;
+    gap: 6px;
+    margin-top: 0;
+  }
+}
+
+/* Readout: live numbers in a strip joined under the plate, never on top of the drawing. */
+.readout {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 14px;
+  padding: 10px 16px 11px;
+  background: var(--plate);
+  border: var(--hair) solid var(--rule);
+  border-top: 0;
+  border-radius: 0 0 var(--radius-plate) var(--radius-plate);
+  font-family: var(--font-mono);
+  font-size: var(--fs-ui);
+  font-weight: 500;
+  line-height: 1.5;
+  font-variant-numeric: tabular-nums;
+}
+.plate__stage:has(+ .readout) {
+  border-radius: var(--radius-plate) var(--radius-plate) 0 0;
+}
+.readout__pair {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  white-space: nowrap;
+}
+.readout__sym {
+  font-family: var(--font-serif);
+  font-size: 1.1em;
+}
+.readout__sep {
+  color: var(--ink-3);
+  font-family: var(--font-sans);
+}
+.readout__status {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-sans);
+  font-size: var(--fs-ui);
+  font-weight: 560;
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums lining-nums;
+}
+.readout__status.is-correct {
+  color: var(--c-correct);
+}
+/* "Try it": a mission checklist under the plate that ticks green. */
+.mission {
+  margin: var(--sp-4) 0 0;
+  padding: var(--sp-3) var(--sp-4);
+  border: var(--hair) solid var(--rule);
+  border-radius: var(--radius);
+  background: var(--raised);
+}
+.mission__title {
+  margin: 0 0 4px;
+  color: var(--ink);
+}
+.mission ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: var(--fs-small);
+  line-height: 1.45;
+}
+.mission li {
+  display: grid;
+  grid-template-columns: 22px 1fr;
+  gap: 10px;
+  align-items: start;
+  margin: 0;
+  padding: 5px 0;
+}
+.mission__box {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  margin-top: 2px;
+  border: 1.5px solid var(--ui-line);
+  border-radius: 3px;
+  color: var(--on-ink);
+  transition: background-color var(--dur-2) var(--ease-out), border-color var(--dur-2) var(--ease-out),
+    transform var(--dur-2) var(--ease-snap);
+}
+.mission__box svg {
+  width: 13px;
+  height: 13px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0;
+}
+.mission li.is-done .mission__box {
+  background: var(--c-correct);
+  border-color: var(--c-correct);
+  transform: scale(1.08);
+}
+.mission li.is-done .mission__box svg {
+  opacity: 1;
+}
+.mission li.is-done .mission__text {
+  color: var(--ink-2);
+}
+.mission__status {
+  margin: var(--sp-2) 0 0;
+  padding-top: var(--sp-2);
+  border-top: var(--hair) dotted var(--rule-strong);
+  font-size: var(--fs-small);
+  color: var(--ink-2);
+}
+.mission__status.is-correct {
+  color: var(--c-correct);
+}
+/* Keyboard path under every interactive figure */
+.fig-keys {
+  margin: var(--sp-3) 0 0;
+  font-family: var(--font-sans);
+  font-size: var(--fs-meta);
+  line-height: 1.5;
+  color: var(--ink-3);
+}
+.fig-keys kbd {
+  font-size: 11.5px;
+}
+/* Legend: swatch in the concept's line style + symbol + words */
+.legend {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 20px;
+  margin: var(--sp-3) 0 0;
+  padding: 0;
+  font-family: var(--font-sans);
+  font-size: var(--fs-meta);
+  color: var(--ink-2);
+}
+.legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+}
+.legend svg {
+  width: 28px;
+  height: 12px;
+  flex: none;
+}
+.caption {
+  margin: var(--sp-3) 0 0;
+  font-size: var(--fs-note);
+  line-height: var(--lh-note);
+  color: var(--ink-2);
+}
+.caption__label {
+  display: block;
+  margin-bottom: 2px;
+  color: var(--ink);
+}
+
+/* SVG vocabulary (Stage2D draws with these classes) */
+.fig-grid {
+  stroke: var(--grid);
+  stroke-width: var(--sw-grid);
+}
+.fig-axis {
+  stroke: var(--axis);
+  stroke-width: var(--sw-axis);
+}
+.fig-tick {
+  fill: var(--ink-3);
+  font: 500 var(--fs-fig-tick) var(--font-sans);
+  font-variant-numeric: tabular-nums lining-nums;
+}
+.fig-guide {
+  fill: none;
+  stroke: var(--ink-3);
+  stroke-width: var(--sw-guide);
+  stroke-dasharray: 1.5 3;
+  stroke-linecap: round;
+}
+.fig-note {
+  fill: var(--ink-2);
+  font: 560 var(--fs-fig-note) var(--font-sans);
+  font-variant-numeric: tabular-nums lining-nums;
+  paint-order: stroke;
+  stroke: var(--plate);
+  stroke-width: 4px;
+  stroke-linejoin: round;
+}
+.fig-label {
+  font-family: var(--font-serif);
+  font-size: var(--fs-fig-label);
+  fill: var(--c, var(--ink));
+  paint-order: stroke;
+  stroke: var(--plate);
+  stroke-width: 5px;
+  stroke-linejoin: round;
+}
+.fig-line {
+  fill: none;
+  stroke: var(--c);
+}
+.fig-head {
+  fill: var(--c);
+  stroke: none;
+}
+.fig-band {
+  fill: none;
+  stroke: var(--c);
+  stroke-width: 16px;
+  stroke-linecap: butt;
+  opacity: 0.08;
+}
+.fig-quiet {
+  opacity: 0.62;
+}
+.fig-context {
+  opacity: 0.22;
+}
+.is-hidden {
+  opacity: 0;
+}
+/* The focal pair: a faint glow in dark mode only (the lamp-lit desk). */
+.fig-focal {
+  filter: var(--focal-glow);
+}
+
+/* A name set along a line ("stretched ×3"), in the line's ink, haloed by the plate. */
+.fig-line-label {
+  fill: var(--c);
+  stroke: var(--plate);
+  stroke-width: 4px;
+  paint-order: stroke;
+  stroke-linejoin: round;
+  font: 620 12.5px var(--font-sans);
+  letter-spacing: 0.02em;
+}
+/* Found: the line under the handle, redrawn in "correct" green on the dynamic layer. */
+.fig-found .fig-band {
+  opacity: 0.13;
+}
+
+/* Draggable handle: dot + soft ring + 44px hit area */
+.fig-handle {
+  --c: var(--hue-blue);
+  color: var(--c);
+  cursor: grab;
+  outline: none;
+  touch-action: none;
+}
+.fig-handle:active,
+.fig-handle.is-dragging {
+  cursor: grabbing;
+}
+.fig-handle__hit {
+  fill: transparent;
+}
+.fig-handle__ring {
+  fill: color-mix(in srgb, var(--c) 13%, transparent);
+  stroke: var(--c);
+  stroke-width: 1.5;
+  stroke-opacity: 0.6;
+  transition: r var(--dur-1) var(--ease-out), stroke-opacity var(--dur-1) var(--ease-out);
+}
+.fig-handle__dot {
+  fill: var(--c);
+  stroke: var(--plate);
+  stroke-width: 2;
+}
+.fig-handle:hover .fig-handle__ring,
+.fig-handle.is-dragging .fig-handle__ring {
+  r: 17px;
+  stroke-opacity: 1;
+}
+.fig-handle__focus {
+  fill: none;
+  stroke: var(--focus);
+  stroke-width: 2;
+  opacity: 0;
+}
+.fig-handle:focus-visible .fig-handle__focus {
+  opacity: 1;
+}
+/* Found it: the handle turns the colour of "correct". */
+.fig-handle.is-correct {
+  --c: var(--hue-green);
+}
+.fig-handle.is-correct .fig-handle__ring {
+  stroke-opacity: 1;
+}
+@media (prefers-reduced-motion: no-preference) {
+  /* Until first touch, the ring breathes: "this moves". */
+  .fig-handle.is-fresh .fig-handle__ring {
+    animation: cs-breathe 1.8s var(--ease-inout) 0.6s 3;
+  }
+}
+@keyframes cs-breathe {
+  50% {
+    r: 19px;
+    stroke-opacity: 1;
+  }
+}
+/* "drag the ring": a hand-lettered note with a pen-stroke arrow, gone after the first drag. */
+.fig-annot {
+  pointer-events: none;
+  transition: opacity var(--dur-3) var(--ease-out);
+}
+.fig-annot text {
+  fill: var(--ink-2);
+  font-family: var(--font-serif);
+  font-size: 16px;
+  font-style: italic;
+  paint-order: stroke;
+  stroke: var(--plate);
+  stroke-width: 5px;
+  stroke-linejoin: round;
+}
+.fig-annot path {
+  fill: none;
+  stroke: var(--ink-2);
+  stroke-width: 1.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.fig-annot.is-gone {
+  opacity: 0;
+}
+
+/* ── 9. Formula ────────────────────────────────────────────────────────── */
+
+.formula,
+.derivation {
+  margin: var(--sp-6) 0;
+  padding: var(--sp-2) 0 var(--sp-5);
+  border-top: var(--hair) solid var(--rule-strong);
+  border-bottom: var(--hair) solid var(--rule);
+}
+.formula__bar,
+.derivation__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0 var(--sp-4);
+  min-height: var(--hit);
+}
+.formula__toggles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 var(--sp-3);
+}
+.formula__stage {
+  position: relative;
+  padding-top: var(--sp-2);
+}
+/* Group brackets above the maths ("where A sends v") */
+.bracket {
+  position: absolute;
+  top: 0;
+  width: max-content;
+  max-width: 220px;
+  font-family: var(--font-sans);
+  font-size: var(--fs-meta);
+  font-weight: 540;
+  line-height: 1.35;
+  text-align: center;
+  text-wrap: balance;
+  color: var(--c, var(--ink-2));
+}
+/* Explain-this notes: bold concept word in its ink + a plain gloss */
+.formula__notes {
+  list-style: none;
+  position: relative;
+  margin: 0;
+  padding: 0;
+}
+.formula__notes > li {
+  position: absolute;
+  top: 0;
+  margin: 0;
+  font-size: var(--fs-note);
+  line-height: 1.42;
+  color: var(--ink-2);
+  text-align: center;
+  hyphens: manual;
+  transition: opacity var(--dur-2) var(--ease-out), transform var(--dur-2) var(--ease-out);
+}
+.formula__notes > li > .note__sym {
+  display: none;
+}
+.formula__over {
+  position: relative;
+}
+.note__word {
+  display: block;
+  font-weight: 650;
+  color: var(--c, var(--ink));
+}
+/* Leaders: curved, in the concept's ink, from a dot under the glyph to the note. */
+.formula__leaders {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: visible;
+}
+.leader {
+  fill: none;
+  stroke: var(--c, var(--ink-3));
+  stroke-width: 1.1;
+  stroke-linecap: round;
+}
+.leader-dot {
+  fill: var(--c, var(--ink-3));
+}
+@media (prefers-reduced-motion: no-preference) {
+  .formula.is-entering .leader {
+    stroke-dasharray: var(--len, 200);
+    stroke-dashoffset: var(--len, 200);
+    animation: cs-draw var(--dur-4) var(--ease-out) forwards;
+  }
+}
+@keyframes cs-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+.formula[data-explain='off'] :is(.formula__notes > li, .bracket, .formula__leaders) {
+  opacity: 0;
+  transform: translateY(-4px);
+  pointer-events: none;
+}
+/* Phones: notes become a dotted-rule key; short stubs in each term's line style tie it back. */
+.formula.is-stacked .formula__notes {
+  display: grid;
+  margin-top: var(--sp-5);
+  border-top: var(--hair) dotted var(--rule-strong);
+}
+.formula.is-stacked .formula__notes > li {
+  position: static;
+  display: grid;
+  grid-template-columns: 38px 1fr;
+  align-items: baseline;
+  padding: 7px 0;
+  border-bottom: var(--hair) dotted var(--rule);
+}
+.formula.is-stacked .formula__notes > li:last-child {
+  border-bottom: 0;
+}
+.formula.is-stacked .formula__notes > li > .note__sym {
+  display: block;
+  text-align: center;
+}
+.formula.is-stacked .formula__notes > li {
+  text-align: left;
+}
+.formula.is-stacked .note__word {
+  display: inline;
+}
+.formula.is-stacked .note__word::after {
+  content: ' ';
+}
+.formula.is-stacked[data-explain='off'] .formula__notes,
+.formula.is-stacked[data-explain='off'] .term-stub {
+  display: none;
+}
+.term-stub {
+  position: absolute;
+  height: 4px;
+  background: var(--u);
+}
+
+/* Live values: the current number hangs under its symbol, ≥ 15px mono, in the symbol's ink. */
+.lv-row {
+  position: relative;
+  height: 34px;
+}
+.lv {
+  position: absolute;
+  top: 2px;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  font-family: var(--font-mono);
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.1;
+  color: var(--c, var(--ink));
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  transform: translateX(-50%);
+}
+.lv::before {
+  content: '';
+  width: 1px;
+  height: 6px;
+  margin-bottom: 3px;
+  background: currentColor;
+  opacity: 0.6;
+}
+/* Exploded live state: one column per symbol, column vectors and matrices in mono. */
+.lv-grid {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: max-content;
+  justify-content: center;
+  align-items: start;
+  gap: 0 var(--sp-4);
+  margin-top: var(--sp-3);
+}
+.lv-col {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+}
+.lv-col__sym {
+  font-size: 1.5em;
+  line-height: 1.2;
+  padding-bottom: 4px;
+  background: var(--u);
+}
+.lv-vec {
+  position: relative;
+  display: inline-grid;
+  grid-auto-flow: row;
+  padding: 2px 7px;
+  font-family: var(--font-mono);
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.3;
+  text-align: right;
+  color: var(--c, var(--ink));
+  font-variant-numeric: tabular-nums;
+}
+.lv-vec--mat {
+  grid-template-columns: repeat(var(--cols, 2), auto);
+  gap: 0 10px;
+}
+.lv-vec::before,
+.lv-vec::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 5px;
+  border: 1.5px solid currentColor;
+  opacity: 0.75;
+}
+.lv-vec::before {
+  left: 0;
+  border-right: 0;
+}
+.lv-vec::after {
+  right: 0;
+  border-left: 0;
+}
+.lv-grid .lv {
+  position: static;
+  transform: none;
+  padding-top: 4px;
+}
+.lv-op {
+  align-self: center;
+  font-size: 1.3em;
+  color: var(--ink-3);
+}
+
+/* Highlighter: what changed in a derivation step (not a concept). */
+.chg {
+  background: linear-gradient(var(--marker-wash), var(--marker-wash)) no-repeat 0 82% / 100% 52%;
+  border-radius: 2px;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .is-entering .chg {
+    animation: cs-marker var(--dur-3) var(--ease-out) 120ms both;
+  }
+}
+@keyframes cs-marker {
+  from {
+    background-size: 0% 52%;
+  }
+}
+
+/* Relation chains: multi-line maths that breaks at relations and aligns under
+   the first one. Built by mathChainHtml() in notation.ts. A relation always
+   travels with its right-hand side, so a line never ends in "=" or "⟹". */
+.mchain {
+  --hang: 1.5em;
+  position: relative;
+  display: block;
+  margin: var(--sp-1) 0;
+  font-size: var(--math-display);
+  line-height: 1.5;
+  text-align: left;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: thin;
+  max-width: 100%;
+}
+.mchain__visual {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: 0.9em;
+  row-gap: 0.3em;
+  padding-left: var(--hang);
+}
+.mchain__clause {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: 0.2778em; /* TeX's thick space around a relation */
+  row-gap: 0.3em;
+  min-width: 0;
+  padding-left: var(--hang);
+}
+.mchain__visual > :first-child {
+  margin-left: calc(-1 * var(--hang));
+}
+/* List items ("λ₁ = 5, λ₂ = 2") wrap together as one unit. */
+.mchain__group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: 0.9em;
+  row-gap: 0.3em;
+  min-width: 0;
+}
+.mchain__group > .mchain__clause + .mchain__clause {
+  padding-left: 0;
+}
+.mchain__group > .mchain__clause + .mchain__clause > .mchain__lhs {
+  margin-left: 0;
+}
+.mchain__lhs {
+  margin-left: calc(-1 * var(--hang));
+  white-space: nowrap;
+}
+.mchain__rest {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: 0.2778em;
+  row-gap: 0.3em;
+  flex: 1 1 0%;
+}
+.mchain__seg {
+  white-space: nowrap;
+}
+.mchain .katex {
+  font-size: 1em;
+}
+.mchain .katex-html {
+  white-space: nowrap;
+}
+
+/* ── 10. Derivation ────────────────────────────────────────────────────── */
+
+.derivation__steps {
+  list-style: none;
+  margin: var(--sp-2) 0 0;
+  padding: 0;
+}
+/* Rows stay inside the column: relation · maths · one-line justification. */
+.dstep {
+  display: grid;
+  grid-template-columns: 34px minmax(0, max-content) minmax(160px, 1fr);
+  align-items: center;
+  column-gap: var(--sp-5);
+  margin: 0;
+  padding: var(--sp-3) 0 var(--sp-3) var(--sp-3);
+  box-shadow: inset 2px 0 0 transparent;
+  transition: box-shadow var(--dur-2) var(--ease-out);
+}
+.dstep + .dstep {
+  border-top: var(--hair) dotted var(--rule);
+}
+/* The current step gets an ink rule, no fill (contrast untouched). */
+.dstep.is-current {
+  box-shadow: inset 2px 0 0 var(--ink);
+}
+.dstep.is-entering {
+  animation-duration: var(--dur-3);
+}
+.dstep__rel {
+  color: var(--ink-3);
+  text-align: center;
+}
+.dstep__math {
+  position: relative;
+  min-width: 0;
+  font-size: 1.12em;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: thin;
+  padding: 4px 0;
+}
+.dstep__why {
+  font-size: var(--fs-note);
+  font-style: italic;
+  line-height: 1.45;
+  color: var(--ink-2);
+}
+.dstep__why .katex {
+  font-style: normal;
+}
+@media (max-width: 699px) {
+  .dstep {
+    grid-template-columns: 28px minmax(0, 1fr);
+    column-gap: var(--sp-2);
+    padding-left: var(--sp-2);
+  }
+  .dstep__rel {
+    text-align: left;
+    font-size: 0.85em;
+  }
+  .dstep__why {
+    grid-column: 2;
+    font-size: 14.5px;
+  }
+}
+
+/* ── 11. Worked example ────────────────────────────────────────────────── */
+
+/* Difficulty tabs: ★ Direct · ★★ Combined · ★★★ Exam level (ink, not hue) */
+.ex-tabs {
+  position: relative;
+  display: flex;
+  margin: calc(-1 * var(--sp-2)) 0 var(--sp-4);
+  border-bottom: var(--hair) solid var(--rule);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.ex-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: var(--hit);
+  padding: 0 var(--sp-4);
+  margin-bottom: -1px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: none;
+  font-family: var(--font-sans);
+  font-size: var(--fs-meta);
+  font-weight: 560;
+  color: var(--ink-3);
+  white-space: nowrap;
+  cursor: pointer;
+}
+.ex-tab:hover {
+  color: var(--ink);
+}
+.ex-tab[aria-selected='true'] {
+  color: var(--ink);
+  border-bottom-color: var(--ink);
+}
+.ex-tab .stars {
+  font-size: 11px;
+  color: inherit;
+}
+.ex-tab:focus-visible {
+  outline-offset: -3px;
+}
+.knowwant {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--sp-5);
+  margin: 0 0 var(--sp-5);
+  padding: var(--sp-4) 0;
+  border-top: var(--hair) solid var(--rule);
+  border-bottom: var(--hair) solid var(--rule);
+}
+.knowwant dd {
+  margin: 2px 0 0;
+  font-size: var(--fs-small);
+  line-height: 1.5;
+}
+.strategy {
+  margin-bottom: var(--sp-5);
+  font-size: var(--fs-small);
+  font-style: italic;
+}
+.strategy .runin {
+  font-style: normal;
+}
+.steps {
+  list-style: none;
+  counter-reset: st;
+  margin: 0 0 var(--sp-5);
+  padding: 0;
+}
+.step {
+  counter-increment: st;
+  position: relative;
+  margin: 0;
+  padding: var(--sp-3) 0 var(--sp-3) 46px;
+}
+.step + .step {
+  border-top: var(--hair) dotted var(--rule);
+}
+.step::before {
+  content: counter(st);
+  position: absolute;
+  left: 0;
+  top: var(--sp-3);
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border: var(--hair) solid var(--rule-strong);
+  border-radius: 50%;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 620;
+  color: var(--ink-2);
+  font-variant-numeric: lining-nums;
+}
+.step__title {
+  margin: 0 0 2px;
+  font-family: var(--font-sans);
+  font-size: var(--fs-ui);
+  font-weight: 620;
+  line-height: 1.6;
+}
+.step__math {
+  padding: 2px 0 4px;
+}
+.step__why {
+  margin: 4px 0 0;
+  font-size: var(--fs-note);
+  font-style: italic;
+  color: var(--ink-2);
+}
+.step__why .katex {
+  font-style: normal;
+}
+.step--pause::before {
+  border-style: dashed;
+  color: var(--ink-3);
+}
+.pause {
+  padding: var(--sp-4) var(--sp-5) var(--sp-5);
+  border: 1.5px dashed var(--rule-strong);
+  border-radius: var(--radius);
+  background: var(--paper);
+}
+.pause__title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 6px;
+  font-family: var(--font-sans);
+  font-size: var(--fs-ui);
+  font-weight: 620;
+}
+.pause__prompt {
+  margin-bottom: var(--sp-4);
+  font-size: var(--fs-small);
+}
+/* Boxed final answer: hatched and dashed while hidden, a solid green rule once revealed. */
+.answer {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  min-height: 60px;
+  margin: 0 0 var(--sp-4);
+  padding: var(--sp-3) var(--sp-5);
+  border: 1.5px solid var(--c-correct);
+  border-radius: var(--radius);
+  box-shadow: inset 3px 0 0 var(--c-correct);
+}
+.answer__label {
+  flex: none;
+  color: var(--c-correct);
+}
+.answer__body {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 28px;
+  font-size: var(--fs-small);
+}
+.answer--hidden {
+  border: 1.5px dashed var(--rule-strong);
+  box-shadow: none;
+}
+.answer--hidden .answer__label {
+  color: var(--ink);
+}
+.answer__veil {
+  flex: 1;
+  align-self: stretch;
+  min-height: 36px;
+  border-radius: 1px;
+  background: repeating-linear-gradient(-45deg, var(--rule) 0 1px, transparent 1px 7px);
+}
+.answer__hint {
+  flex: none;
+  font-family: var(--font-sans);
+  font-size: var(--fs-meta);
+  color: var(--ink-3);
+}
+.sanity {
+  margin: 0;
+  font-size: var(--fs-small);
+}
+.sanity__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-right: 10px;
+  color: var(--c-correct);
+  vertical-align: 1px;
+}
+
+/* ── 12. Practice problem ──────────────────────────────────────────────── */
+
+/* Set progress: 1–8, solved / solved with hints / attempted / current / to do. */
+.pset {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 0 0 var(--sp-4);
+  padding: 0;
+}
+.pset li {
+  margin: 0;
+}
+.pset__dot {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 1.5px solid var(--rule-strong);
+  border-radius: 50%;
+  background: none;
+  font-family: var(--font-sans);
+  font-size: 12.5px;
+  font-weight: 620;
+  color: var(--ink-3);
+  font-variant-numeric: lining-nums;
+  cursor: pointer;
+}
+.pset__dot::after {
+  content: '';
+  position: absolute;
+  inset: -7px -3px;
+}
+.pset__dot.is-attempted {
+  border-color: var(--ink-2);
+  color: var(--ink-2);
+  border-style: dashed;
+}
+.pset__dot.is-solved {
+  border-color: var(--c-correct);
+  background: var(--c-correct);
+  color: var(--on-ink);
+}
+.pset__dot.is-hinted {
+  border-color: var(--c-correct);
+  color: var(--c-correct);
+  background: repeating-linear-gradient(-45deg, var(--w-green) 0 3px, transparent 3px 6px);
+}
+.pset__dot[aria-current='step'] {
+  box-shadow: 0 0 0 2px var(--raised), 0 0 0 3.5px var(--ink);
+  color: var(--ink);
+  border-color: var(--ink);
+}
+.pset__dot.is-solved[aria-current='step'] {
+  color: var(--on-ink);
+}
+.problem__meta {
+  font-family: var(--font-sans);
+  font-size: var(--fs-meta);
+  color: var(--ink-3);
+  font-variant-numeric: lining-nums tabular-nums;
+}
+.answer-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-3);
+  margin: 0 0 var(--sp-5);
+}
+.answer-row__label {
+  font-size: 1.05em;
+}
+.answer-row__help {
+  flex-basis: 100%;
+  margin: -4px 0 0;
+  font-family: var(--font-sans);
+  font-size: var(--fs-meta);
+  color: var(--ink-3);
+}
+.feedback {
+  flex-basis: 100%;
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: var(--fs-ui);
+  font-weight: 540;
+  line-height: 1.45;
+}
+.feedback .icon {
+  align-self: center;
+}
+.feedback--wrong {
+  color: var(--c-error);
+}
+.feedback--correct {
+  color: var(--c-correct);
+}
+/* Hint ladder: Nudge · Strategy · First step. Each unlocks the next. */
+.hints {
+  margin: 0 0 var(--sp-5);
+}
+.hints .seg {
+  max-width: 460px;
+}
+.hint {
+  margin-top: var(--sp-3);
+  padding: var(--sp-3) var(--sp-4) var(--sp-4);
+  border-left: 2px solid var(--ink-2);
+  background: var(--sunk);
+  font-size: var(--fs-small);
+  animation: cs-reveal var(--dur-2) var(--ease-out) both;
+}
+.hint__label {
+  display: block;
+  margin: 0 0 4px;
+}
+.hint p:last-child {
+  margin-bottom: 0;
+}
+/* Why the common wrong answer is wrong */
+.wrong-note {
+  margin: 0 0 var(--sp-4);
+  padding: var(--sp-3) var(--sp-4) var(--sp-4);
+  border-left: 2px solid var(--c-error);
+  background: var(--w-red);
+  font-size: var(--fs-small);
+}
+.wrong-note__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 4px;
+  font-family: var(--font-sans);
+  font-size: var(--fs-ui);
+  font-weight: 620;
+  color: var(--c-error);
+}
+.wrong-note p:last-child {
+  margin: 0;
+}
+.solution {
+  margin: 0 0 var(--sp-4);
+  padding-top: var(--sp-3);
+  border-top: 1.5px solid var(--ink);
+  animation: cs-reveal var(--dur-2) var(--ease-out) both;
+}
+.solution .steps {
+  margin-bottom: var(--sp-3);
+}
+.card__foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-2);
+}
+.card__foot .problem__meta,
+.card__foot .quiz__count {
+  margin-left: auto;
+}
+
+/* ── 13. Common trap ───────────────────────────────────────────────────── */
+
+.trap {
+  border-left: var(--rule-heavy) solid var(--c-error);
+}
+.trap__title {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  margin: 0;
+  font-size: var(--fs-small);
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--c-error);
+}
+.trap__title .icon {
+  width: 16px;
+  height: 16px;
+  margin-top: 2px;
+}
+.trap__body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 176px;
+  gap: var(--sp-5);
+  align-items: start;
+}
+.trap__text {
+  font-size: var(--fs-small);
+}
+.trap__truth {
+  padding-top: var(--sp-3);
+  border-top: var(--hair) solid var(--rule);
+}
+.trap__fig {
+  margin: 0;
+  padding: var(--sp-2);
+  background: var(--plate);
+  border: var(--hair) solid var(--rule);
+  border-radius: var(--radius-plate);
+}
+.trap__fig svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.trap__fig figcaption {
+  padding: 4px 4px 2px;
+  font-family: var(--font-sans);
+  font-size: 12.5px;
+  line-height: 1.4;
+  color: var(--ink-3);
+}
+
+/* ── 14. Quick check ───────────────────────────────────────────────────── */
+
+.quiz__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-4);
+}
+.quiz__dots {
+  list-style: none;
+  display: flex;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+}
+.quiz__dots li {
+  width: 10px;
+  height: 10px;
+  margin: 0;
+  border: 1.5px solid var(--rule-strong);
+  border-radius: 50%;
+}
+.quiz__dots li.is-correct {
+  border-color: var(--c-correct);
+  background: var(--c-correct);
+}
+.quiz__dots li.is-wrong {
+  border-color: var(--c-error);
+  background: repeating-linear-gradient(-45deg, var(--c-error) 0 1.5px, transparent 1.5px 3px);
+}
+.quiz__dots li[aria-current='step'] {
+  border-color: var(--ink);
+  box-shadow: 0 0 0 2px var(--raised), 0 0 0 3.5px var(--ink);
+}
+.quiz__count {
+  font-family: var(--font-sans);
+  font-size: var(--fs-meta);
+  color: var(--ink-3);
+  font-variant-numeric: lining-nums;
+}
+.quiz__set {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.quiz__q {
+  margin-bottom: var(--sp-4);
+  padding: 0;
+  font-size: var(--fs-lead);
+  line-height: 1.5;
+}
+.choice {
+  position: relative;
+  border: var(--hair) solid var(--rule);
+  border-radius: var(--radius);
+  background: var(--paper);
+  transition: border-color var(--dur-1) var(--ease-out), background-color var(--dur-1) var(--ease-out);
+}
+.choice + .choice {
+  margin-top: var(--sp-2);
+}
+.choice input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+.choice label {
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--sp-3);
+  min-height: 54px;
+  padding: var(--sp-2) var(--sp-4);
+  font-size: var(--fs-small);
+  line-height: 1.45;
+  cursor: pointer;
+}
+.choice:hover {
+  border-color: var(--rule-strong);
+}
+.choice input:focus-visible + label {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+  border-radius: var(--radius);
+}
+.choice__key {
+  display: inline-grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: var(--hair) solid var(--rule-strong);
+  border-radius: 50%;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 620;
+  color: var(--ink-2);
+  font-variant-numeric: lining-nums;
+}
+.choice__mark {
+  display: inline-flex;
+}
+.choice.is-wrong {
+  border-color: var(--c-error);
+  background: var(--raised);
+  box-shadow: inset 3px 0 0 var(--c-error);
+}
+.choice.is-wrong .choice__key {
+  border-color: var(--c-error);
+  background: var(--c-error);
+  color: var(--on-ink);
+}
+.choice.is-wrong .choice__mark {
+  color: var(--c-error);
+}
+.choice.is-correct {
+  border-color: var(--c-correct);
+  background: var(--raised);
+  box-shadow: inset 3px 0 0 var(--c-correct);
+}
+.choice.is-correct .choice__key {
+  border-color: var(--c-correct);
+  background: var(--c-correct);
+  color: var(--on-ink);
+}
+.choice.is-correct .choice__mark {
+  color: var(--c-correct);
+}
+.choice__why {
+  margin: 0 var(--sp-4) var(--sp-4) calc(var(--sp-4) + 30px + var(--sp-3));
+  padding-top: var(--sp-3);
+  border-top: var(--hair) solid var(--rule);
+  font-size: var(--fs-note);
+  line-height: 1.5;
+  color: var(--ink-2);
+  animation: cs-reveal var(--dur-2) var(--ease-out) both;
+}
+.choice__verdict {
+  margin: 0 0 2px;
+  font-family: var(--font-sans);
+  font-size: var(--fs-ui);
+  font-weight: 620;
+  color: var(--c-error);
+}
+.choice.is-correct .choice__verdict {
+  color: var(--c-correct);
+}
+.choice__why p:last-child {
+  margin: 0;
+}
+.quiz .card__foot {
+  margin-top: var(--sp-5);
+}
+
+/* ── 15. Where this goes next, references ──────────────────────────────── */
+
+.next-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--sp-6);
+}
+.section > .next-grid,
+.section > .refs {
+  max-width: var(--wide);
+}
+.lesson-cards {
+  list-style: none;
+  display: grid;
+  gap: var(--sp-2);
+  margin: var(--sp-2) 0 0;
+  padding: 0;
+}
+.lesson-cards li {
+  margin: 0;
+}
+.lesson-card {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 2px var(--sp-3);
+  min-height: var(--hit);
+  padding: var(--sp-3) var(--sp-4);
+  border: var(--hair) solid var(--rule);
+  border-radius: var(--radius);
+  background: var(--raised);
+  text-decoration: none;
+  transition: border-color var(--dur-1) var(--ease-out);
+}
+a.lesson-card:hover {
+  border-color: var(--ink-3);
+}
+a.lesson-card:hover .lesson-card__title {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+}
+.lesson-card__kicker {
+  font-family: var(--font-sans);
+  font-size: 12.5px;
+  font-weight: 560;
+  letter-spacing: 0.02em;
+  color: var(--ink-3);
+  font-variant-numeric: lining-nums tabular-nums;
+}
+.lesson-card__title {
+  grid-column: 1;
+  font-size: 18.5px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+.lesson-card__desc {
+  grid-column: 1;
+  font-family: var(--font-sans);
+  font-size: var(--fs-meta);
+  line-height: 1.45;
+  color: var(--ink-3);
+}
+.lesson-card__dir {
+  grid-column: 2;
+  grid-row: 1 / span 3;
+  align-self: center;
+  font-family: var(--font-sans);
+  color: var(--ink-3);
+}
+.lesson-card.is-soon {
+  border-style: dashed;
+  border-color: var(--rule-strong);
+  background: none;
+}
+.lesson-card.is-soon .lesson-card__title {
+  color: var(--ink-2);
+}
+.refs {
+  margin: 0;
+  padding: 0 0 0 1.6em;
+  font-size: var(--fs-note);
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+.refs li {
+  margin: 0 0 var(--sp-2);
+  padding-left: 0.3em;
+}
+.refs li::marker {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  color: var(--ink-3);
+}
+.refs__author {
+  font-variant-caps: all-small-caps;
+  letter-spacing: 0.04em;
+  font-weight: 560;
+  color: var(--ink);
+}
+
+/* ── 16. Code cell ─────────────────────────────────────────────────────── */
+
+.codecell {
+  margin: var(--sp-6) 0;
+  border: var(--hair) solid var(--rule);
+  border-radius: var(--radius);
+  background: var(--raised);
+  overflow: hidden;
+}
+.codecell__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  min-height: var(--hit);
+  padding: 0 var(--sp-2) 0 var(--sp-4);
+  border-bottom: var(--hair) solid var(--rule);
+}
+.codecell__code {
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  background: var(--sunk);
+}
+.codecell__out {
+  margin: 0;
+  padding: var(--sp-3) var(--sp-4);
+  border-top: var(--hair) solid var(--rule);
+  font-family: var(--font-mono);
+  font-size: var(--fs-code);
+  color: var(--ink-2);
+  white-space: pre-wrap;
+}
+.tok-kw {
+  color: var(--ink);
+  font-weight: 500;
+}
+.tok-com {
+  color: var(--ink-3);
+  font-style: italic;
+}
+.tok-num {
+  color: var(--ink-2);
+}
+
+/* ── 17. Phone adjustments ─────────────────────────────────────────────── */
+
+@media (max-width: 699px) {
+  .card {
+    margin-inline: -6px;
+    padding: var(--sp-4) var(--sp-4) var(--sp-5);
+  }
+  .tldr {
+    padding: var(--sp-3) var(--sp-4) var(--sp-5);
+  }
+  .tldr__formula {
+    justify-content: space-between;
+  }
+  .tldr__points li {
+    padding-left: 28px;
+  }
+  .plate__stage {
+    border-inline: 0;
+    border-radius: 0;
+  }
+  .readout {
+    border-inline: 0;
+    border-radius: 0;
+    padding: 10px var(--page-pad) 12px;
+    gap: 2px 10px;
+  }
+  .readout__status {
+    flex-basis: 100%;
+    margin: 2px 0 0;
+  }
+  .knowwant {
+    grid-template-columns: 1fr;
+    gap: var(--sp-3);
+  }
+  .step {
+    padding-left: 40px;
+  }
+  .step::before {
+    width: 28px;
+    height: 28px;
+  }
+  .pause {
+    padding: var(--sp-3) var(--sp-4) var(--sp-4);
+  }
+  .pause .btn {
+    flex: 1 1 auto;
+  }
+  .answer {
+    flex-wrap: wrap;
+    gap: var(--sp-2) var(--sp-4);
+    padding: var(--sp-3) var(--sp-4);
+  }
+  .answer__veil {
+    flex-basis: 100%;
+    order: 3;
+  }
+  .trap__body {
+    grid-template-columns: 1fr;
+  }
+  .trap__fig {
+    display: grid;
+    grid-template-columns: 132px 1fr;
+    align-items: center;
+    gap: var(--sp-3);
+  }
+  .answer-row .field {
+    flex: 1 1 100px;
+    width: auto;
+    min-width: 0;
+  }
+  .hints .seg {
+    max-width: none;
+  }
+  /* Example tabs: three equal columns, stars over the label. */
+  .ex-tabs {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .ex-tab {
+    flex-direction: column;
+    gap: 2px;
+    min-height: 56px;
+    padding: 6px 4px;
+    white-space: normal;
+    text-align: center;
+    line-height: 1.2;
+  }
+  .hints .seg__btn {
+    flex-direction: column;
+    gap: 3px;
+    padding: 6px 4px;
+    min-height: 56px;
+  }
+  .choice label {
+    gap: var(--sp-3);
+    padding: var(--sp-2) var(--sp-3);
+  }
+  .choice__why {
+    margin: 0 var(--sp-3) var(--sp-3);
+  }
+  .next-grid {
+    grid-template-columns: 1fr;
+  }
+  .lv-grid {
+    gap: 0 var(--sp-2);
+  }
+}
+
+/* ── 18. Print: the TL;DR card becomes a revision sheet ─────────────────── */
+
+@media print {
+  /* Specificity (0,2,1) outranks the OS-dark and pinned-dark blocks (0,2,0): paper always prints white. */
+  html:root:not([data-print='as-screen']) {
+    color-scheme: light;
+    --paper: #ffffff;
+    --raised: #ffffff;
+    --sunk: #ffffff;
+    --plate: #ffffff;
+    --ink: #111111;
+    --ink-2: #333333;
+    --ink-3: #555555;
+    --rule: #bbbbbb;
+    --rule-strong: #888888;
+    --hue-blue: #174c8c;
+    --hue-orange: #8c3e06;
+    --hue-red: #9a2219;
+    --hue-green: #1f5f2b;
+    --hue-purple: #573896;
+    --hue-teal: #0a5a56;
+    --hue-rose: #88255f;
+    --hue-gold: #614b00;
+    --prose-wght: 400;
+  }
+  body {
+    font-size: 11.5pt;
+    line-height: 1.45;
+    orphans: 3;
+    widows: 3;
+  }
+  .masthead,
+  .rail,
+  .btn,
+  .icon-btn,
+  .colophon,
+  .skip-link,
+  .sidenote {
+    display: none !important;
+  }
+  .page {
+    display: block;
+    padding: 0;
+  }
+  .card,
+  .plate,
+  .formula {
+    break-inside: avoid;
+  }
+  body {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  /* "Print card": body.print-card prints only the lesson head and the TL;DR card. */
+  body.print-card .lesson > :not(.lesson-head):not(:has(.tldr)),
+  body.print-card .lesson > :has(.tldr) > :not(.tldr) {
+    display: none !important;
+  }
+  body.print-card .lesson-head {
+    padding-top: 0;
+  }
+  body.print-card .lesson > :has(.tldr) {
+    margin-top: 14pt;
+  }
+  .tldr,
+  .section > .tldr {
+    max-width: 17cm;
+    margin: 0;
+    padding: 10pt 14pt 14pt;
+    border: 0.75pt solid #888;
+    border-top: 2.5pt solid #111;
+  }
+  .tldr__body {
+    grid-template-columns: minmax(0, 1fr) 5.4cm;
+    gap: 14pt;
+  }
+  .tldr__formula {
+    flex-direction: column;
+    padding: 0 0 0 14pt;
+    border-top: 0;
+    border-left: 0.75pt solid #bbb;
+  }
+  .tldr__points li {
+    text-wrap: pretty;
+  }
+}

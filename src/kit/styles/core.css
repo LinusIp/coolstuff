@@ -1,0 +1,45 @@
+/* ==========================================================================
+   Kit foundations (kit architect): link bus, RichText, line swatches.
+   Group styles live in text.css, visual.css, practice.css, controls.css,
+   shell.css and structures.css (one owner each; see src/kit/PLAN.md).
+   ========================================================================== */
+
+/* Term-level linking: the link bus adds .is-linked to [data-term] / [data-anchor]
+   matches (a symbol, not a whole concept). Same wash as concept linking. */
+.is-linked {
+  --lit: 1;
+}
+.is-linked:not(.ct):not(svg *) {
+  border-radius: 2px;
+  background-color: color-mix(in srgb, var(--c, var(--ink)) 12%, transparent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--c, var(--ink)) 12%, transparent);
+}
+
+/* RichText wrapper: no stray margins at its edges. */
+.rich > :first-child {
+  margin-top: 0;
+}
+.rich > :last-child {
+  margin-bottom: 0;
+}
+.rich > ul,
+.rich > ol {
+  padding-left: 1.3em;
+}
+
+/* Glossary term as RichText renders it ([[term]]); G1's Glossary makes it interactive. */
+dfn.gloss {
+  font-style: inherit;
+  text-decoration: underline dotted var(--ink-3);
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 3px;
+}
+
+/* A concept's line style as a short stroke (legends, explain-this key). */
+.line-swatch {
+  display: inline-block;
+  flex: none;
+  vertical-align: middle;
+  overflow: visible;
+  fill: none;
+}

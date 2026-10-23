@@ -1,0 +1,29 @@
+/* Gallery host (kit architect): /kit and kit/_dev/<group>.html. */
+.gallery-demo {
+  margin: var(--sp-7) 0 0;
+}
+.gallery-demo__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--sp-2) var(--sp-3);
+  margin-bottom: var(--sp-3);
+}
+.gallery-demo__head h3 {
+  margin: 0;
+}
+.gallery-demo__component {
+  font: var(--fs-meta) / 1.3 var(--font-sans);
+  color: var(--ink-3);
+}
+.gallery-demo__notes {
+  font-size: var(--fs-small);
+  color: var(--ink-2);
+}
+.gallery-empty {
+  padding: var(--sp-5);
+  border: 1px dashed var(--rule-strong);
+  border-radius: 2px;
+  color: var(--ink-3);
+  font: var(--fs-ui) / 1.4 var(--font-sans);
+}

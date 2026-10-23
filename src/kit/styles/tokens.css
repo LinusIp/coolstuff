@@ -1,0 +1,252 @@
+/* ==========================================================================
+   coolstuff design tokens ("Paper")
+   Mirrors src/kit/theme.ts. theme.test.ts checks every colour here against
+   the TS tables and against WCAG AA, so change both together.
+   Light: warm paper and iron-gall ink. Dark: a lamp-lit desk.
+   ========================================================================== */
+
+:root {
+  color-scheme: light;
+
+  /* ── Families (self-hosted, see fonts.css) ── */
+  --font-serif: 'Source Serif 4 Variable', 'Source Serif 4', 'Iowan Old Style', 'Palatino Linotype', Georgia, serif;
+  --font-sans: 'Inter Variable', Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+
+  /* ── Type scale (desktop; phone values below). Ratio ≈ 1.25 around 19px. ── */
+  --fs-meta: 13.5px; /* smallest UI text: meta, counters, legends */
+  --fs-ui: 15px; /* buttons, inputs, controls */
+  --fs-note: 15.5px; /* sidenotes, captions, justifications */
+  --fs-small: 16.5px; /* card prose, hints, trap text */
+  --fs-body: 19px; /* reading text */
+  --fs-lead: 21px; /* problem and question statements */
+  --fs-label: 18.5px; /* serif small caps: kickers, card labels (glyphs ≈ 9.5px tall) */
+  --fs-code: 15px;
+  --fs-h3: 22px;
+  --fs-h2: 32px;
+  --fs-h1: 56px;
+  --fs-h1-sub: 30px;
+  --lh-body: 1.6;
+  --lh-note: 1.5;
+  --lh-ui: 1.35;
+  --lh-tight: 1.15;
+  --prose-wght: 400; /* 380 in dark: light-on-dark serif blooms */
+  /* Maths (KaTeX_Main has a smaller x-height than Source Serif 4) */
+  --math-inline: 1.1em;
+  --math-display: 1.21em;
+  --math-key: 1.9em;
+  --math-hero: 2.15em;
+  /* Figures (SVG text) */
+  --fs-fig-label: 18px;
+  --fs-fig-note: 13px;
+  --fs-fig-tick: 12px;
+
+  /* ── Spacing: 4px base ── */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 24px;
+  --sp-6: 32px;
+  --sp-7: 48px;
+  --sp-8: 64px;
+  --sp-9: 96px; /* between lesson sections (64px on phones) */
+
+  /* ── Page geometry (Tufte grid: rail · text · gutter · margin) ── */
+  --rail: 164px;
+  --text: 608px; /* 72 characters of 19px Source Serif 4 */
+  --gutter: 56px;
+  --margin: 248px;
+  --wide: calc(var(--text) + var(--gutter) + var(--margin)); /* 912px: text + margin */
+  --page-pad: 32px;
+  --masthead-h: 60px;
+
+  /* ── Shape and strokes ── */
+  --radius: 2px; /* cards, controls */
+  --radius-plate: 3px; /* figure plates */
+  --hair: 1px;
+  --rule-heavy: 3px; /* TL;DR top rule, trap edge */
+  --sw-grid: 1px;
+  --sw-axis: 1.25px;
+  --sw-guide: 1.5px;
+  --sw-support: 2px;
+  --sw-focal: 2.5px; /* one focal pair per figure */
+  --hit: 44px; /* minimum touch target */
+
+  /* ── Motion ── */
+  --dur-1: 140ms; /* state feedback: hover, press (colour only, not motion) */
+  --dur-2: 240ms; /* reveals: hint, explanation, solution, toggles */
+  --dur-3: 420ms; /* a derivation step entering, figure tweens */
+  --dur-4: 600ms; /* emphasis: highlighter sweep, leader draw-in, snap flash */
+  --ease-out: cubic-bezier(0.2, 0.7, 0.2, 1); /* "ink settling" */
+  --ease-inout: cubic-bezier(0.45, 0, 0.2, 1);
+  --ease-snap: cubic-bezier(0.3, 1.35, 0.5, 1); /* small settles only, ≤ 240ms */
+
+  /* ── Light palette ── */
+  --paper: #f8f5ee;
+  --raised: #fdfbf6;
+  --sunk: #f1ece1;
+  --plate: #fdfbf6;
+  --ink: #1e1b16;
+  --ink-2: #4a443a;
+  --ink-3: #6b6356;
+  --ink-4: #a39a8b;
+  --rule: #ddd5c6;
+  --rule-strong: #bdb29e;
+  --grid: #e9e2d4;
+  --axis: #8d8473;
+  --ui-line: #8a8070;
+  --on-ink: #fdfbf6;
+  --marker: #f2c94c;
+  --marker-pct: 30%;
+
+  --hue-blue: #1f62b0;
+  --hue-orange: #974f09;
+  --hue-red: #b92a2d;
+  --hue-green: #19712e;
+  --hue-purple: #754aba;
+  --hue-teal: #0f6d69;
+  --hue-rose: #a63481;
+  --hue-gold: #705e0c;
+
+  --shadow-lift: 0 1px 0 rgb(30 27 22 / 0.03), 0 6px 18px -10px rgb(30 27 22 / 0.18);
+  --focal-glow: none; /* dark mode only: a faint glow on the focal pair */
+}
+
+/* Dark: pinned by the reader… */
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --prose-wght: 380;
+  --paper: #191714;
+  --raised: #211e1a;
+  --sunk: #141210;
+  --plate: #1d1a17;
+  --ink: #ece6d9;
+  --ink-2: #c5bcac;
+  --ink-3: #a0978a;
+  --ink-4: #6a6255;
+  --rule: #36312a;
+  --rule-strong: #524a3f;
+  --grid: #2a2621;
+  --axis: #757062;
+  --ui-line: #7c7364;
+  --on-ink: #191714;
+  --marker: #dba52c;
+  --marker-pct: 22%;
+  --hue-blue: #7caff1;
+  --hue-orange: #ea9a53;
+  --hue-red: #fe8b85;
+  --hue-green: #79bc80;
+  --hue-purple: #ba9ff3;
+  --hue-teal: #50bdb4;
+  --hue-rose: #ec8dce;
+  --hue-gold: #d3ba4e;
+  --shadow-lift: 0 1px 0 rgb(0 0 0 / 0.2), 0 8px 24px -12px rgb(0 0 0 / 0.6);
+  --focal-glow: drop-shadow(0 0 4px color-mix(in srgb, currentColor 45%, transparent));
+}
+
+/* …or by the OS, unless the reader pinned light. Keep identical to the block above. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    color-scheme: dark;
+    --prose-wght: 380;
+    --paper: #191714;
+    --raised: #211e1a;
+    --sunk: #141210;
+    --plate: #1d1a17;
+    --ink: #ece6d9;
+    --ink-2: #c5bcac;
+    --ink-3: #a0978a;
+    --ink-4: #6a6255;
+    --rule: #36312a;
+    --rule-strong: #524a3f;
+    --grid: #2a2621;
+    --axis: #757062;
+    --ui-line: #7c7364;
+    --on-ink: #191714;
+    --marker: #dba52c;
+    --marker-pct: 22%;
+    --hue-blue: #7caff1;
+    --hue-orange: #ea9a53;
+    --hue-red: #fe8b85;
+    --hue-green: #79bc80;
+    --hue-purple: #ba9ff3;
+    --hue-teal: #50bdb4;
+    --hue-rose: #ec8dce;
+    --hue-gold: #d3ba4e;
+    --shadow-lift: 0 1px 0 rgb(0 0 0 / 0.2), 0 8px 24px -12px rgb(0 0 0 / 0.6);
+    --focal-glow: drop-shadow(0 0 4px color-mix(in srgb, currentColor 45%, transparent));
+  }
+}
+
+/* ── Derived: semantic aliases, washes, highlighter (follow the theme automatically) ── */
+:root,
+:root[data-theme] {
+  --focus: var(--ink);
+
+  /* The five global meanings */
+  --c-input: var(--hue-blue);
+  --c-output: var(--hue-orange);
+  --c-error: var(--hue-red);
+  --c-correct: var(--hue-green);
+  --c-prob: var(--hue-purple);
+
+  /* Washes: 12% of an ink over its surface (chips, linked highlight, verdict panels) */
+  --w-blue: color-mix(in srgb, var(--hue-blue) 12%, transparent);
+  --w-orange: color-mix(in srgb, var(--hue-orange) 12%, transparent);
+  --w-red: color-mix(in srgb, var(--hue-red) 12%, transparent);
+  --w-green: color-mix(in srgb, var(--hue-green) 12%, transparent);
+  --w-purple: color-mix(in srgb, var(--hue-purple) 12%, transparent);
+  --w-teal: color-mix(in srgb, var(--hue-teal) 12%, transparent);
+  --w-rose: color-mix(in srgb, var(--hue-rose) 12%, transparent);
+  --w-gold: color-mix(in srgb, var(--hue-gold) 12%, transparent);
+  --w-ink: color-mix(in srgb, var(--ink) 6%, transparent);
+
+  /* Highlighter pen: "this changed" in a derivation. Every ink stays ≥ 4.5:1 over it. */
+  --marker-wash: color-mix(in srgb, var(--marker) var(--marker-pct), transparent);
+}
+
+/* ── Phone (< 700px) ── */
+@media (max-width: 699px) {
+  :root {
+    --fs-note: 15px;
+    --fs-small: 16px;
+    --fs-body: 17px;
+    --fs-lead: 18.5px;
+    --fs-label: 17.5px;
+    --fs-code: 14px;
+    --fs-h3: 20px;
+    --fs-h2: 26px;
+    --fs-h1: 40px;
+    --fs-h1-sub: 23px;
+    --lh-body: 1.58;
+    --math-key: 1.75em;
+    --math-hero: 1.95em;
+    --sp-9: 64px;
+    --page-pad: 20px;
+    --masthead-h: 54px;
+  }
+}
+
+/* Below 1240px the contents rail folds away; below 1000px the margin column folds into the text. */
+@media (max-width: 1239px) {
+  :root {
+    --rail: 0px;
+  }
+}
+@media (max-width: 999px) {
+  :root {
+    --margin: 0px;
+    --gutter: 0px;
+  }
+}
+
+/* Reduced motion: durations collapse (base.css also stops every animation). */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-1: 1ms;
+    --dur-2: 1ms;
+    --dur-3: 1ms;
+    --dur-4: 1ms;
+  }
+}
