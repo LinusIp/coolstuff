@@ -2,7 +2,7 @@
 
 ## Needs owner
 
-- Nothing open. (GitHub Pages was enabled on 2026-10-23; deploys run from `main`.)
+- **Switch GitHub Pages to "GitHub Actions" as its source** (Settings → Pages → Build and deployment → Source → *GitHub Actions*). It is currently "Deploy from a branch", so on every push GitHub also runs its own Jekyll build of the raw repository next to our `pages.yml` deploy. That build currently fails (harmlessly) on template syntax in `src/kit/README.md`, but if it ever succeeded it would publish unbuilt source over the real site — that is probably what happened at 05:32 on 2026-10-23. Our `pages.yml` deploy is the correct one.
 
 ---
 
