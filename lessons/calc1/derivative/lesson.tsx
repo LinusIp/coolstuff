@@ -8,9 +8,11 @@
  * the last of them.
  */
 import '@kit/styles/index.css';
-import { CodeCell, Figure, LessonPage, Section, Step, WhereNext, mountLesson, type LessonMeta } from '@kit';
+import { CodeCell, LessonPage, Section, Step, WhereNext, mountLesson, type LessonMeta } from '@kit';
 import type { ComponentChildren } from 'preact';
+import './lesson.css';
 import meta from './meta.json';
+import { TripPlay } from './play';
 import * as content from './problems';
 // import { FIGURES } from './figures';   // for WorkedExampleSet, Trap, ProblemSet and Quiz
 
@@ -40,30 +42,8 @@ mountLesson(
       <Wip use="prose + <Figure> (often <Predict>)">A question, puzzle or surprising visual that makes the idea feel necessary, in one screen.</Wip>
     </Section>
 
-    <Section id="play" title="Play with it">
-      <Figure
-        name="derivative-play"
-        central
-        wide
-        caption="Work in progress: the central interactive."
-        description="A placeholder plate where the lesson's central interactive will go: secant → tangent with h slider."
-      >
-        <div class="plate__stage plate__stage--wide" data-wip>
-          <svg class="plate__layer" viewBox="0 0 640 360" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Placeholder for the central interactive">
-            <title>Work in progress: the central interactive</title>
-            <rect x="24" y="24" width="592" height="312" rx="3" class="fig-guide" />
-            <text x="320" y="172" text-anchor="middle" class="fig-label">
-              Work in progress
-            </text>
-            <text x="320" y="204" text-anchor="middle" class="fig-note">
-              secant → tangent with h slider
-            </text>
-          </svg>
-        </div>
-      </Figure>
-      <Wip use="<Figure central wide> + Stage2D / Plot / MatrixGrid, readout, mission, legend">
-        The central interactive, with no formulas: the learner explores freely, and the idea clicks within a minute.
-      </Wip>
+    <Section id="play" title="Shrink the gap">
+      <TripPlay />
     </Section>
 
     <Section id="build" title="Build the idea">

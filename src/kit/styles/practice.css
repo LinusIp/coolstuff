@@ -652,7 +652,7 @@
   min-width: 0;
   overflow-wrap: anywhere;
   font-family: var(--font-mono);
-  font-size: 13.5px;
+  font-size: var(--fs-meta);
   color: var(--ink-2);
 }
 .test__detail {
@@ -672,7 +672,7 @@
   overflow-x: auto;
   background: var(--sunk);
   font-family: var(--font-mono);
-  font-size: 13.5px;
+  font-size: var(--fs-meta);
 }
 
 /* Show solution asks once. */

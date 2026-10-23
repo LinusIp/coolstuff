@@ -1,0 +1,65 @@
+/* ==========================================================================
+   ml/gradient-descent: marks the kit has no primitive for (the ball, the
+   step dots, the minimum targets, the "off the map" arrow).
+   Tokens only (DESIGN.md): no raw colours.
+   ========================================================================== */
+
+/* One dot per gradient-descent step. */
+.gd-dots {
+  fill: var(--c);
+  stroke: var(--plate);
+  stroke-width: 1;
+}
+.gd-dots--ahead {
+  fill: var(--plate);
+  stroke: var(--c);
+  stroke-width: 1.25;
+  opacity: 0.55;
+}
+
+/* The ball: a solid disc in the parameters' ink with a plate halo; glides between steps. */
+.gd-ball circle {
+  fill: var(--c);
+  stroke: var(--plate);
+  stroke-width: 2;
+}
+.gd-ball .gd-ball__shine {
+  fill: var(--plate);
+  stroke: none;
+  opacity: 0.55;
+}
+.gd-ball {
+  transition: transform var(--dur-1) var(--ease-out);
+}
+@media (prefers-reduced-motion: reduce) {
+  .gd-ball {
+    transition: none;
+  }
+}
+
+/* The lowest point(s): a target. The deepest is filled; it turns green when the ball settles there. */
+.gd-target__ring {
+  fill: var(--plate);
+  stroke: var(--c);
+  stroke-width: 1.5;
+}
+.gd-target.is-global .gd-target__ring {
+  stroke-width: 2;
+}
+.gd-target__cross {
+  fill: none;
+  stroke: var(--c);
+  stroke-width: 1.75;
+  stroke-linecap: round;
+}
+.gd-target.is-correct .gd-target__ring {
+  fill: color-mix(in srgb, var(--c) 16%, var(--plate));
+  stroke-width: 2.5;
+}
+
+/* The arrow on the map's edge where a diverging run leaves it. */
+.gd-exit path {
+  fill: var(--c);
+  stroke: var(--plate);
+  stroke-width: 1.5;
+}

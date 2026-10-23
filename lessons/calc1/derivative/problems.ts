@@ -11,15 +11,20 @@ import { defineConcepts, type DerivationSpec, type FormulaSpec, type GlossaryTer
 
 /** 3–5 concepts: one ink and one line style each, the same in figure, formula, prose and code (DESIGN.md §4). */
 export const C = defineConcepts({
+  /** The input x (in the car figure: the moment t). Blue, solid. */
   input: { hue: 'input', label: 'input', symbol: 'x' },
-  output: { hue: 'output', label: 'output', symbol: 'y' },
-  // wip: name this lesson's own concepts on the free inks: teal, rose, gold.
+  /** The output f(x) and changes in it, f(x + h) − f(x) (the car's position s and the distance Δs). Orange, dashed. */
+  output: { hue: 'output', label: 'output', symbol: 'f(x)' },
+  /** Slope = rate of change: secant and tangent slopes, the speedometer, f′. Rose, double rule. */
+  rate: { hue: 'rose', label: 'slope, the rate of change', symbol: "f'(x)" },
+  /** The step h = Δx (in the car figure: a short time later). Teal, dotted. */
+  h: { hue: 'teal', label: 'the step h', symbol: 'h' },
 });
 
 /** The printable revision card: exactly three points and the key formula. */
 export const TLDR: TldrSpec = {
   points: ['wip: the first thing to remember.', 'wip: the second.', 'wip: the third.'],
-  formula: '\\cOutput = f(\\cInput)',
+  formula: "\\cRate = \\lim_{\\cH \\to 0} \\frac{f(x + \\cH) - f(x)}{\\cH}",
 };
 
 /** Key formulas, the Formalize definition first; every `\anchor{id}{…}` needs an explain note. */

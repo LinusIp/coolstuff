@@ -991,7 +991,13 @@ examples, problems, quiz…), as it should until the content exists.
 <!-- region:G1 -->
 ## 5. Formulas & text (G1)
 
-### 5.1 `Formula` ⏳ G1
+Import from `@kit` (barrel `src/kit/text/index.ts`). The geometry and rules
+behind the components are pure and tested: `text/explain-layout.ts`
+(notes, leaders, brackets, stubs, inline live values), `text/anchors.ts`
+(repeated anchors, FLIP pairing, anchor contents), `text/flip.ts`,
+`text/live-format.ts`, `text/glossary-core.ts`, `text/label.ts`.
+
+### 5.1 `Formula` ✅ G1
 
 KaTeX with colour-linked terms, live values and explain-this. Key formulas
 are `FormulaSpec`s in problems.ts (types.ts §4, audited); spread one in and
@@ -1001,38 +1007,68 @@ add the live values: `<Formula {...FORMULAS[0]} live={{ v, Av }} />`.
 interface FormulaProps {
   tex: string;                                  // tag symbols with \anchor{id}{…}; colour with \cX shorthands
   id?: string;                                  // FormulaSpec.id: the DOM id and data-formula value
-  label?: string;                               // bar label: "Definition", "Key formula"; default "Formula"
+  label?: string;                               // bar label: "Definition", "Key formula"; default "Formula" (Greek stays lower case)
   size?: 'display' | 'key' | 'hero';            // default 'key' (math-key); 'hero' for the Formalize definition
   explain?: ExplainMap;                         // { [anchorId]: { word, gloss, concept? } } → "Explain this" switch
   brackets?: readonly FormulaBracket[];         // labels above groups: { anchor, text, concept? }
   explainDefault?: boolean;                     // default false
-  live?: Readonly<Record<string, LiveValue | { value: LiveValue; decimals?: number; unit?: string }>>;  // → "Live values" switch
+  live?: Readonly<Record<string, FormulaLive>>; // anchor id → value → inline values + "Live values" switch
   liveDefault?: boolean;                        // default false; inline .lv values show whenever `live` is set
   inWords?: Rich;                               // italic "In words" sentence with [terms]{concept}
   macros?: Readonly<Record<string, string>>;
+  class?: string;
 }
+type FormulaLive = LiveValue | { value: LiveValue; decimals?: number /* 2 */; unit?: string /* 'kg', 'm/s²' */; shape?: [rows, cols] /* a flat Mat2 → [2, 2] */ };
 ```
 
-States: plain · explain on (wide: notes under symbols, curved leaders in the
-concept's ink, packed with no overlaps or crossings, brackets above; < 560px
-block width: `.is-stacked` dotted-rule key + `.term-stub` under each symbol) ·
-live on (`.lv-grid` exploded view) · hover-linked (any symbol, note or bracket
-lights its concept/term everywhere via the link bus).
-Repeated anchors (§1.6): the note, leader, stub and inline live value attach
-to the **first** occurrence of an id; every occurrence carries
-`data-anchor` and lights; use `text/anchors.ts` (`noteCarriers`).
-A11y: switches are `button.switch[role=switch][aria-checked]`; notes are a
-real `ol` whose items are focusable (`tabindex=0`, publishing their concept
-and term on focus: the keyboard route to hover-linking) with the symbol's
-MathML; leaders/brackets are aria-hidden decoration; live values are
-announced politely at most once per second.
-DOM: `.formula[data-formula=<id>][data-explain]` (`data-explain` present
-whenever `explain` has a note; smoke counts it in Formalize) >
+- **Colour-linked terms.** `\cX` / `\colorTerm` colour symbols; every
+  `\anchor` element gets its concept's ink as `--c`, so a term-level highlight
+  (`.is-linked`) washes it in that ink. Hovering, focusing or tapping a
+  symbol, note or bracket lights its concept and term on the link bus; a
+  lit concept or term lights the notes and leaders back.
+- **Explain this, wide** (stage ≥ 560px): one row of notes (bold concept word
+  in its ink + gloss) under their symbols, packed by least squares so none
+  overlap, widest capped first; leaders drop from a dot under the symbol to a
+  shared bus line, then curve to the note, so they never cross. If even the
+  narrowest notes can't fit (7+ notes in a narrow block), it falls back to the
+  stacked key. Brackets span their anchor's glyph box; nested or crowded
+  ones stack in tiers. Leaders draw in (600ms) when the switch is turned on.
+- **Explain this, stacked** (< 560px): `.is-stacked`; the notes become a
+  dotted-rule key (symbol · bold word · gloss) and each note with a concept
+  gets a `.term-stub` in the concept's line style under its symbol (above it
+  when below would hit other maths, e.g. a numerator over its fraction bar;
+  a group around its parts drops a tier). A note without a concept has no
+  line style, so no stub.
+- **No layout shift.** The bracket band is reserved whether explain is on or
+  off, so toggling never moves the maths (Playwright: Δ ≤ 0.3px); the notes
+  open below it.
+- **Repeated anchors** (§1.6): the note, leader, stub and inline live value
+  attach to the **first** occurrence of an id; every occurrence carries
+  `data-anchor` and lights.
+- **Live values**: each inline value is its own tiny component reading its
+  signal, so a change re-renders only that `.lv` (the Formula and its KaTeX
+  never re-render: dev counters `data-renders` on `.formula`,
+  `data-tex-renders` on `.formula__math`). Scalars are one mono number,
+  vectors columns, matrices grids (`.lv-vec`), with an optional unit; they
+  pack under their symbols without overlapping (the widest drop out of the
+  row, matrices first, when it's too narrow; the grid still shows them).
+  *Live values* opens `.lv-grid`: one column per live entry (symbol over its
+  line-style stub, then the value); a 2×2 matrix and two vectors fit 390px.
+  Values are announced politely at most once per second.
+- **Layout** re-runs on resize (ResizeObserver), after fonts load, and when a
+  long formula scrolls inside its box.
+
+A11y: switches are `button.switch[role=switch][aria-checked]` (G4 `Toggle`);
+notes are a real `ol` whose items are focusable (`tabindex=0`, publishing
+their concept and term on focus) with the symbol's MathML (visually hidden
+in the wide layout); leaders, brackets and stubs are aria-hidden decoration.
+Notes and the grid mount on first open (§1.10).
+DOM: `.formula[data-formula=<id>][data-explain=on|off][data-live=on|off]` >
 `.formula__bar` (`p.label` + `.formula__toggles`) + `.formula__stage`
-(`.formula__over` brackets, the KaTeX, `ol.formula__notes`
-`li[data-for][data-concept]`, `svg.formula__leaders`) + `.lv-grid` + `p.in-words`.
-Explain layout is pure and tested (`text/explain-layout.ts`, from the
-prototype in `text/explain-proto.ts`).
+(`.formula__over` > `.bracket[data-for][data-term]`, `.formula__math` (the
+KaTeX), `.lv-row` > `.lv[data-lv]`, `ol.formula__notes` >
+`li[data-for][data-term][data-concept]`, `svg.formula__leaders`, `.term-stub`)
++ `.lv-grid` > `.lv-col[data-lv]` + `p.in-words` + a polite `p.sr-only`.
 
 ```tsx
 <Formula
@@ -1043,100 +1079,117 @@ prototype in `text/explain-proto.ts`).
              lam: { word: 'a plain number', gloss: 'how much $\\vec v$ is stretched', concept: 'eigenvalue' },
              Av: { word: 'the image', gloss: 'where $A$ sends $\\vec v$', concept: 'output' } }}
   brackets={[{ anchor: 'Av', text: 'where $A$ sends $\\vec v$', concept: 'output' }]}
-  live={{ v, lam }}
+  live={{ v, lam, A: { value: A, shape: [2, 2] }, m: { value: mass, decimals: 1, unit: 'kg' } }}
   inWords="Applying [the matrix]{matrix} to [the vector]{input} gives back the same vector, only stretched by [the number $\lambda$]{eigenvalue}."
 />
 ```
 
-### 5.2 `Derivation` ⏳ G1
+### 5.2 `Derivation` ✅ G1
 
 ```ts
 interface DerivationProps {
   steps: readonly DerivationStep[];   // { rel?: TeX relation, tex, why: Rich }; mark changes with \chg{…}
-  id?: string;                        // DerivationSpec.id (spread a spec: <Derivation {...DERIVATIONS[0]} />)
-  label?: string;                     // default "Derivation"
-  start?: number;                     // steps visible at first (default 1)
-  step?: Signal<number>;              // external control (e.g. a Scrolly)
+  id?: string;                        // DerivationSpec.id: DOM id and data-derivation (spread a spec: <Derivation {...DERIVATIONS[0]} />)
+  label?: string;                     // default "Derivation" (Greek stays lower case in the small-caps label)
+  start?: number;                     // steps visible at first (default 1; ignored with `step`)
+  step?: Signal<number>;              // external control: 0-based index of the last visible step (e.g. a Scrolly)
   macros?;
 }
 ```
 
-Steps reveal one at a time with a `Stepper` ("‹ Step 2 of 3 ›"; G4's
-component) and a "Show all" control. A new step enters (`.is-entering`,
-`--dur-3`); `\chg{}` content gets the highlighter sweep (420ms after 120ms);
-**symbols tagged with the same `\anchor` id in consecutive steps slide from
-their old position to the new one (FLIP, ≤ 420ms), paired in order of
-occurrence (`pairAnchors`): the k-th `v` goes to the k-th `v`, unpaired
-extras fade out (old step) or in (new step)**. The current step has
-`.is-current` (2px ink rule). Reduced motion: no slides or sweeps, states
-still change. Print and `?all`: every step shown.
-DOM: `.derivation` > `.derivation__bar` + `ol.derivation__steps` >
-`li.dstep` (`.dstep__rel`, `.dstep__math`, `.dstep__why`); justification below
-the maths on phones.
+Steps reveal one at a time with G4's `Stepper` ("‹ Step 2 of 4 ›", ← → when
+focused) and a **Show all** button (it becomes **Start over** once every step
+shows). A new step enters (`.is-entering`, 420ms); `\chg{}` content gets the
+highlighter sweep (420ms after 120ms); symbols tagged with the same `\anchor`
+id slide from the step above into their new places (FLIP on overlay copies,
+420ms), paired k-th occurrence to k-th (`flipPlan` → `pairAnchors`); an
+unpaired symbol of the old step drops away and fades (300ms), an unpaired
+symbol of the new step fades in (240ms after 180ms). The current step has
+`.is-current` (2px ink rule) and `aria-current="step"`; its maths and
+justification are announced. Reduced motion: no slides or sweeps, the step
+still appears. Printing (`beforeprint`) and `?all` in the URL show every step
+(`?all` also hides the controls). Steps render as relation chains
+(`mathChainHtml`), so a long step wraps at its relations on a phone; later
+steps mount when revealed.
+DOM: `.derivation[data-derivation]` > `.derivation__bar` (`p.label` +
+`.derivation__controls`) + `ol.derivation__steps` > `li.dstep` (`.dstep__rel`,
+`.dstep__math` > `.mchain`, `.dstep__why`) + `.derivation__flip` (overlay);
+justification below the maths on phones.
 
-### 5.3 `Glossary`, `Term`, `installGlossary` ⏳ G1
+### 5.3 `Glossary`, `Term`, `installGlossary` ✅ G1
 
 ```ts
 interface GlossaryEntry { term: string; definition: Rich; lesson?: string /* defining lesson id */ }
-registerGlossary(entries: readonly GlossaryEntry[]): void     // site-wide terms come from @content/search-index.json
-<Term id="eigenvalue">eigenvalues</Term>                     // inline, explicit
-installGlossary(root?): () => void                           // enhances RichText's dfn.gloss[data-gloss]
-<Glossary entries={…} />                                     // a <dl> of the lesson's terms (optional, e.g. in "next")
+registerGlossary(entries: readonly GlossaryEntry[], opts?: { macros? }): void   // macros: the lesson's C.macros(), so definitions can use \cX
+installGlossary(root?: Element): () => void                  // enhances RichText's dfn.gloss[data-gloss], now and as more mount; ref-counted
+glossaryEntry(term): RegisteredTerm | undefined              // lookup ("eigenvalues" finds "eigenvalue")
+<Term id="eigenvalue">eigenvalues</Term>                     // inline, explicit (installs the glossary itself)
+<Glossary entries={…} register? label? />                    // a <dl class="glossary"> of the lesson's terms
 ```
 
-A term is a focusable button-like `dfn`; hover/focus/tap opens a small
-popover (definition as Rich, so TeX shows; "Defined in *Lesson*" link; Esc
-closes; never covers the term itself; stays on screen at 390px; rendered
-inside the current concept scope, `useKit().scope`). Unknown terms render as
-plain text and log nothing. `LessonPage` calls `installGlossary()` and
-registers the lesson's `GLOSSARY` (or `meta.glossary`). Definitions are Rich
-everywhere (problems.ts `GLOSSARY`, meta.json `glossary`); build-index strips
-them to plain text for search.
+A known term becomes a focusable button-like `dfn` (`tabindex=0`,
+`role=button`, `aria-expanded`, dotted underline, 44px hit area via
+`::after` + `data-hit`); hover (mouse, 120ms), focus (keyboard) or a tap
+opens a popover (`.gloss-pop`, `position: fixed`) inserted right after the
+term, so it renders inside the current concept scope and Tab reaches its
+link. It shows the term, the definition as Rich (TeX works), and "Defined in
+*Lesson*" when the term belongs to another lesson (a link when that lesson is
+shipped, "coming soon" otherwise). It sits below the term (above when there's
+no room), clamped 8px inside the viewport, and never covers the term
+(`placePopover`, tested at 390px). Esc closes it (focus returns to the term),
+as do a tap elsewhere, moving the mouse away, or Tab leaving it; a click or
+Enter pins it open. Unknown terms stay plain text and log nothing; terms
+other lessons define come from `@content/search-index.json` (loaded lazily,
+plain-text definitions) the first time an unknown term appears. `LessonPage`
+calls `registerGlossary` (with `lesson: id`) and `installGlossary()`.
 
-### 5.4 `TLDR` ⏳ G1
+### 5.4 `TLDR` ✅ G1
 
 ```ts
-<TLDR spec: TldrSpec />   // { points: [3 × Rich], formula: TeX, key?: { tex, text }[] }
+<TLDR spec: TldrSpec label? />   // { points: [3 × Rich], formula: TeX, key?: { tex, text }[] }; label default "In brief · revision card"
 ```
 
-`.card.tldr.is-wide`: head (label "In brief · revision card" + **Print card**
-`btn--sm`, which calls `printWithClass('print-card')` from `@kit/util`: the
-class is removed on `afterprint`, never synchronously, because `print()`
-returns immediately on iOS Safari and Firefox Android), `ol.tldr__points`
-(italic old-style numerals), `.tldr__formula` (the formula at `math-key` + a
-`dl.key`). Prints as the revision sheet (DESIGN.md §12); smoke screenshots
-it in print media.
+`.card.tldr.is-wide`: head (label + **Print card** `btn--sm`, which calls
+`printWithClass('print-card')` from `@kit/util`: the class is removed on
+`afterprint`, never synchronously), `ol.tldr__points` (italic old-style
+numerals), `.tldr__formula` (the formula at `math-key` + a `dl.key`). Prints
+as the revision sheet (DESIGN.md §12): only the lesson head and the card, in
+the print ink set, whether the card sits directly in its section (a lesson)
+or deeper (the gallery).
 
-### 5.5 `Trap`, `Callout`, `Sidenote` ⏳ G1
+### 5.5 `Trap`, `Callout`, `Sidenote` ✅ G1
 
 ```ts
 interface TrapProps {
   spec: TrapSpec;                              // myth, explanation, truth, figure key, figureCaption, figureDescription
-  n?: number;
+  n?: number;                                  // "Trap n"
   figures?: LessonFigures['traps'];           // FIGURES.traps from figures.tsx: renders figures[spec.figure]()
   figure?: ComponentChildren;                  // or the counterexample directly (wins over `figures`)
 }
-<Callout kind?: 'note' | 'key' | 'simplify' label?: string>{children}</Callout>
-<Sidenote>{children}</Sidenote>                                 // numbered sn-ref + .sidenote (margin ≥ 1000px, folds inline below)
+<Callout kind?: 'note' | 'key' | 'simplify' label? text?: Rich>{children}</Callout>   // aside.callout[data-callout]
+<Sidenote text?: Rich>{children}</Sidenote>                     // numbered button.sn-ref + span.sidenote[role=note]
 ```
 
-`Trap` → `article.card.trap[data-trap=<id>]`: ⚠ + the myth in quotes
-(`.trap__title`), `.trap__body` with `.trap__text` (explanation, then "What's
-true." `.trap__truth`) and `figure.trap__fig[data-figure="trap-<id>"]` with
-`figcaption` = `figureCaption` and a visually hidden `figureDescription`
-(`aria-describedby`). Every trap has its visual counterexample (§4.8;
-`auditTraps` requires the key, caption and description). If no renderer is
-found for the key, Trap renders **no** `<figure>` (an empty one would be a
-blank figure) and logs a `console.error` naming the key, which fails smoke
-and the gallery, so it can't ship. `Callout kind="simplify"` is how lessons
-say "we're ignoring air resistance here" (§10). Trap renders its own figure
-markup; it never imports the shell's `Figure` (PLAN §3).
+`Trap` → `article.card.trap[data-trap=<id>]`: `h3.trap__title` (⚠ "Trap n" ·
+the myth in quotes), `.trap__body` with `.trap__text` (explanation, then
+"What's true." `.trap__truth`) and `figure.trap__fig[data-figure="trap-<id>"]`
+with `figcaption` = `figureCaption` and a visually hidden
+`figureDescription` (`aria-describedby`). If no renderer is found for the key,
+Trap renders **no** `<figure>` and logs one `console.error` naming the key
+(gallery: `?missing-trap`). `Callout kind="simplify"` is how lessons say
+"we're ignoring air resistance here" (§10); the label defaults to Note / Key
+idea / Simplification. A sidenote floats into the margin at ≥ 1000px (its
+marker then just flashes it); below that the numbered marker is a button
+(`aria-expanded`, `data-hit`) that opens it inline under the line. Numbers
+follow page order and renumber when notes mount or unmount.
 
-### 5.6 RichText polish ⏳ G1
+### 5.6 RichText polish ✅ G1
 
-G1 owns core/richtext.ts after handoff: keep the syntax in §1.7 backward
-compatible (only add), keep `richToHtml` pure and memoised and its link
-safety (`safeHref`), add glossary popover wiring through `installGlossary`.
+The syntax in §1.7 is unchanged (backward compatible), `richToHtml` stays
+pure, memoised and link-safe. `[[term]]` renders `dfn.gloss[data-gloss]`,
+which is plain text until the glossary knows the term (core.css), then
+`installGlossary` makes it a popover term. Small-caps labels keep Greek
+letters as themselves (`labelRuns`, used by Formula and Derivation bars).
 
 <!-- /region:G1 -->
 
@@ -1647,7 +1700,17 @@ answers and ExamSet's submit-time grading use it too.
 <!-- region:G3 -->
 ## 8. Practice (G3)
 
-### 8.1 `WorkedExample`, `WorkedExampleSet` ⏳ G3
+All of §8 is ✅ (G3): import from `@kit` (or `../practice` inside the kit).
+Gallery: `kit/_dev/practice.html` shows every component in its states,
+several of them driven through the real UI (typed, checked, hinted,
+revealed). The rules behind the components are pure and tested:
+`practice/draft.ts` (input model, help line, labels, attempt rule,
+"another one"), `example-state.ts` (accept guard, reveal count, tabs),
+`quiz-state.ts`, `predict-state.ts`, `exam-state.ts` (clock,
+announcements), `code-results.ts` (test lines, verdicts), `arrange.ts`
+(order and match), `code-edit.ts`.
+
+### 8.1 `WorkedExample`, `WorkedExampleSet` ✅ G3
 
 ```ts
 interface WorkedExampleProps {
@@ -1655,6 +1718,7 @@ interface WorkedExampleProps {
   n?: number;                                                   // "Worked example 2"
   figure?: ExampleFigure;                                       // (params, setParams) => …: its own small interactive
   params?: Signal<ParamValues>;                                 // external live params (a figure elsewhere drives them); default internal
+  start?: number;                                               // steps revealed at first (default 1; ≥ the step count shows the whole solution)
 }
 interface WorkedExampleSetProps {
   examples: readonly WorkedExampleSpec[];                       // ★ direct · ★★ combined · ★★★ exam level
@@ -1662,35 +1726,42 @@ interface WorkedExampleSetProps {
 }
 ```
 
-Flow (DESIGN.md §8): statement (`.lead`) → `dl.knowwant` → `.strategy` →
-`ol.steps`: step 1 shown; before each further step a **pause**
-(`.step--pause` > `.pause`: "Try the next step yourself" + the step's `tryIt`,
-which the audit requires on every step after the first; **Reveal step k**
-primary + *I've done it, compare* quiet) → boxed answer (`.answer--hidden`
-with veil until the last step, then `.answer` green rule) → ✓ `.sanity`.
-Steps render with `MathChain`. Writes `progress.example`.
+Flow (DESIGN.md §8): card head (`p.label` "Worked example n · level", the
+spec's `title` in italics, "n of N") → live parameters (`.params`) →
+statement (`.lead`) → the figure → `dl.knowwant` → `.strategy` → `ol.steps`:
+step 1 shown; before each further step a **pause** (`.step--pause` > `.pause`:
+"Try the next step yourself" + the step's `tryIt`; **Reveal step k** primary
++ *I've done it, compare* quiet; both reveal, and focus moves to the new
+step) → boxed answer (`.answer--hidden` with veil until the last step, then
+`.answer` green rule) → ✓ `.sanity` (after the answer). Steps render with
+`MathChain`. Every reveal writes `progress.example(lessonId, id, revealed,
+total)` (lesson id from `useKit()`).
 
-**Live parameters.** Controls above the statement: a `Slider` per numeric
-param (honouring `scale: 'log'` and `detents`), a `Segmented` per `choice`
-param (its value is the option index: pick $f$ from a list). Every `Live`
-field recomputes via `resolveExample`. The example's `accept(p)` guard runs
-on every change: a rejected setting is never shown; the example keeps the
-last accepted values, the control that caused it snaps back on release and
-shows the reason beside it (`.param__why`, `aria-live`), and choice options
-that `accept` would reject with the current other values are disabled with
-the reason as their description. A figure receives `(params, setParams)`, so
-dragging $x_0$ in the figure writes the same params the sliders show
-(`setParams` goes through `accept` too). **Reveal state is a count**: "k
-steps revealed" survives parameter changes, clamped to the new number of
-steps when `steps` is `Live` and its length changes.
-`WorkedExampleSet`: one `article.card.example` with `.ex-tabs[role=tablist]`
-(`★ Direct · ★★ Combined · ★★★ Exam level`, arrow keys move between tabs) and
-one `[role=tabpanel][data-worked-example]` per example (inactive ones
-`hidden`, holding statement, known/want, strategy and step 1; the rest mounts
-when first shown, §1.10).
-A standalone `WorkedExample` puts `data-worked-example` on its `article`.
+**Live parameters.** A `Slider` per numeric param (`scale`, `detents`,
+`concept`, `unit` in the value text) and a `Segmented` per `choice` param
+(value = option index). Every `Live` field recomputes via `resolveExample`.
+Every change goes through `accept()` (`proposeParams`): a rejected value is
+never shown; the example keeps the last accepted values, the slider shows
+what the learner dragged until release, then snaps back, and the reason
+stays beside it (`.param__why`, `aria-live`) until the next accepted
+change. Choice options `accept()` would reject with the other values as
+they are are disabled, and their reasons are listed in that control's
+`.param__why` line (Segmented has no per-option description yet: PLAN §6).
+`setParams` from the figure and writes to an external `params` signal go
+through `accept()` too (a rejected outside write is reverted and its reason
+shown under the figure). **Reveal state is a count**, clamped to the new
+number of steps when `steps` is `Live` and shrinks.
+`WorkedExampleSet`: `article.card.example` with `.ex-tabs[role=tablist]`
+(`button.ex-tab[role=tab][aria-selected][aria-controls]`, roving tabindex;
+←/→/↑/↓ move and select, Home/End; tab labels are numbered only when two
+examples share a level) and one `div.example__panel[role=tabpanel]
+[data-worked-example][tabindex=0]` per example (inactive ones `hidden`,
+holding the head, statement, known/want, strategy and step 1; params,
+figure, pauses, answer and sanity mount when the tab is first shown). A
+missing `figures[spec.figure]` logs a `console.error`. A standalone
+`WorkedExample` puts `data-worked-example` on its `article`.
 
-### 8.2 `Problem` ⏳ G3
+### 8.2 `Problem` ✅ G3
 
 ```ts
 interface ProblemProps {
@@ -1698,52 +1769,96 @@ interface ProblemProps {
   n?: number; total?: number;                                   // "Problem 4 · numeric · 4 of 8"
   figure?: ProblemFigure;                                       // (instance) => …; in a set: figures[spec.figure]
   custom?: ProblemCustom;                                       // (state, instance) => … for drag mode 'custom'; in a set: customs[spec.figure]
-  lessonId?: string;                                            // default useKit().lessonId: progress key (and DOM namespace on mixed pages)
+  lessonId?: string;                                            // default useKit().lessonId: progress key; passing it also namespaces the DOM key (mixed pages)
   instance?: ProblemInstance;                                   // a pre-drawn instance (ExamSet's paper); default drawProblem(spec, 0)
   mode?: 'practice' | 'exam' | 'review';                        // default 'practice'
-  response?: Signal<ExamResponse>;                              // exam: the answer as it stands (written on every edit)
+  response?: Signal<ExamResponse>;                              // exam: the answer as it stands (written on every edit); review: the answer shown
   verdict?: Verdict;                                            // review: the scored verdict to show
   onSolved?: (instance: ProblemInstance) => void;
+  hidden?: boolean;                                             // set-internal: a non-current problem of a paged set
+  dormant?: boolean;                                            // set-internal: head + prompt only until first shown (§1.10)
 }
+useProblemProgress(lessonId, problemId): ProblemProgress | undefined   // re-renders only when that record changes
 ```
 
-`article.card.problem[data-problem=<key>]`, `id="p-<domId(key)>"`, where
-`key` is the problem id on a lesson page and `problemKey(lessonId, id)` on a
-page that mixes lessons (§2). Answer inputs by kind:
-numeric/symbolic → `form.answer-row` (`label` with the TeX `label`, `.field`
-mono input, **Check**, `.answer-row__help` with the stated precision via
-`describePrecision`, live "We read: …" preview from `Verdict.understood`);
-numeric with `shape` → a `rows × cols` grid of fields in matrix brackets
-(row-major, arrow keys move between cells), joined for the checker; numeric
-with `complex` → one field per number with an "a + bi" placeholder (or one
-field accepting `1 ± 2i`); `equivalence` says so in the help line ("any
-nonzero multiple works"); choice → radio/checkbox `.choice` rows (+ a
-one-line reason field when `askReason`); drag → point (a small Stage2D +
-Handle from G2), order (a reorderable list: drag *or* move-up/down buttons),
-match (items → slots: drag *or* select menus), slider (G4 Slider), custom
-(the `custom` render prop); proof → optional textarea, then the model answer
-and a checklist the learner ticks; code → CodeCell editor + **Run tests**
-(sandboxed, per-test results, hidden tests shown as "hidden test 4 ✓/×").
-A problem with a `figure` key renders `figure(instance)` above the input and
-again in the solution.
-States (`mode: 'practice'`): unanswered · typing · wrong (`.field.is-wrong`,
-`.feedback--wrong` × + message, and the matching `.wrong-note` "Why 6 is the
-common wrong answer" ⚠) · right (`.is-correct`, ✓) · hints opened 1–3
-(`.hints .seg`: ① Nudge ② Strategy ③ First step; each unlocks the next;
-`aria-expanded`) · solution shown (after a right answer, or **Show solution**
-= giving up, which asks once and records `progress.reveal`; the solution
-lists every common-wrong note) · **Another one** (only if `spec.generate`:
-draws a new seed with `drawProblem`, resets the card, keeps attempt counts).
-Foot meta: "2 attempts · 1 hint". Writes `progress.attempt/hint/reveal`
-under its lesson id. Hints, the solution and wrong notes mount when first
-opened (§1.10).
-`mode: 'exam'`: the input only. No Check, verdicts, hints, solution or
-Another one; every edit writes `response` (code answers write
-`{ kind: 'code', source }`; ExamSet runs them at submit). `mode: 'review'`:
-read-only, shows the learner's response, `verdict` (✓/× + message), the full
-solution, the matching common-wrong note and every other one.
+`article.card.problem[data-problem=<key>]`, `id="p-<domId(key)>"`; `key` is
+the problem id, or `problemKey(lessonId, id)` when `lessonId` is passed
+(ProblemSet `items` and ExamSet always pass it). Inner ids derive from the
+article id, so two lessons' `p-2` never collide. Head: `p.label` "Problem n ·
+kind" (`kindLabel`: numeric, vector, matrix, complex number(s), expression,
+multiple choice, choose all that apply, drag the point, put in order,
+match, set the slider, on the figure, explain, code) · title · ★ stars with
+a word · "n of N".
 
-### 8.3 `ProblemSet` ⏳ G3
+Inputs by kind (one `form.problem__form`; Enter in a field checks):
+numeric/symbolic → `.answer-row` (TeX `label` or a visually hidden "Your
+answer", mono `.field`, **Check**, `.answer-row__help` from `answerHelp`:
+precision via `describePrecision`, list/order rules, equivalence ("any
+nonzero multiple works"), "Include the unit.", symbolic variables, "+ C is
+optional", disallowed functions; then `.answer-row__read` "We read: …" from
+`Verdict.understood` as the learner types, never saying right or wrong; an
+unreadable input says so only after a 0.9 s pause). `shape` → `.mgrid`
+(rows × cols fields in matrix brackets, `aria-label` "Row 2, column 1";
+↑/↓ move between rows, ←/→ at the caret's edge across; joined row-major,
+empty cells kept so the checker says "fill in all 4 entries"). `complex`
+→ one `a + bi` field per number (`1 ± 2i` in the first answers a pair).
+`askUnit: false` shows the unit after the field. choice → `fieldset.choices`
+of `.choice` radio rows (checkboxes for "choose all that apply"), lettered by
+display position, shuffled per `problemKey#seed` when `shuffle`; the picked
+row is inked; after Check the picked ones turn green/red with their `why`;
+`askReason` adds a one-line reason field that must be filled before Check.
+drag point → a plate with `Stage2D` + `Handle` (snap, constraint curve/x/y,
+context curves from the target), a readout and a keys line; the handle turns
+green when right. order → `ol.order` rows with a grip (mouse/touch drag,
+`touch-action: none` on the grip only) and ↑/↓ `icon-btn`s (keyboard; focus
+follows the row; moves are announced). match → `.match`: each item has a
+`select` (keyboard, screen readers, phones) and a grip to drag it onto a
+`.match__slot`, which lists what's in it. slider → G4 `Slider`. custom → the
+`custom(state, instance)` render prop holds the state signal, `describe`
+speaks it ("Your answer: …"); a missing renderer renders a note and logs a
+`console.error`. proof → optional textarea → **Compare with the model
+answer** → model answer + a checklist of `.choice--check` boxes →
+**Check my answer** (`checkProof`). code → an editor with CodeCell's look
+(`.codecell` classes; Tab indents, **Esc then Tab leaves**, Ctrl/⌘+Enter
+runs the tests; a visible keys line) + **Run tests** → `runSandboxed({ code,
+tests, timeoutMs })` → `.tests` (one line per test: ✓/× name, the call,
+expected/got; hidden tests only "hidden test 4 ✓/×"), console output, and
+the verdict (`runVerdict`; a run past the time limit says so; the next run
+gets a fresh worker).
+
+States (`mode: 'practice'`): unanswered · typing (the verdict clears on the
+next edit) · wrong (`.field.is-wrong`, `p.feedback.feedback--wrong` ×
+message in `aria-live="polite"`) · fix-it notes (empty, unreadable, missing
+entries or unit, too rough, unsimplified: `.feedback--note` ⚠, not counted
+as attempts: `countsAsAttempt`) · right (`.is-correct`, ✓, the solution
+opens) · the `.wrong-note` "Why 6 is the common wrong answer" ⚠ exactly when
+`Verdict.commonWrong` is set (`wrongNoteTitle`: the answer as typed, "option
+B", "this order") · hints (`.hints .seg[role=group]`: ① Nudge ② Strategy ③
+First step; each unlocks the next (locked ones are disabled and say what to
+open first); `aria-expanded`; open hints toggle; each new level writes
+`progress.hint`) · solution (`.solution[tabindex=-1]`: steps, boxed answer,
+✓ check, the figure again, choice `reasoning`, code's reference solution
+read-only, and every common-wrong note except the one already shown; **Show
+solution** asks once inline (`.reveal-confirm`: "Show it" / "Keep trying",
+focus on "Show it") and writes `progress.reveal`; no question once solved or
+revealed; then it toggles Hide/Show) · **Another one** (only with
+`spec.generate`: `nextInstance` draws seeds until the prompt differs; resets
+the card, keeps the attempt count, focuses the new prompt, announces it).
+Foot: Show solution · Another one · ✓ Solved / Solved with help · "2
+attempts · 1 hint" (`metaLine`, from progress). Hints, the solution and
+wrong notes mount when first opened.
+`mode: 'exam'`: head, prompt, figure and input only; every edit writes
+`response` (`draftToResponse`: null while nothing is entered; an untouched
+drag or untouched starter code is unanswered; code writes `{ kind: 'code',
+source }`). `mode: 'review'`: the response (read-only inputs; "Your answer:
+not answered"), `verdict` (✓/×/⚠ + message), the matching common-wrong note,
+and the full solution with every other note; choice rows mark the right
+option the learner didn't pick (`.choice.is-answer`).
+Every edit is applied to the latest draft (inputs pass updater functions;
+signal effects run synchronously, see §6), so quick successive edits and
+"arrow, then Enter" never lose a keystroke.
+
+### 8.3 `ProblemSet` ✅ G3
 
 ```ts
 interface ProblemSetProps {
@@ -1756,54 +1871,73 @@ interface ProblemSetProps {
 }
 ```
 
-Give exactly one of `problems` or `items`. With `items`, each problem is
-wrapped in its own scoped `KitProvider { lessonId, concepts }` (§3.1: its
-concept inks, macros and progress key), keyed `problemKey(lessonId, id)`,
-and gets its figure and custom renderer from `entry.figures`. A problem whose
-`figure` key has no renderer logs a `console.error` (so smoke catches it);
-a custom drag without one can't be answered and is left out of a practice
-page with a note.
-Paged: `ol.pset` dot strip (one `button.pset__dot` per problem, 44px;
-`is-solved` ✓ / `is-hinted` hatch / `is-attempted` dashed / to do; current
-`aria-current="step"`; status from progress) above the current `Problem`;
-**every `article[data-problem]` stays in the DOM** (`hidden` when not current;
-its body mounts when first shown). Next/previous via the dots or after
-solving ("Next problem →").
+Give exactly one of `problems` or `items` (both: `items` wins, with a
+`console.error`). With `items`, each problem renders inside its own scoped
+`KitProvider { lessonId, concepts }` (inks, macros, progress key), keyed
+`problemKey(lessonId, id)`, with its figure and custom renderer from
+`entry.figures`. A `figure` key with no renderer logs a `console.error`; a
+custom drag without its renderer is left out of a mixed page with a note
+(`.pset__note`).
+Paged: `div.card.problem-set` > `.pset__top` (`p.label` title, `ol.pset`,
+"3 of 8 solved") → every `article.card.problem[data-problem]` (non-current
+ones `hidden`; a body mounts when first shown) → `.pset__nav` (‹ Previous ·
+Next problem ›, primary once the current one is solved; focus moves to the
+new prompt). Dots: `button.pset__dot[data-hit]` (32px, a 44px hit area),
+`is-solved` ✓ fill / `is-hinted` hatch (solved with help) / `is-attempted`
+dashed (also "solution viewed") / to do; `aria-current="step"`; names like
+"Problem 3, Where does v land?: solved with help". Status from progress
+(`useProgress`), so it survives a reload; the set opens at the first
+unsolved problem.
+List: `div.problem-list` (title, "n of N solved", then every problem; each
+body mounts when it comes within 600px of the viewport).
 
-### 8.4 `Quiz` ⏳ G3
+### 8.4 `Quiz` ✅ G3
 
 ```ts
-interface QuizProps { questions: QuizSpec; title?: string; figures?: LessonFigures['quiz'] }
+interface QuizProps { questions: QuizSpec; title?: string /* "Quick check" */; figures?: LessonFigures['quiz'] }
 ```
 
-`article.card.quiz`: `.quiz__top` (dot strip `ol.quiz__dots`: right = green,
-wrong = red hatch, current = ink ring; "Question 2 of 5") → one
-`fieldset.quiz__set[data-quiz-question=<id>]` per question (non-current
-`hidden`), `legend.quiz__q`, then the question's `figure` (from `figures`)
-when it has one. Choice: 54px `.choice` rows with circled letter
-keys; picking checks immediately: wrong → red, ×, "Not quite." + that
-option's `why` right under it; right → green, ✓, "Right." + why. Drag
-questions reuse the order/match inputs, with `whyRight`/`whyWrong`. Foot:
-**Try again** · **Next question**. The end shows the score and a "review your
-misses" list; writes `progress.quiz` and, when finished, `progress.complete`.
+`article.card.quiz`: `.quiz__top` (`p.label` title, `ol.quiz__dots`: first
+answer right = green, wrong = red hatch, current = ink ring; "Question 2 of
+5") → one `fieldset.quiz__set[data-quiz-question=<id>]` per question (all in
+the DOM, non-current `hidden`), `legend.quiz__q`, the question's figure
+(`figures[q.figure]()`, a missing one logs a `console.error`). Choice:
+`.choice` rows whose `button.choice__btn` is the pick (`aria-pressed`;
+↑/↓ move focus between options without picking):
+picking checks immediately (wrong → red, × "Not quite." + that option's
+`why`; right → green ✓ "Right." + why; other options `aria-disabled`).
+Several right options: pick, then **Check** (missed right ones are marked
+"Also true."). Drag questions reuse OrderInput / MatchInput + **Check**,
+then `whyRight` / `whyWrong`. The verdict and why are spoken through a
+polite live region. Foot: **Try again** (after a wrong answer; the first
+answer stays the score) · **Next question** (→ "See your score" on the last
+one to answer). The summary (`.quiz__summary`, focused) shows the score and
+"Review your misses" buttons that jump back to each miss; **Start again**.
+Writes `progress.quiz` on every answer and, when finished, `progress.quiz
+(done)` + `progress.complete`.
 
-### 8.5 `Predict` ⏳ G3
+### 8.5 `Predict` ✅ G3
 
 ```ts
 interface PredictProps {
   spec: PredictSpec;
-  children: (s: { locked: boolean; guess: unknown; setGuess: (g: unknown) => void; correct: boolean | null }) => ComponentChildren;
+  children?: (s: PredictRenderState) => ComponentChildren;
 }
+interface PredictRenderState { locked: boolean; guess: unknown; setGuess: (g: unknown) => void /* ignored once locked */; correct: boolean | null }
 ```
 
-A "make your guess" wrapper: prompt → guess input (choice rows, a Slider for
-`number`, or the children's own visual via `setGuess` for `custom`) → **Lock
-in my guess** (disabled until a guess exists) → the children render the
-reveal (they decide what to hide while `!locked`), then `reveal` plus the
-`right`/`wrong` line with ✓/×. The guess can't change after locking (a
-*Try again later* link resets it). Writes `progress.predict`.
+`div.card.predict[data-predict]`: "Make your guess" → prompt → the children
+(the visual; it decides what to hide while `!locked`; a `custom` guess comes
+from it through `setGuess`, e.g. a Handle's `onDragEnd`) → choice rows
+(`button.choice__btn[aria-pressed]`) or a `Slider` for `number` (starts mid
+range; moving it makes the guess) → **Lock in my guess** (disabled until a
+guess exists, with a line saying what's missing) → the reveal
+(`.predict__reveal`, focused): "Your guess: Two. Right." / "… Not quite:
+it's 2.0 s." with ✓/×, `reveal`, then `right` or `wrong`; choice rows mark
+the guess and the answer. The guess can't change once locked; **Reset my
+guess** starts over. Writes `progress.predict`.
 
-### 8.6 `figures.tsx` and pages that mix lessons ✅ contracts · ⏳ G3 components
+### 8.6 `figures.tsx` and pages that mix lessons ✅
 
 CLAUDE.md §5 asks for a mixed practice page and an exam-style set per
 subject, drawing problems from every shipped lesson. Three contracts make
@@ -1855,7 +1989,7 @@ attempt, deterministic per seed), `scoreExam(paper, responses)` (the same
 checkers as practice), types `PracticeItem` (types.ts) and `PracticeEntry`
 (+ `figures`, core/figures.ts).
 
-### 8.7 `ExamSet` ⏳ G3
+### 8.7 `ExamSet` ✅ G3
 
 The timed, mixed exam-style set with a full solutions walkthrough at the end.
 
@@ -1864,31 +1998,37 @@ interface ExamSetProps {
   subjectId: string;                     // progress.exam key, e.g. 'linalg'
   items: readonly PracticeEntry[];       // the pool: every shipped lesson's PROBLEMS in the subject (§8.6)
   count?: number;                        // questions per paper; default 8
-  minutes?: number;                      // time limit; default 3 × count
+  minutes?: number;                      // time limit; default 3 × the questions on the paper
   mix?: ExamOptions['mix'];              // difficulty shares; default { 1: 0.25, 2: 0.5, 3: 0.25 }
   exclude?: readonly AnswerKind[];       // kinds that can't be auto-scored; default ['proof']
-  title?: string;
+  title?: string;                        // default "Exam-style set"
 }
 ```
 
-Flow: **start** (number of questions, time, "no hints and no feedback until
-you submit", previous attempts from `progress.read().exams[subjectId]`) →
-**Start** draws a paper with `drawExam(items, { seed: randomSeed(), … })` →
-**paper**: every question as `Problem mode="exam"` (numbered, each in its
-lesson's scoped provider, figure shown), a sticky timer (`role="timer"`,
-"12:30 left", announced politely at 5 and 1 minutes, never every second),
-an answered count and jump links → **Submit all** (confirms if questions
-are unanswered; auto-submits at 0:00) → code answers run through
-`runSandboxed` → `scoreExam` → **results**: score, time taken, a ✓/× strip,
-then the **walkthrough**: each question as `Problem mode="review"` (the
-learner's answer, the verdict, the full worked solution, the matching
-common-wrong note and every other one) → **Try another paper** (a new seed:
-generated problems change too). Writes `progress.exam(subjectId, { date,
-score, total, seconds })` and `progress.attempt(lessonId, id, correct)` for
-each answered question (no hints are recorded: none were available).
-DOM: `article.card.exam[data-exam=<subjectId>]`; questions keep
-`[data-problem=<key>]`. Keyboard: everything is a native control; the timer
-never steals focus. Reduced motion: no countdown animation.
+`article.card.exam[data-exam=<subjectId>]`, phases: **start** (questions,
+minutes, "no hints and no feedback until you submit", "generated questions
+change with every attempt", best / last attempt from
+`progress.read().exams[subjectId]`; an empty pool says so and disables
+Start) → **Start the paper**: `drawExam(items, { seed: randomSeed(), … })` →
+**paper**: a sticky `.exam__bar` (`role=group`: the timer `span.exam__timer
+[role=timer][aria-live=off]` "12:30 left", ticking from the deadline so a
+throttled tab never drifts, with a separate polite region that speaks only
+"5 minutes left." and "1 minute left."; "3 of 8 answered"; jump links to
+each question, inked when answered; **Submit all**) and every question as
+`Problem mode="exam"` in its lesson's scoped provider (figure and custom
+renderer from `entry.figures`) → **Submit all** (unanswered questions:
+an inline `.exam__confirm` "2 questions are unanswered: 3, 7. Submit
+anyway?" with focus on *Submit anyway*; at 0:00 it submits itself and says
+"Time is up") → **marking**: code answers run through `runSandboxed` one by
+one (the paper is `inert` meanwhile) → `scoreExam` → **results**
+(`.exam__results`, focused): "6 of 8 in 14 min 32 s", a ✓/× strip of links
+to each question, **Try another paper** (a new seed: generated problems
+change too), then the walkthrough: every question as `Problem mode="review"`.
+Writes `progress.exam(subjectId, { date, score, total, seconds })` and
+`progress.attempt(lessonId, id, correct)` for each answered question (no
+hints recorded: none were available). Keyboard: native controls only; the
+timer never takes focus. ExamSet itself never subscribes to the answers
+(only its bar does), so typing doesn't re-render the paper.
 
 <!-- /region:G3 -->
 

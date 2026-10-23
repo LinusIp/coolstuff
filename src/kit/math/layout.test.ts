@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { forceLayout, layeredLayout, layoutInorder, layoutTidy, type TreeNode } from './layout';
+import { circleLayout, forceLayout, layeredLayout, layoutInorder, layoutTidy, type TreeNode } from './layout';
 
 const bst: TreeNode = {
   id: '5',
@@ -32,6 +32,55 @@ describe('tree layouts', () => {
     expect(x('a')).toBe(0.5);
     expect(x('r')).toBe(1.25);
     expect(layoutTidy(null)).toEqual([]);
+  });
+
+  it('tidy layout keeps a lone child on its own side (null slots)', () => {
+    const right: TreeNode = { id: 'p', children: [null, { id: 'r' }] };
+    const left: TreeNode = { id: 'p', children: [{ id: 'l' }, null] };
+    const xr = layoutTidy(right);
+    const xl = layoutTidy(left);
+    const at = (ns: ReturnType<typeof layoutTidy>, id: string) => ns.find((n) => n.id === id)!.x;
+    expect(at(xr, 'r')).toBeGreaterThan(at(xr, 'p'));
+    expect(at(xl, 'l')).toBeLessThan(at(xl, 'p'));
+    // Phantom slots draw nothing: only real nodes come out.
+    expect(xr.map((n) => n.id)).toEqual(['p', 'r']);
+    // A node whose children are all null is a leaf (no phantom slots).
+    expect(layoutTidy({ id: 'a', children: [null, null] })).toEqual([{ id: 'a', x: 0, depth: 0, parent: null }]);
+  });
+
+  it('tidy layout of a heap keeps every left child left of its right sibling', () => {
+    const heap = (i: number, n: number): TreeNode | null =>
+      i >= n ? null : { id: String(i), children: [heap(2 * i + 1, n), heap(2 * i + 2, n)] };
+    const nodes = layoutTidy(heap(0, 10));
+    const x = (id: number) => nodes.find((n) => n.id === String(id))!.x;
+    for (let i = 0; 2 * i + 2 < 10; i++) expect(x(2 * i + 1)).toBeLessThan(x(2 * i + 2));
+    // Node 4 has only a left child (9): it sits to the left of 4.
+    expect(x(9)).toBeLessThan(x(4));
+  });
+
+  it('in-order layout keeps BST order through a rotation', () => {
+    // Right rotation at 5: 3 becomes the root, 4 moves under 5.
+    const rotated: TreeNode = {
+      id: '3',
+      children: [{ id: '1' }, { id: '5', children: [{ id: '4' }, { id: '8', children: [null, { id: '9' }] }] }],
+    };
+    const order = (t: TreeNode) => [...layoutInorder(t)].sort((a, b) => a.x - b.x).map((n) => n.id);
+    expect(order(rotated)).toEqual(order(bst));
+    const depth = (t: TreeNode, id: string) => layoutInorder(t).find((n) => n.id === id)!.depth;
+    expect(depth(rotated, '3')).toBe(0);
+    expect(depth(rotated, '5')).toBe(1);
+  });
+});
+
+describe('circle layout', () => {
+  it('spaces nodes on the inscribed circle, first at the top, clockwise', () => {
+    const p = circleLayout(['a', 'b', 'c', 'd']);
+    expect(p.get('a')).toEqual([0.5, 0]);
+    expect(p.get('b')).toEqual([1, 0.5]);
+    expect(p.get('c')).toEqual([0.5, 1]);
+    expect(p.get('d')).toEqual([0, 0.5]);
+    expect(circleLayout(['solo']).get('solo')).toEqual([0.5, 0.5]);
+    expect(circleLayout([]).size).toBe(0);
   });
 });
 

@@ -1,0 +1,10 @@
+{
+  "title": "Gradient descent",
+  "subject": "ml",
+  "unit": "Learning from data",
+  "order": 3,
+  "prerequisites": ["ml/linear-regression","calc3/gradient"],
+  "minutes": 20,
+  "level": "core",
+  "status": "wip"
+}

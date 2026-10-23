@@ -8,14 +8,16 @@
  * the last of them.
  */
 import '@kit/styles/index.css';
-import { CodeCell, Figure, LessonPage, Section, Step, WhereNext, mountLesson, type LessonMeta } from '@kit';
+import { CodeCell, LessonPage, RichText, Section, Step, WhereNext, mountLesson, type LessonMeta } from '@kit';
 import type { ComponentChildren } from 'preact';
 import meta from './meta.json';
+import { GuessDirections } from './hook';
+import { EigenHunt } from './play';
 import * as content from './problems';
 // import { FIGURES } from './figures';   // for WorkedExampleSet, Trap, ProblemSet and Quiz
 
 const ID = 'linalg/eigenvectors';
-const { C, GLOSSARY, REFERENCES, SNIPPETS } = content;
+const { C, GLOSSARY, PREDICTS, REFERENCES, SNIPPETS } = content;
 
 /** A clearly marked placeholder for a part of the lesson that isn't written yet. */
 function Wip({ use, children }: { use: string; children: ComponentChildren }) {
@@ -31,39 +33,20 @@ function Wip({ use, children }: { use: string; children: ComponentChildren }) {
 }
 
 mountLesson(
-  <LessonPage id={ID} meta={meta as LessonMeta} concepts={C} glossary={GLOSSARY} subtitle="work in progress">
+  <LessonPage id={ID} meta={meta as LessonMeta} concepts={C} glossary={GLOSSARY} subtitle="the directions a matrix doesn’t turn">
     <Section id="tldr" title="In three lines">
       <Wip use="<TLDR spec={TLDR} />">Three bullets and the key formula, printable as a revision sheet.</Wip>
     </Section>
 
-    <Section id="hook" title="A question to start">
-      <Wip use="prose + <Figure> (often <Predict>)">A question, puzzle or surprising visual that makes the idea feel necessary, in one screen.</Wip>
+    <Section id="hook" title="Which arrows survive?">
+      <RichText
+        text={'A matrix moves every arrow in the plane: it stretches some, squashes others, and swings almost all of them round to point somewhere new. *Almost* all. A few special directions come out exactly on the line they started on, and those directions turn out to explain what the matrix does: its long-run behaviour, its powers, its stability. Before we name them, find them by eye.'}
+      />
+      <GuessDirections spec={PREDICTS[0]} />
     </Section>
 
-    <Section id="play" title="Play with it">
-      <Figure
-        name="eigenvectors-play"
-        central
-        wide
-        caption="Work in progress: the central interactive."
-        description="A placeholder plate where the lesson's central interactive will go: directions a matrix doesn't turn."
-      >
-        <div class="plate__stage plate__stage--wide" data-wip>
-          <svg class="plate__layer" viewBox="0 0 640 360" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Placeholder for the central interactive">
-            <title>Work in progress: the central interactive</title>
-            <rect x="24" y="24" width="592" height="312" rx="3" class="fig-guide" />
-            <text x="320" y="172" text-anchor="middle" class="fig-label">
-              Work in progress
-            </text>
-            <text x="320" y="204" text-anchor="middle" class="fig-note">
-              directions a matrix doesn't turn
-            </text>
-          </svg>
-        </div>
-      </Figure>
-      <Wip use="<Figure central wide> + Stage2D / Plot / MatrixGrid, readout, mission, legend">
-        The central interactive, with no formulas: the learner explores freely, and the idea clicks within a minute.
-      </Wip>
+    <Section id="play" title="Hunt for the arrows that survive">
+      <EigenHunt />
     </Section>
 
     <Section id="build" title="Build the idea">

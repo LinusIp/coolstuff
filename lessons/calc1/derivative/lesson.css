@@ -1,0 +1,189 @@
+/* ==========================================================================
+   calc1/derivative: layout for the central interactive only (a graph stage
+   beside a speedometer panel, which the kit's Figure has no layout for).
+   Tokens only (DESIGN.md): no raw colours.
+   ========================================================================== */
+
+/* Graph stage + speedometer: stacked below 1000px, side by side on the wide plate. */
+.dv-play {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+}
+.dv-play > .plate__stage {
+  border-radius: var(--radius-plate) var(--radius-plate) 0 0;
+}
+@media (min-width: 1000px) {
+  .dv-play {
+    grid-template-columns: minmax(0, 1fr) 16rem;
+  }
+}
+/* Phones: the whole figure goes full-bleed like a bare stage would. */
+@media (max-width: 699px) {
+  .plate > .dv-play {
+    margin-inline: 0;
+  }
+}
+
+/* The road along the graph's right edge. */
+.dv-road__bed {
+  fill: var(--sunk);
+}
+.dv-road__edge {
+  fill: none;
+  stroke: var(--rule-strong);
+  stroke-width: 1.25;
+}
+.dv-road__lane {
+  fill: none;
+  stroke: var(--rule-strong);
+  stroke-width: 1.5;
+  stroke-dasharray: 7 7;
+}
+.dv-car__body {
+  fill: var(--c);
+  stroke: var(--plate);
+  stroke-width: 1.5;
+}
+.dv-car__glass {
+  fill: var(--plate);
+  opacity: 0.85;
+}
+.dv-car.is-ghost .dv-car__body {
+  fill: color-mix(in srgb, var(--c) 12%, var(--sunk));
+  stroke: var(--c);
+  stroke-width: 1.5;
+  stroke-dasharray: 4 3;
+}
+.dv-gap .fig-line {
+  stroke-width: 2;
+}
+
+/* The speedometer panel. */
+.dv-gauge {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2) var(--sp-5);
+  padding: var(--sp-3) var(--sp-4) var(--sp-4);
+  background: var(--plate);
+  border: var(--hair) solid var(--rule);
+  border-top: 0;
+}
+@media (min-width: 1000px) {
+  .dv-gauge {
+    flex-direction: column;
+    border-top: var(--hair) solid var(--rule);
+    border-left: 0;
+    border-radius: 0 var(--radius-plate) 0 0;
+  }
+  .dv-play > .plate__stage {
+    border-radius: var(--radius-plate) 0 0 0;
+  }
+}
+.dv-gauge__dial {
+  display: block;
+  width: 100%;
+  max-width: 14rem;
+  height: auto;
+}
+/* Below the wide layout the panel is a row: a smaller dial beside its two readings. */
+@media (max-width: 999px) {
+  .dv-gauge {
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+  }
+  .dv-gauge__dial {
+    flex: 0 0 11rem;
+    width: 11rem;
+  }
+  .dv-gauge__vals {
+    flex: 1 1 auto;
+  }
+}
+.dv-gauge__arc {
+  fill: none;
+  stroke: var(--axis);
+  stroke-width: 1.25;
+}
+.dv-gauge__needle {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 3.5;
+  stroke-linecap: round;
+}
+.dv-gauge__hub {
+  fill: var(--ink);
+  stroke: var(--plate);
+  stroke-width: 2;
+}
+.dv-gauge__avg .fig-line {
+  stroke-width: 2.5;
+}
+.dv-gauge__avg {
+  transition: color var(--dur-1) var(--ease-out);
+}
+.dv-gauge__vals {
+  display: grid;
+  gap: var(--sp-2);
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: var(--fs-meta);
+  min-width: 0;
+}
+.dv-gauge__val {
+  display: grid;
+  gap: 1px;
+}
+.dv-gauge__val:not(.ct) {
+  color: var(--ink);
+}
+.dv-gauge__val dt {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  color: var(--ink-2);
+}
+.dv-gauge__val.ct dt {
+  color: var(--c);
+}
+.dv-gauge__val dd {
+  margin: 0 0 0 calc(18px + var(--sp-2));
+  font-family: var(--font-mono);
+  font-size: var(--fs-code);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+.dv-swatch {
+  flex: none;
+  display: inline-block;
+  width: 18px;
+  height: 0;
+}
+.dv-swatch--needle {
+  border-top: 3.5px solid var(--ink);
+  border-radius: 2px;
+}
+.dv-swatch--ptr {
+  border-top: 2.5px solid var(--c);
+}
+
+/* Slider and the Drive button share a row when there is room. */
+.dv-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-2) var(--sp-4);
+}
+.dv-controls > .slider {
+  flex: 1 1 18rem;
+  min-width: 0;
+}
+.dv-drive {
+  gap: 6px;
+}
+.dv-drive .icon,
+.dv-drive svg {
+  width: 15px;
+  height: 15px;
+}

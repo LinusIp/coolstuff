@@ -42,24 +42,48 @@ export function layoutInorder(root: TreeNode | null): LaidOutNode[] {
  * General ("tidy") layout: leaves get consecutive x slots in left-to-right
  * order and each parent is centred over its children. Deterministic; fine for
  * the small trees lessons draw (heaps, tries, recursion trees, B-trees).
+ *
+ * A `null` child next to a real one keeps an empty slot, so a lone right
+ * child still sits to the right of its parent (and a lone left child to the
+ * left): binary trees keep left and right distinct in this layout too. A node
+ * whose children are all `null` is a leaf.
  */
 export function layoutTidy(root: TreeNode | null): LaidOutNode[] {
   const out: LaidOutNode[] = [];
   let nextLeaf = 0;
   const walk = (n: TreeNode, depth: number, parent: string | null): number => {
-    const kids = (n.children ?? []).filter((c): c is TreeNode => !!c);
+    const slots = n.children ?? [];
     const entry: LaidOutNode = { id: n.id, x: 0, depth, parent };
     out.push(entry);
     let x: number;
-    if (kids.length === 0) x = nextLeaf++;
+    if (!slots.some((c) => !!c)) x = nextLeaf++;
     else {
-      const xs = kids.map((k) => walk(k, depth + 1, n.id));
+      // A null slot beside a real child is a phantom leaf: it takes a slot but draws nothing.
+      const xs = slots.map((k) => (k ? walk(k, depth + 1, n.id) : nextLeaf++));
       x = (xs[0] + xs[xs.length - 1]) / 2;
     }
     entry.x = x;
     return x;
   };
   if (root) walk(root, 0, null);
+  return out;
+}
+
+/**
+ * Nodes evenly spaced on a circle inscribed in the unit square, in the given
+ * order, the first at the top and going clockwise (y grows downwards, as on
+ * screen). One node sits in the centre.
+ */
+export function circleLayout(ids: readonly string[]): Map<string, [number, number]> {
+  const n = ids.length;
+  const out = new Map<string, [number, number]>();
+  ids.forEach((id, i) => {
+    if (n === 1) return out.set(id, [0.5, 0.5]);
+    const a = -Math.PI / 2 + (2 * Math.PI * i) / n;
+    // Round away float noise so tests and snapshots stay stable (cos(π/2) = 6e-17).
+    const r = (v: number) => Math.round(v * 1e9) / 1e9;
+    out.set(id, [r(0.5 + 0.5 * Math.cos(a)), r(0.5 + 0.5 * Math.sin(a))]);
+  });
   return out;
 }
 

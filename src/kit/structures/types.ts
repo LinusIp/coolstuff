@@ -68,4 +68,10 @@ export interface ArchMetrics {
   /** Over all caches, if any. */
   hitRate?: number;
   perNode: Readonly<Record<string, { utilization: number; queue: number; up: boolean; served: number }>>;
+  /** Arrivals per second at the entry (recent window). */
+  offered?: number;
+  /** Mean response time of completed requests, ms (recent window). */
+  meanMs?: number;
+  /** Requests in the system right now (Little's L, instantaneous). */
+  inFlight?: number;
 }
