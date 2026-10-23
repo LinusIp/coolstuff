@@ -16,5 +16,7 @@
     "skipLibCheck": true,
     "noEmit": true
   },
-  "include": ["vite.config.ts", "vitest.config.ts", "scripts", "eslint.config.js", "src/**/vite-*.ts"]
+  "include": ["vite.config.ts", "vitest.config.ts", "scripts", "eslint.config.js", "src/**/vite-*.ts"],
+  // The lesson template holds {{placeholders}}; it is checked by scaffolding a lesson from it.
+  "exclude": ["scripts/lesson-template"]
 }

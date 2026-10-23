@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { decimalsForStep, formatSliderValue, sliderPosition, sliderValue, snapSliderValue, stepSliderValue, validateSliderScale, type SliderScale } from './slider-scale';
+import { decimalsForStep, formatSliderValue, magnetDetent, sliderExtreme, sliderPosition, sliderValue, snapSliderValue, stepSliderValue, validateSliderScale, type SliderScale } from './slider-scale';
 
 describe('slider scales', () => {
   const lin: SliderScale = { min: -2, max: 2, step: 0.25 };
@@ -58,5 +58,42 @@ describe('slider scales', () => {
     expect(formatSliderValue(-0.001, { min: -1, max: 1, step: 0.01 })).toBe('0.00');
     expect(decimalsForStep(0.25)).toBe(2);
     expect(decimalsForStep(5)).toBe(0);
+  });
+});
+
+describe('detents and extremes (G4 Slider)', () => {
+  const lin: SliderScale = { min: -2, max: 4, step: 0.05 };
+  const eta: SliderScale = { min: 0.001, max: 1.5, scale: 'log' };
+
+  it('magnetic within 1.5 steps on a linear scale; the nearest detent wins', () => {
+    const detents = [1, { value: 3, label: 'λ₁' }];
+    expect(magnetDetent(1.07, detents, lin)).toBe(1);
+    expect(magnetDetent(0.93, detents, lin)).toBe(1);
+    expect(magnetDetent(1.1, detents, lin)).toBe(1.1);
+    expect(magnetDetent(2.95, detents, lin)).toBe(3);
+    expect(magnetDetent(2, detents, lin)).toBe(2);
+    expect(magnetDetent(1.04, [1, 1.1], lin, 0.2)).toBe(1);
+    expect(magnetDetent(1.06, [1, 1.1], lin, 0.2)).toBe(1.1);
+  });
+
+  it('respects an explicit radius, and ignores excluded or out-of-range detents', () => {
+    expect(magnetDetent(1.4, [1], lin, 0.5)).toBe(1);
+    expect(magnetDetent(0.02, [0], { ...lin, exclude: [0] })).toBe(0.02);
+    expect(magnetDetent(4, [9], lin, 10)).toBe(4);
+    expect(magnetDetent(1, undefined, lin)).toBe(1);
+  });
+
+  it('on a log scale the radius is a fraction of the track, so it works at both ends', () => {
+    expect(magnetDetent(0.0011, [0.001], eta)).toBe(0.001);
+    expect(magnetDetent(1.45, [1.5], eta)).toBe(1.5);
+    expect(magnetDetent(0.0015, [0.001], eta)).toBe(0.0015);
+  });
+
+  it('Home and End land on allowed values', () => {
+    expect(sliderExtreme('min', lin)).toBe(-2);
+    expect(sliderExtreme('max', lin)).toBe(4);
+    expect(sliderExtreme('min', { min: 0, max: 1, step: 0.1, exclude: [0] })).toBe(0.1);
+    expect(sliderExtreme('max', eta)).toBe(1.5);
+    expect(sliderExtreme('min', eta)).toBe(0.001);
   });
 });

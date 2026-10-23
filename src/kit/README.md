@@ -813,7 +813,7 @@ depth and under a GitHub Pages sub-path. Smoke checks it offline.
 <!-- region:G4-shell -->
 ## 4. Lesson shell (G4)
 
-### 4.1 `LessonPage` ⏳ G4
+### 4.1 `LessonPage` ✅ G4
 
 The page frame every lesson uses. Provides context, linking, progress,
 concepts CSS, glossary, masthead, contents rail, lesson head and colophon.
@@ -832,26 +832,46 @@ mountLesson(vnode, el?: string | HTMLElement = '#app'): void   // initTheme, ren
 
 DOM (layout.css): `a.skip-link` → `header.masthead` (`SiteHeader`) →
 `div.page` > **`nav.rail`** (must come first: `.page` is a two-column grid at
-≥ 1240px) + `main.lesson#main` > `header.lesson-head` (kicker "Subject ·
-Lesson n", `h1.lesson-title` with `__main`/`__sub`, `ul.lesson-meta`: minutes,
-level pill, prerequisite links) → sections → `footer.colophon`.
+≥ 1240px) + `main.lesson#main[tabindex=-1]` > `header.lesson-head` (kicker
+"n Subject · Unit", `h1.lesson-title` with `__main`/`__sub`, `ul.lesson-meta`:
+minutes, level pill, a dashed "Work in progress" pill while `status` is
+`wip`, prerequisite links) → sections → `footer.colophon`.
 
-Behaviour: `C.mount()` once (page-wide); `KitProvider { lessonId: id,
-concepts, scoped: false }`; `installLinking()`; `installGlossary()` with the
-lesson's terms registered; `progress.visit(id)`; an IntersectionObserver
-marks each section seen (`progress.section`) and drives the rail's
-`aria-current` and the masthead progress; `?thumb` in the URL hides the
-masthead for thumbnail capture. Title: `document.title = "<title> — coolstuff"`
-when missing. LessonPage imports `../text/Glossary` directly, never the
-`../text` barrel (PLAN §3: no barrel cycles).
+Behaviour: `C.mount()` once (page-wide, before first paint); `KitProvider
+{ lessonId: id, concepts, scoped: false }`; `installLinking()`; the glossary
+(below); `progress.visit(id)`; one IntersectionObserver over the page's
+`[data-section]`s (a reading band at 30–45% of the viewport) marks each
+section seen (`progress.section`) and drives the rail's `aria-current`
+(rail entries are the sections' kickers; reached ones get `.is-done`) and
+the masthead progress; `?thumb` in the URL hides the masthead for thumbnail
+capture. Title: `document.title = "<title> — coolstuff"` when missing.
+Prerequisites (lesson head) and WhereNext cards link only to **shipped**
+lessons (`@content/lessons.json`); the others are plain text / "coming soon".
 
-### 4.2 `Section` and `Step` ⏳ G4
+Sections are read from LessonPage's children (`scanSections`: direct
+children, fragments and arrays), so a Section's number is known at the
+first render; keep Sections as direct children (conditionals are fine).
+
+**Glossary.** LessonPage loads G1's `text/Glossary.tsx` by file (never the
+`../text` barrel, PLAN §3) through an eager `import.meta.glob`, so it builds
+before that file exists. It calls `registerGlossary(entries)` with
+`{ term, definition, lesson: id }` and then `installGlossary()` (and its
+return value on unmount). Until G1 lands, `dfn.gloss` terms stay plain.
+
+Links (`shell/links.ts`, tested): `LESSON_TO_ROOT` (`'../../../'`),
+`lessonHref(id)` (`'../../<subject>/<slug>/'`), `subjectHref(subject)`
+(the subject on the home page until subject pages exist: integration
+changes that one function), `siteRoot()` / `rootFrom(manifestHref, path)`
+(the site root from the page's manifest link, at any depth).
+
+### 4.2 `Section` and `Step` ✅ G4
 
 ```ts
 interface SectionProps {
   id: LessonSectionId;              // one per page; the §4 id
   title: string;                    // the h2
   kicker?: string;                  // default SECTION_KICKERS[id]
+  n?: number;                       // number shown when used outside LessonPage (inside, it is the position)
   children: ComponentChildren;
 }
 interface StepProps {               // one "Build the idea" step (§4.4: 3–6 per lesson)
@@ -863,63 +883,79 @@ interface StepProps {               // one "Build the idea" step (§4.4: 3–6 p
 
 `Section` → `<section class="section" id data-section aria-labelledby>` with
 `header.section__head` (`p.kicker` with `span.kicker__num` = position among
-the page's sections, then `h2`). The first section gets `section--first`.
-Registers itself with LessonPage for the rail and progress.
-`Step` → `div.build-step[data-step]` with an optional `h3.build-step__title`
-prefixed by its number; Scrolly steps carry `data-step` too (§7.5), so smoke
-counts either form.
+the page's sections, then `h2#<id>-title`). The first section gets
+`section--first`. `Step` → `div.build-step[data-step="<n>"]` with an optional
+`h3.build-step__title` (`span.build-step__n` + the Rich title); Scrolly steps
+carry `data-step` too (§7.5), so smoke counts either form.
 
-### 4.3 `Figure` and its strip: `Readout`, `Mission`, `Legend`, `FigKeys` ⏳ G4
+### 4.3 `Figure` and its strip: `Readout`, `Mission`, `Legend`, `FigKeys` ✅ G4
 
 The plate around any visual (DESIGN.md §5). Stages (Stage2D, Plot,
 GraphView…) go inside as children.
 
 ```ts
 interface FigureProps {
-  name: string;                       // data-figure; unique per page, kebab-case
+  name: string;                       // data-figure; unique per page, kebab-case (also the caption/description id prefix)
   caption: Rich;                      // figcaption (required)
   description: string;                // longer plain-text description for screen readers
-  label?: string;                     // default "Figure n" (auto-numbered in page order)
+  label?: string;                     // default "Figure n" (numbered in page order; figures inside problems, examples, quiz questions and traps get no number)
   wide?: boolean;                     // .is-wide: text + margin (912px) at ≥ 1000px
   central?: boolean;                  // data-thumb: the lesson's central interactive
-  readout?: ComponentChildren;        // mono strip joined under the stage (aria-live="polite")
+  readout?: ComponentChildren;        // mono strip joined under the stage (aria-live="polite"); a <Readout> is used as is
+  controls?: ComponentChildren;       // knobs (Slider, Segmented, Toggle…) set under the readout, in .plate__controls
   mission?: MissionProps;             // "Try it" goals
   keys?: ComponentChildren;           // keyboard help line; defaults to the standard handle text when `interactive`
   interactive?: boolean;              // shows the default keys line
   legend?: readonly LegendItem[];
   children: ComponentChildren;
 }
+type Reactive<T> = T | ReadonlySignal<T>;
 interface LegendItem { concept?: string; line?: LineStyle; hue?: Hue; label: Rich }
-interface MissionProps { title?: string; goals: readonly { text: Rich; done: boolean | ReadonlySignal<boolean> }[]; status?: Rich | ReadonlySignal<Rich>; correct?: boolean | ReadonlySignal<boolean> }
-<Readout status? correct?>…<ReadoutPair concept sym value /> …</Readout>
-<FigKeys>…</FigKeys>
+interface MissionProps { title?: string; goals: readonly { text: Rich; done: Reactive<boolean> }[]; status?: Reactive<Rich>; correct?: Reactive<boolean> }
+<Readout status?: ComponentChildren | ReadonlySignal<Rich> correct?: Reactive<boolean>>…<ReadoutPair concept? sym: Rich value decimals? /> …</Readout>
+   // ReadoutPair value: a signal, computed or getter (formatLive), a number or vector, or JSX
+<Mission {...MissionProps} />  <Legend items label? />  <FigKeys>…</FigKeys>  <DefaultKeys />
 ```
 
-DOM: `<figure class="plate[ is-wide]" data-figure aria-describedby="<name>-cap <name>-desc">`
-children → `.readout` → `.plate__below` > `.plate__main` (`.mission`,
-`.fig-keys`) + `.plate__side` (`ul.legend`, `figcaption.caption#<name>-cap`
-with `span.label.caption__label`) → `p.sr-only#<name>-desc`.
+DOM: `<figure class="plate[ is-wide]" data-figure [data-thumb] aria-describedby="<name>-cap <name>-desc">`
+→ (text-width only: `figcaption.caption#<name>-cap` **first**, so it floats
+into the margin at ≥ 1000px beside the stage; below 1000px it reads last) →
+children → `.readout` → `.plate__controls` → `.plate__below` > `.plate__main`
+(`.mission`, `.fig-keys`) + `.plate__side` (`ul.legend`, and for wide plates
+the `figcaption` with `span.label.caption__label`) → `p.sr-only#<name>-desc`.
+Legend rows with a concept are `li.ct.ct-<concept>[tabindex=0]`: they light
+the concept on hover and focus (the keyboard route to hover-linking) and
+wash when it is lit elsewhere. Mission goals tick green over 240ms, each
+goal carries a sr-only "Done." / "Not yet.", and each new tick is announced
+(`announce()`).
 
-### 4.4 `SiteHeader`, `ReadingProgress`, `ThemeToggle` ⏳ G4
+### 4.4 `SiteHeader`, `ReadingProgress`, `ThemeToggle` ✅ G4
 
 ```ts
 interface SiteHeaderProps {
   crumbs: readonly { label: string; href?: string }[];   // last one is aria-current="page"
   progress?: boolean;                                     // show ReadingProgress (lesson pages)
-  home?: string;                                          // wordmark href (relative; default computed from depth)
+  home?: string;                                          // wordmark href (relative; default siteRoot() from the manifest link)
 }
-<ReadingProgress />   // segmented hairline: one segment per [data-section]; role="progressbar"
+<ReadingProgress />   // segmented hairline: one segment per [data-section]; role="progressbar", aria-valuenow = current section
 <ThemeToggle />       // icon-btn.theme-toggle; toggleTheme(); aria-label "Switch light or dark"
+useSectionTrack(root?, onSeen?) → { ids, current, seen }   // the observer LessonPage shares through SectionTrackContext
 ```
 
 Used by site pages too (home, subject, graph, practice). Phones: wordmark +
-toggle; progress becomes a full-width hairline on the masthead's bottom edge.
+toggle; progress becomes a full-width hairline on the masthead's bottom
+edge; tablets keep the first and last crumb. The toggle persists the choice
+(`coolstuff:theme`) and syncs `meta[name=theme-color]`. ReadingProgress uses
+LessonPage's tracker when inside one, else observes `[data-section]` itself.
 
-### 4.5 `WhereNext`, `References` ⏳ G4
+### 4.5 `WhereNext`, `References` ✅ G4
 
 ```ts
-interface WhereNextProps { lessonId: string; references: readonly Reference[]; extraBuildsOn?: string[]; extraUnlocks?: string[] }
+interface WhereNextProps { lessonId: string; references: readonly Reference[]; extraBuildsOn?: readonly string[]; extraUnlocks?: readonly string[] }
 <References items={refs} />
+<LessonCard card={LessonCardData} dir? />            // one card (site pages reuse it)
+whereNext(lessonId, lessons, subjects, index, extras?) → { buildsOn, unlocks }   // pure, tested
+referenceParts(ref) · referenceText(ref)             // pure, tested
 ```
 
 Reads `@content/curriculum` (prerequisites; dependents = lessons listing this
@@ -927,8 +963,26 @@ one) and `@content/lessons.json` (shipped status, summaries). Renders
 `.next-grid` with "← Builds on" / "Unlocks →" `.lesson-cards`; unshipped
 lessons are `div.lesson-card.is-soon` "coming soon" (not links). Then
 `p.label` "References" + `ol.refs` with one `li[data-ref]` per reference
-(small-caps authors, italic title, edition, publisher, year, section; URLs as
-text, never fetched). Links are relative (`../../<subject>/<slug>/`).
+(small-caps authors, italic `cite` title, edition, venue, publisher, year,
+section; URLs as text, never fetched). Links are relative
+(`../../<subject>/<slug>/`).
+
+### 4.6 The lesson template (`npm run new -- <subject> <slug>`) ✅ G4
+
+`scripts/lesson-template/` is what `npm run new` copies (with `{{vars}}`
+filled from curriculum.ts): `index.html`, `meta.json` (`status: "wip"`),
+`NOTES.md` (the five-line plan + checklist), `math.ts` and `problems.ts`
+(pure, `@kit/pure` / `@kit/math`; every `LessonContent` export as a typed
+stub), `figures.tsx` (`defineFigures({})`), `lesson.tsx` (LessonPage with all
+eleven §4 sections; every unwritten part is a `<Wip use="…">` card with
+`data-wip` naming the component that replaces it; a real central `Figure`
+placeholder, three `Step`s, a working `CodeCell` on the stub snippet and
+`WhereNext`), and `lesson.test.ts` (`auditLesson(content, { knownLessons })`,
+`auditFigureKeys(content, FIGURES)`, an answer check that fails until written
+and a `runSnippet` check, all skipped while `PROBLEMS` is empty; meanwhile it
+checks the lesson stays `wip` and tests math.ts). A wip lesson builds, renders
+every section and passes its tests; smoke still fails it on counts (no
+examples, problems, quiz…), as it should until the content exists.
 
 <!-- /region:G4-shell -->
 
@@ -1091,88 +1145,104 @@ safety (`safeHref`), add glossary popover wiring through `installGlossary`.
 <!-- region:G2 -->
 ## 6. Visuals (G2)
 
-### 6.1 `Stage2D` and primitives ⏳ G2
+Import from `@kit` (barrel `src/kit/visual/index.ts`), except 3D: `@kit/visual/Stage3D`.
+Pure helpers behind the components are tested: `scales.ts` (world↔pixel,
+axes, clipping, label placement), `constraints.ts` (handle constraints, snap,
+keys), `sampling.ts` + `series.ts` (adaptive sampling, per-series computeds),
+`ramp.ts` (heat colours), `matrixgrid.ts`, `scene3d.ts`, `frame.ts` (≤ 1
+update per frame), and `math/eig3.ts` (`cubicRoots`, `eig3`).
+
+### 6.1 `Stage2D` and primitives ✅
 
 A coordinate plane with grid, axes, pan/zoom and draggable handles.
 
 ```ts
 interface Stage2DProps {
-  view: ViewBox | Signal<ViewBox>;          // { x: [xmin, xmax], y: [ymin, ymax] } in world units
+  view: ViewBox | Signal<ViewBox>;          // { x: [xmin, xmax], y: [ymin, ymax] } in world units; a signal is written by pan/zoom
   title: string;                            // SVG <title> (accessible name)
   aspect?: number | { desktop: number; phone: number };   // height/width; default { desktop: 0.62, phone: 0.94 }
   equalScale?: boolean;                     // default true: 1 unit is the same length on both axes (view grows to fit)
   grid?: boolean | { step?: number };       // default true; nice steps from niceStep()
-  axes?: boolean | { x?: Rich; y?: Rich; ticks?: boolean };   // default true
-  pan?: boolean;                            // drag empty space / two fingers; default false
-  zoom?: boolean | { min: number; max: number };   // ctrl/⌘-wheel, pinch, +/− keys; default false; never hijacks page scroll
+  axes?: boolean | { x?: Rich; y?: Rich; ticks?: boolean | 'x' | 'y' };   // default true; axis names in the HTML overlay
+  pan?: boolean;                            // drag empty space (mouse) / two fingers (touch); default false
+  zoom?: boolean | { min: number; max: number };   // ctrl/⌘-wheel, pinch, +/− keys; zoom level relative to the initial view; default false
   hint?: string | false;                    // first-touch note beside the first handle; default "drag the ring"
   static?: ComponentChildren;               // primitives for the static layer (drawn once per resize)
   children?: ComponentChildren;             // primitives for the dynamic layer
   class?: string;
 }
 useStage(): StageApi
-interface StageApi { view: ViewBox; width: number; height: number; pxPerUnit: number; toPx(p: Vec2): Vec2; toWorld(px: Vec2): Vec2 }
+interface StageApi { view; width; height; pxPerUnit; pxPerUnitY; toPx(p: Vec2): Vec2; toWorld(px: Vec2): Vec2 }
 ```
 
-Primitives (all accept `concept?: string`, `emphasis?: 'focal' | 'quiet' |
-'context'` (2.5px / 2px@62% / 22%), `label?: Rich`, and `Vec2 | ReadonlySignal<Vec2>`
-wherever a point is expected):
+Primitives (all accept `concept?`, `emphasis?: 'focal' | 'quiet' | 'context'`
+(2.5px / 2px@62% / 22%), `label?: Rich` (KaTeX allowed), `correct?:
+boolean | ReadonlySignal<boolean>` (draw in green: "the answer is earned"),
+and `Vec2 | ReadonlySignal<Vec2>` wherever a point is expected):
 
 ```ts
-<Vector from?={[0,0]} to concept label? />                    // arrowheads scale with stroke
-<Segment a b concept /> · <Line through={[p, q]} concept />   // Line is infinite, clipped to the view
-<Point at concept r? label? />
-<Curve f={(x) => y} concept samples? /> · <Curve param={(t) => [x, y]} t={[a, b]} concept />   // adaptive; breaks at discontinuities
-<Polyline points closed? concept /> · <Polygon points fill?: 'wash' | 'hatch' concept />
-<Label at text: Rich concept? anchor?: 'n'|'ne'|'e'|… />      // haloed, clamped inside the plate; KaTeX allowed (HTML overlay)
-<Band through direction width? concept />                      // the "found" band (DESIGN.md §5)
-<Arc center from to r? label? />                               // angle marks
+<Vector from?={[0,0]} to concept label? labelAnchor? labelGap? />   // filled head scales with the stroke; labelGap ≈ 22 when a handle sits on the tip
+<Segment a b concept /> · <Line through={[p, q]} concept />          // Line is infinite, clipped to the view
+<Point at concept r? label? hollow? />                               // hollow: an excluded endpoint
+<Curve f={(x) => y} concept domain? samples? /> · <Curve param={(t) => [x, y]} t={[a, b]} concept />   // adaptive; breaks at poles, jumps, domain edges
+<Polyline points closed? concept /> · <Polygon points fill?: 'wash' | 'hatch' | 'none' outline? concept />
+<Label at text: Rich concept? anchor?: 'n'|'ne'|'e'|'se'|'s'|'sw'|'w'|'nw'|'c' gap? focusable? term? />   // haloed, clamped inside the plate; focusable (publishes its concept) when it has a concept
+<Band through direction width? line? concept label? />               // the "found" band: 16px soft band + the line in its style + a name along it (kept inside the plate)
+<Arc center from to r? label? />                                     // angle mark, smaller angle between the arms
+<ConceptGroup concept>…</ConceptGroup>                               // marks that light together
 <Handle
   value: Signal<Vec2>
   label: string                                  // accessible name: "the input arrow v"
-  concept?: string
-  constrain?: 'free' | { x: number } | { y: number } | { curve: (x: number) => number } | { line: [Vec2, Vec2] } | { circle: { c: Vec2; r: number } } | ((p: Vec2) => Vec2)
-  snap?: number | readonly Vec2[]                // grid step, or magnetic targets (within 12px / 3°)
-  step?: number                                  // arrow-key step (default 0.1; Shift ×5)
-  bounds?: ViewBox
+  concept?: string                               // ink when omitted (blue would claim "input")
+  constrain?: 'free' | { x } | { y } | { curve: (x) => y } | { line: [Vec2, Vec2] } | { circle: { c, r } } | ((p: Vec2) => Vec2)
+  snap?: number | readonly Vec2[]                // grid step, or magnetic point targets (within 12px)
+  snapDirections?: readonly Vec2[]               // magnetic directions from `origin` (default [0,0]) within 3°
+  step?: number                                  // arrow-key step (default: the grid snap, else 0.1; Shift ×5)
+  bounds?: ViewBox                               // default: the visible view
   correct?: boolean | ReadonlySignal<boolean>    // green "found" state
+  symbol?: string; valueText?: (v) => string     // aria-valuetext "v = (1.40, 0.20)"
+  disabled?: boolean
   onDragStart?(): void
-  onDragEnd?(value: Vec2): void                  // e.g. a Predict guess: onDragEnd={setGuess}
+  onDragEnd?(value: Vec2): void                  // once per drag, and after each keyboard move: onDragEnd={setGuess}
 />
-<CanvasLayer draw={(ctx: CanvasRenderingContext2D, api: StageApi) => void} />   // heavy content; re-draws when signals it reads change
+<CanvasLayer draw={(ctx, api) => void} />        // DPR-scaled, cleared; re-draws ≤ 1/frame when signals it reads change
 ```
 
-Handles: 5.5px dot + 14px ring on a 13% wash over a **44px** transparent hit
-area; ring grows on hover/drag; `cursor: grab/grabbing`; `touch-action: none`
-on the handle only (the page still scrolls around the figure);
-`role="slider"`, `aria-valuetext="v = (1.40, 0.20)"`, arrows move it; the
-first handle breathes three times and shows the hand-lettered hint until the
-first interaction (skipped under reduced motion). Dragging a handle lights its
-concept on the link bus.
-Layers: static SVG (`.plate__layer--static`, never touched during a drag) +
-dynamic SVG + optional canvas + HTML label overlay. Long dashed lines are
-clipped to the view.
+Handles: 5.5px dot + 14px ring on a 13% wash over a **45px** transparent hit
+circle; ring grows on hover/drag; `role="slider"`, `aria-valuetext`, arrows
+move it (along the constraint: curve/line/x/y/circle), Home/End to the ends of
+a curve/line constraint (a curve handle stays on the piece of the curve inside
+its bounds). Touch: the stage cancels `touchstart`/`touchmove` that begin on a
+`.fig-handle` (or any `[data-touch-capture]` element, for custom draggables),
+so dragging a handle never scrolls the page while every other touch scrolls
+normally (`touch-action: pan-y` on the plate). The first handle breathes three
+times and shows the hand-lettered hint until the first interaction (no
+breathing under reduced motion). Dragging lights the handle's concept on the
+link bus. Writes reach the signal at most once per animation frame.
 
-**Reactivity.** Every primitive that takes `Vec2 | ReadonlySignal<Vec2>` (and
-`Curve`'s `f`, `CanvasLayer`'s `draw`) reads its signals inside the dynamic
-layer's render: a signal change re-renders only that primitive, at most once
-per animation frame; the static layer never repaints for a signal.
-**Keyboard.** Handles: arrows (Shift ×5), Home/End along a `curve`/`line`
-constraint. When `pan` or `zoom` is on, the stage itself is focusable
-(`tabindex=0`, `aria-label` = title + "use arrow keys to pan"): arrows pan
-by a tenth of the view, `+`/`−` zoom, `0` resets the view; the stage's own
-`.fig-keys` line says so.
+Layers (bottom → top): static canvases · static SVG
+(`.plate__layer--static`: grid, axes, `static` primitives) · dynamic canvases ·
+dynamic SVG (`role="group"`, `aria-labelledby` the `<title>`) · HTML overlay
+(labels). On the dynamic layer a primitive reads its signals during render (a
+change re-renders that primitive only); on the static layer it peeks (and
+samples functions untracked), so **the static layer never repaints for a
+signal**. Dev hook: the stage element carries `data-renders="static:n
+dynamic:m"`.
+**Keyboard.** When `pan` or `zoom` is on, the stage is focusable (`tabindex=0`,
+`aria-label` = title + "; use arrow keys to pan"): arrows pan by a tenth of
+the view, `+`/`−` zoom, `0` resets (a Reset view button appears once moved);
+Stage2D renders its own `.fig-keys` line after the plate stage.
 
-### 6.2 `Plot` ⏳ G2
+> SVG note for every group: in Preact write `tabindex` (lowercase) on SVG
+> elements; `tabIndex` becomes a case-sensitive attribute browsers ignore.
+
+### 6.2 `Plot` ✅
 
 Charts on Stage2D: functions, parametric curves, points, live series,
 histograms, bars, vector fields, contour maps, heat maps, shaded areas and
 Riemann sums.
 
 ```ts
-type Fn1 = (x: number) => number;
-type Fn2 = (x: number, y: number) => number;
-type MaybeSignal<T> = T | ReadonlySignal<T>;
 interface PlotProps {
   title: string;
   x: readonly [number, number];
@@ -1180,61 +1250,52 @@ interface PlotProps {
   series: readonly PlotSeries[];
   xLabel?: Rich; yLabel?: Rich;
   cursor?: Signal<number>;           // draggable vertical cursor at this x (linked plots share one signal)
-  equalScale?: boolean;              // default false for plots (true for contour/heat maps of a 2D domain)
+  cursorLabel?: string;              // its accessible name (default "the cursor")
+  equalScale?: boolean;              // default false (true when a series is a field, contour or heat map)
   aspect?: Stage2DProps['aspect'];
+  grid?: Stage2DProps['grid'];       // default true, except under a heat map
+  hint?: string | false;             // first-touch hint for a Handle child (default none)
   children?: ComponentChildren;      // extra primitives on top (Handle, Point, Label…)
 }
-type PlotSeries =
-  | { kind: 'function'; f: MaybeSignal<Fn1>; concept?: string; label?: Rich }
-  | { kind: 'parametric'; f: MaybeSignal<(t: number) => Vec2>; t: readonly [number, number]; concept?: string; label?: Rich }
-  | { kind: 'points'; data: MaybeSignal<readonly Vec2[]>; concept?: string; label?: Rich }
-  | { kind: 'line'; data: MaybeSignal<readonly Vec2[]>; concept?: string; label?: Rich }   // live series (training loss, an iterate path)
-  | { kind: 'histogram'; data: MaybeSignal<readonly number[]>; bins: number; range?: readonly [number, number]; density?: boolean; concept?: string }
-  | { kind: 'bars'; values: MaybeSignal<readonly number[]>; labels?: readonly string[]; concept?: string }
-  | { kind: 'field'; F: MaybeSignal<(x: number, y: number) => Vec2>; density?: number; concept?: string }
-  | { kind: 'contour'; f: MaybeSignal<Fn2>; levels?: readonly number[] | number; resolution?: number; concept?: string; labels?: boolean; label?: Rich }
-  | { kind: 'heat'; f: MaybeSignal<Fn2>; range?: readonly [number, number]; resolution?: number; scheme?: 'sequential' | 'diverging'; concept?: string; label?: Rich }
-  | { kind: 'area'; f: Fn1; from: MaybeSignal<number>; to: MaybeSignal<number>; concept?: string }
-  | { kind: 'riemann'; f: Fn1; a: number; b: number; n: MaybeSignal<number>; rule: MaybeSignal<RiemannRule>; concept?: string };
+type PlotSeries = (one of the kinds below) & { concept?: string; layer?: 'static' | 'dynamic' }
+  | { kind: 'function'; f: MaybeSignal<Fn1>; label?: Rich }
+  | { kind: 'parametric'; f: MaybeSignal<(t) => Vec2>; t: [a, b]; label?: Rich }
+  | { kind: 'points'; data: MaybeSignal<readonly Vec2[]>; label?: Rich }
+  | { kind: 'line'; data: MaybeSignal<readonly Vec2[]>; label?: Rich }        // live series (training loss, an iterate path)
+  | { kind: 'histogram'; data: MaybeSignal<readonly number[]>; bins; range?; density? }
+  | { kind: 'bars'; values: MaybeSignal<readonly number[]>; labels? }          // bar k centred on x = k, width 0.8
+  | { kind: 'field'; F: MaybeSignal<(x, y) => Vec2>; density? }
+  | { kind: 'contour'; f: MaybeSignal<Fn2>; levels?: number[] | number; resolution?; labels?; label? }
+  | { kind: 'heat'; f: MaybeSignal<Fn2>; range?; resolution?; scheme?: 'sequential' | 'diverging'; label? }
+  | { kind: 'area'; f: Fn1; from: MaybeSignal<number>; to: MaybeSignal<number> }
+  | { kind: 'riemann'; f: Fn1; a; b; n: MaybeSignal<number>; rule: MaybeSignal<RiemannRule> };
 ```
 
-**Reactivity (binding, tested).** Each series is sampled inside its own
-`computed`. A series whose `f` *reads signals when called* (a tangent line
-at a dragged `x0`, the secant for a slider `h`, a Taylor partial sum with `n`
-terms) or that is given signals (`f` as a `ReadonlySignal<Fn1>`, `data`,
-`n`, `from`, …) re-samples **only that series**, on the dynamic layer, at most
-once per frame; series that read no signals are sampled once per resize on
-the static layer. Never rebuild the `series` array per render to "refresh"
-a curve: write a signal. Adaptive sampling (`function`) breaks at poles
-(tan x shows no vertical connector) and `auto` y-ranges ignore infinities.
+**Reactivity (binding, tested).** Each series is sampled in its own `computed`
+(`createSeriesSampler`): a series whose `f` reads signals when called, or that
+is given signals, re-samples **only that series**, at most once per frame;
+the others are sampled once per resize. `layer` decides where a series is
+drawn: by default series with functions or signals go on the dynamic layer
+(their functions may read signals; a constant one is still sampled only once),
+plain data on the static layer; pass `layer: 'static'` for a heavy series you
+know never changes (a loss landscape's contours). (A function's signal reads
+can't be detected through `@preact/signals`' public API, hence the explicit
+override rather than automatic placement.) Dev hook: `data-samples="0:1 1:7"`
+counts samplings per series. Long series are thinned to ≥ 0.5px steps before
+stroking (`simplifyPx`), so a 2,000-point live line stays cheap. Adaptive
+sampling breaks at poles (tan x has no vertical connector) and `auto` y-ranges
+ignore infinities and trim pole spikes.
+**Contour and heat maps.** `contour` draws `contours(f, view, levels,
+resolution)` in the concept's ink and line style with optional haloed level
+labels; `heat` fills a canvas layer with a sequential (plate → concept ink) or
+diverging (neutral ink ← plate → concept ink, centred on 0) ramp, with a key
+chip in the top-right corner; pair it with contours or labels.
+**Keyboard.** The cursor grip is a `role=slider` (`aria-valuetext` "x = 1.4"):
+arrows move it by 1/100 of the x range (Shift ×10, PageUp/PageDown ×10),
+Home/End to the ends; the grip is a 45px target; on touch only the grip drags
+(the rest of the plot scrolls the page), on desktop the whole cursor line too.
 
-```tsx
-const x0 = signal<Vec2>([1, 1]);                         // a handle on the curve
-const tangent = (x: number) => f(x0.value[0]) + derivative(f, x0.value[0]) * (x - x0.value[0]);
-<Plot title="f and its tangent" x={[-2, 3]} y="auto" series={[
-  { kind: 'function', f, concept: 'output' },
-  { kind: 'function', f: tangent, concept: 'rate' },        // re-sampled whenever x0 moves
-]}>
-  <Handle value={x0} constrain={{ curve: f }} label="the point of tangency" concept="rate" />
-</Plot>
-```
-
-**Contour and heat maps.** `contour` draws `contours(f, view, levels, resolution)`
-(`@kit/math`, marching squares) as polylines in the concept's ink and line
-style, with optional level labels (haloed, along the line); `levels` is a list
-or a count of nice levels (`contourLevels`). `heat` fills the plot with a
-sequential (paper → concept ink) or diverging ramp at `resolution` cells per
-axis on the canvas layer, with a small key; colour is never the only signal,
-so pair a heat map with contours or labels. Used for loss landscapes (GD's 2D
-view), calc3 contour maps, Lagrange constraint curves, L1/L2 balls and
-covariance ellipses.
-
-**Keyboard.** The `cursor` is a `role=slider` (`aria-valuetext` "x = 1.40"):
-arrows move it by 1/100 of the x range (Shift ×10), Home/End to the ends.
-Stacked linked plots (f, f′, f″) share `x` and a `cursor` signal. Surfaces
-are Stage3D's job.
-
-### 6.3 `MatrixGrid` ⏳ G2
+### 6.3 `MatrixGrid` ✅
 
 A 2×2 transform acting on the plane, with î and ĵ highlighted. (A 3×3 acting
 on space is `MatrixGrid3D`, §6.4.)
@@ -1245,34 +1306,40 @@ interface MatrixGridProps {
   title: string;
   editable?: 'basis' | 'entries' | 'both' | false;   // drag î/ĵ tips, or step the entries; default 'basis'
   snap?: number;                                      // default 0.5 (entries and basis tips)
-  morph?: ReadonlySignal<number>;                     // 0 = identity … 1 = the matrix (animate with a Slider/PlayScrub)
-  show?: { grid?: boolean; basis?: boolean; unitSquare?: boolean; determinant?: boolean; eigen?: boolean };
+  morph?: ReadonlySignal<number>;                     // 0 = identity … 1 = the matrix (lerpMat2); tips not draggable mid-morph
+  show?: { grid?; basis?; unitSquare?; determinant?; eigen? };   // default all true except eigen
   vectors?: readonly MatrixGridVector[];
-  view?: ViewBox;
-  concepts?: { i?: string; j?: string; area?: string };   // which concepts î, ĵ and the area wear
+  view?: ViewBox;                                     // default x ∈ [−4, 4], y ∈ [−3.2, 3.2]
+  concepts?: { i?; j?; area?; grid?; eigen? };        // defaults: î/ĵ in ink; area + grid in the lesson's `matrix`, eigen lines in its `eigenvalue` (when defined)
+  symbol?: string;                                    // TeX for the panel, default 'A'
+  aspect?; hint?;
 }
 interface MatrixGridVector {
-  value: Signal<Vec2> | ReadonlySignal<Vec2>;   // the input vector v, drawn as itself (never transformed)
+  value: Signal<Vec2> | ReadonlySignal<Vec2>;   // drawn as itself (never transformed)
   concept: string;
-  label: string;                                 // accessible name of its handle: "the input arrow v"
-  draggable?: boolean;                           // default: true when `value` is a writable Signal
+  label: string;                                 // accessible name of its handle
+  tex?: string;                                  // KaTeX label at the tip: '$\\cInput$'
+  draggable?: boolean;                           // default: true when `value` is a writable signal
   snap?: number;
-  image?: { concept: string; label: string };    // ALSO draw A·v: a derived, non-draggable arrow that follows `morph`
-  onDragEnd?: (v: Vec2) => void;                 // e.g. a Predict guess: onDragEnd={setGuess}
+  image?: { concept: string; label: string; tex?: string };   // ALSO draw A·v (through the morph)
+  onDragEnd?: (v: Vec2) => void;                 // once per drag
 }
-imageOf(matrix: ReadonlySignal<Mat2>, v: ReadonlySignal<Vec2>, morph?: ReadonlySignal<number>): ReadonlySignal<Vec2>
-   // computed A·v (through the morph when given): the same value the image arrow shows, for Formula live values and readouts
+imageOf(matrix, v, morph?): ReadonlySignal<Vec2>   // the very computed the image arrow draws (tested)
+imageValue(A, v, t?) · isWritableSignal(sig)
 ```
 
-Shows the transformed grid as a context layer, î/ĵ arrows, an entries panel
-(`.lv-vec--mat`, editable as steppers when `editable` includes entries),
-optional unit square with signed area (orientation flip hatched), and eigen
-directions (rose double rule) when real. The eigen lesson's central visual is
-one `vectors` entry with an `image`: drag v, watch Av, and the two line up
-exactly on an eigen direction. Keyboard: î/ĵ tips and vector handles are
-`role=slider` handles (arrows, Shift ×5); entries are steppers.
+Draws the transformed grid as context, î/ĵ (`\ihat`, `\jhat`), the unit square
+mapped to a parallelogram labelled "area ×det" (**hatched when the orientation
+flips**), eigen directions as rose double-rule bands named "stretched ×3" /
+"unchanged ×1" (when real; the panel says "no real eigen-directions" or "every
+direction is kept" otherwise), and under the stage an entries panel
+(`.mxg__panel`, a readout-style strip): the matrix as `.lv-vec--mat`, steppers
+when `editable` includes entries (each entry a `role="spinbutton"`: ↑/↓, Shift
+×5; − / + buttons for pointer and touch), and "det = −1.50 · orientation
+flipped; areas × 1.50" in words. G2's classes are `.mxg*` (G3's matrix answer
+input owns `.mgrid*`).
 
-### 6.4 `Stage3D` and `MatrixGrid3D` ⏳ G2 (`@kit/visual/Stage3D`)
+### 6.4 `Stage3D` and `MatrixGrid3D` ✅ (`@kit/visual/Stage3D`)
 
 Only for genuinely 3D concepts (surfaces, fields, rotations, 3×3 transforms).
 
@@ -1281,55 +1348,67 @@ type V3 = Vec3 | ReadonlySignal<Vec3>;
 type V3s = readonly Vec3[] | ReadonlySignal<readonly Vec3[]>;
 interface Stage3DProps {
   title: string;
-  bounds: { x: readonly [number, number]; y: readonly [number, number]; z: readonly [number, number] };
-  camera?: { azimuth: number; elevation: number; distance?: number } | Signal<{ azimuth: number; elevation: number; distance?: number }>;
-  autoRotate?: boolean;            // never under reduced motion
-  axes?: boolean; grid?: boolean;
-  fallback: Rich;                  // caption shown if 3D can't render
-  children: ComponentChildren;     // the primitives below
+  bounds: { x: [a, b]; y: [a, b]; z: [a, b] };
+  camera?: Camera3 | Signal<Camera3>;   // { azimuth, elevation } in DEGREES (default −60°, 25°), distance? (× bounding radius, default 4), zoom?
+  autoRotate?: boolean;                 // until the first interaction; never under reduced motion or off-screen
+  axes?: boolean; grid?: boolean;       // default true (axes + floor grid)
+  axisNames?: { x?; y?; z? };           // plain text at the positive ends
+  box?: 'equal' | 'cube';               // 'cube' scales each axis to the same length (surfaces with a tall z range)
+  aspect?; class?;
+  fallback: Rich;                       // shown in the plate if 3D can't render
+  forceFallback?: boolean;              // show it anyway (tests, screenshots)
+  noWebGL?: boolean;                    // draw surfaces with the canvas painter (tests)
+  children: ComponentChildren;
 }
-<Surface f={(x, y) => z} x y resolution? concept? contours?: boolean colorBy?: 'height' | 'concept' opacity? />
-<Point3D at: V3 concept r? label? />                       // the GD ball
+<Surface f={(x, y) => z} x y resolution? /* 40 */ concept? contours? colorBy?: 'height' | 'concept' opacity? />
+<Point3D at: V3 concept r? label? />        // the GD ball
 <Points3D data: V3s concept r? />
-<Polyline3D points: V3s concept closed? />                  // an iterate path on the loss surface
-<Vector3D from?: V3 to: V3 concept label? />
+<Polyline3D points: V3s concept closed? width? />
+<Vector3D from?: V3 to: V3 concept label? width? />
 <Curve3D f={(t) => Vec3} t concept samples? />
 <Plane3D normal: V3 point: V3 concept size? />
 <VectorField3D F density? concept />
 
 interface MatrixGrid3DProps {
-  matrix: Signal<Mat3>;
-  title: string;
-  fallback: Rich;
-  editable?: 'entries' | 'basis' | 'both' | false;   // 'basis': drag î/ĵ/k̂ tips in the plane facing the camera; default 'entries'
+  matrix: Signal<Mat3>; title: string; fallback: Rich;
+  editable?: 'entries' | 'basis' | 'both' | false;   // default 'entries'; 'basis' drags î/ĵ/k̂ tips in the plane facing the camera (keys: ← → x, ↑ ↓ y, PageUp/PageDown z)
   snap?: number;                                      // default 0.5
   morph?: ReadonlySignal<number>;
-  show?: { lattice?: boolean; basis?: boolean; unitCube?: boolean; determinant?: boolean; eigen?: boolean };
-  vectors?: readonly { value: Signal<Vec3> | ReadonlySignal<Vec3>; concept: string; label: string; image?: { concept: string; label: string } }[];
-  concepts?: { i?: string; j?: string; k?: string; volume?: string };
-  camera?: Stage3DProps['camera'];
+  show?: { lattice?; basis?; unitCube?; determinant?; eigen? };
+  vectors?: { value; concept; label; tex?; image?: { concept; label; tex? } }[];
+  concepts?: { i?; j?; k?; volume?; lattice?; eigen? };
+  camera?; bounds? /* [−2.5, 2.5]³ */; symbol?; aspect?;
 }
+imageOf3(matrix, v, morph?): ReadonlySignal<Vec3>
 ```
 
-**Signals and rebuilds (binding).** Points, vectors and paths accept signals;
-a signal change updates only those dynamic objects (moving a ball or
-appending to a path never rebuilds the scene). A `Surface` mesh is built once
-per `(f, x, y, resolution)` identity, so keep `f` stable (module level or
-`useMemo`); a surface that must change shape takes a new `f`. A PlayScrub
-driving `Point3D at={ballSignal}` costs one cheap update per frame.
+**Renderer** (no three.js): canvas 2D on the kit's orbit camera for points,
+paths, vectors, fields, planes, the lattice and the parallelepiped (depth-
+sorted), and a ~200-line raw WebGL renderer (`stage3d-gl.ts`) for `Surface`
+meshes: one indexed, z-buffered draw whose camera uniforms reproduce
+`projectOrbit`, so the canvas overlays line up. Canvas path fills cost ~0.1ms
+per quad on software-rendered browsers (a 60×60 surface took ~370ms a frame
+in headless Chromium); the WebGL draw takes a few ms there. Without WebGL the
+canvas painter draws surfaces; if no canvas works, the `fallback` caption
+shows.
+**Signals and rebuilds (binding).** Points, vectors and paths accept signals
+and update only themselves (one redraw per frame); a `Surface` mesh is built
+once per `(f, x, y, resolution)` and quality level, so keep `f` stable
+(module level or `useMemo`). Dev hooks on the stage: `data-builds` (surface
+builds), `data-renderer` ('webgl' | 'canvas'), `data-camera` ("az el zoom").
+`QualityGovernor` lowers the mesh resolution and the GL backing-store scale
+while orbiting if frames drop, and returns to full detail when still.
+Orbit by mouse drag; on touch a sideways swipe orbits and a vertical one
+scrolls the page (two fingers pinch-zoom and tilt); ctrl/⌘-wheel zooms;
+focused stage: ←/→ turn, ↑/↓ tilt (Shift ×3), +/− zoom, 0/Home reset; a Reset
+view button sits in the corner.
 
-Orbit by drag, zoom by pinch/ctrl-wheel, arrow keys rotate, a "Reset view"
-button; sensible default camera (azimuth −60°, elevation 25°). Renderer: SVG/
-canvas with `orbitBasis` for light scenes; three.js (lazy-imported) only when
-a scene needs it, justified in G2's PLAN region and that lesson's NOTES.md.
-
-`MatrixGrid3D` (linear algebra: determinant as volume, 3D rotations) shows the
-transformed lattice as context, î/ĵ/k̂ arrows, the unit cube mapped to a
-parallelepiped with its signed volume (`det3`) in the entries panel (a 3×3
-`.lv-vec--mat` of steppers); a negative determinant hatches the faces and
-says "orientation flipped" in words, zero flattens it with "volume 0: space
-squashed onto a plane (or line)". Eigen directions draw as rose double rules
-when real.
+`MatrixGrid3D` shows the transformed integer lattice as context, î/ĵ/k̂, the
+unit cube mapped to a parallelepiped (translucent faces; **hatched** when
+det < 0) with "det = −1.00 · volume × 1.00, orientation flipped" in a 3×3
+entries panel (on phones: tap an entry, then one shared − / + pair), "volume
+0: space squashed onto a plane (or line)" when det = 0, and real
+eigen-directions (`eig3`) as rose double rules.
 
 <!-- /region:G2 -->
 
@@ -1338,7 +1417,7 @@ when real.
 <!-- region:G4-controls -->
 ## 7. Controls & code (G4)
 
-### 7.1 `Slider` ⏳ G4
+### 7.1 `Slider` ✅ G4
 
 ```ts
 interface SliderProps {
@@ -1349,46 +1428,54 @@ interface SliderProps {
   sig?: number;                                     // log without step: snap to this many significant figures (default 2)
   label: Rich;                                      // shown left; also the accessible name (plain text)
   concept?: string;                                 // thumb in the concept ink; dragging lights it on the link bus
-  detents?: readonly (number | { value: number; label?: string })[];   // ticks below; magnetic within snapRadius
-  snapRadius?: number;                              // world units; default 1.5 steps
+  detents?: readonly (number | { value: number; label?: string })[];   // ticks below; magnetic within snapRadius while dragging
+  snapRadius?: number;                              // linear: world units (default 1.5 steps); log: track fraction (default 0.015)
   format?: (v: number) => string;                   // value text; default formatSliderValue (step decimals, or sig figs on log)
-  valueText?: (v: number) => string;                // aria-valuetext ("lambda 3.00, determinant 0.00")
+  valueText?: (v: number) => string;                // aria-valuetext ("lambda 3.00, determinant 0.00"); default the formatted value
   disabled?: boolean;
-  onCommit?: (v: number) => void;                   // pointer up / key up
+  onCommit?: (v: number) => void;                   // pointer up / after each key press; never during a drag
 }
 ```
 
 All mapping goes through `core/slider-scale.ts` (§3.14: `sliderValue`,
-`sliderPosition`, `stepSliderValue`, `formatSliderValue`), which is tested;
-the component holds no maths of its own and throws (via
-`validateSliderScale`) on an impossible scale in dev. A two-sided quantity
-that must avoid 0 (the secant's $h$) is either a linear slider with
-`exclude: [0]`, or a `Segmented` sign (±) beside a positive `log` slider
-that never reaches 0.
-DOM: `.slider[.ct.ct-<concept>]` > `.slider__label` + `.slider__track`
-(`input[type=range]` 44px tall, `--fill`, `.slider__ticks`) + `.slider__value`.
-The native range input runs on track positions (0…1000) mapped through the
-scale, and the component handles arrows, PageUp/PageDown and Home/End with
-`stepSliderValue`, so every key press lands on a new allowed value, on log
-scales too.
+`sliderPosition`, `stepSliderValue`, `formatSliderValue`, and G4's
+`magnetDetent`, `sliderExtreme`, `detentValue`), which is tested; the
+component holds no maths of its own and throws (via `validateSliderScale`)
+on an impossible scale in dev (in a production build it logs a
+`console.error`, which fails smoke, disables itself and reads "—"). A two-sided quantity that must avoid 0 (the
+secant's $h$) is either a linear slider with `exclude: [0]`, or a
+`Segmented` sign (±) beside a positive `log` slider that never reaches 0.
+DOM: `.slider[.ct.ct-<concept>][data-concept]` > `label.slider__label` +
+`.slider__track` (`input[type=range]` 44px tall, `--fill`, `.slider__ticks`
+> `.slider__tick[.is-on]`) + `.slider__value` (tabular mono). The native
+range input runs on track positions (0…1000) mapped through the scale, and
+the component handles arrows, PageUp/PageDown and Home/End with
+`stepSliderValue` / `sliderExtreme`, so every key press lands on a new
+allowed value, on log scales too. Phones: label above, track + value below.
 
-### 7.2 `Toggle`, `Segmented` ⏳ G4
-
-```ts
-<Toggle value: Signal<boolean> label: Rich disabled? />                       // button.switch[role=switch]
-<Segmented value: Signal<T> options: readonly { value: T; label: Rich; disabled?: boolean }[] label: string /* group name */ />   // .seg, aria-pressed
-```
-
-### 7.3 `Stepper` ⏳ G4
+### 7.2 `Toggle`, `Segmented` ✅ G4
 
 ```ts
-<Stepper value: Signal<number> /* 0-based */ count: number label?: (i: number, count: number) => string /* "Step 2 of 3" */ wrap?: boolean />
+<Toggle value: Signal<boolean> label: Rich disabled? onChange? />          // button.switch[role=switch][aria-checked]
+<Segmented value: Signal<T> options: readonly { value: T; label: Rich; disabled?: boolean }[] label: string /* group name */ onChange? />
+   // .seg[role=group][aria-label] > button.seg__btn[aria-pressed]; every button a tab stop; ← → Home End move focus (skipping disabled)
 ```
 
-`.stepper`: prev/next `icon-btn`s (disabled at the ends), live label.
-Keyboard: ←/→ when focused. Used by Derivation and WorkedExample.
+`onChange` is for side effects only (the signal is already written).
 
-### 7.4 `PlayScrub` ⏳ G4
+### 7.3 `Stepper` ✅ G4
+
+```ts
+<Stepper value: Signal<number> /* 0-based */ count: number label?: (i: number, count: number) => string /* "Step 2 of 3" */ wrap? name? /* group label, default "Steps" */ onChange? />
+```
+
+`.stepper[role=group]`: `icon-btn.stepper__prev` / `.stepper__next`
+("Previous" / "Next", disabled at the ends unless `wrap`), live
+`.stepper__label` (`aria-live="polite"`). Keyboard: ←/→ anywhere inside.
+When the focused button disables itself at an end, focus moves to the other
+one (never dropped onto the page). Used by Derivation and WorkedExample.
+
+### 7.4 `PlayScrub` ✅ G4
 
 A timeline for stepping through algorithms and simulations frame by frame.
 
@@ -1396,19 +1483,26 @@ A timeline for stepping through algorithms and simulations frame by frame.
 interface PlayScrubProps {
   frame: Signal<number>;            // 0-based
   count: number;
-  playing?: Signal<boolean>;
-  fps?: number;                     // frames per second when playing; default 2
+  playing?: Signal<boolean>;        // optional shared play state; default internal
+  fps?: number;                     // frames per second when playing; default 2 (≤ 2 under reduced motion)
   loop?: boolean;
-  label?: (i: number) => string;    // "Pass 2 · compare 7 and 4"
+  label?: (i: number) => string;    // "Pass 2 · compare 7 and 4", beside the counter and in aria-valuetext
   notes?: readonly Rich[];          // per-frame narration (a Trace's notes), aria-live
   marks?: readonly number[];        // notable frames shown as ticks
+  name?: string;                    // group label; default "Timeline"
 }
 ```
 
-Play/pause, step back/forward, a scrubber, frame counter. Keyboard: Space
-play/pause, ←/→ step, Home/End. Never autoplays; under reduced motion "play"
-still steps frames (it's discrete), at most 2 fps. Pauses off-screen.
-Pattern with a trace (types.ts §8):
+`.playscrub[role=group]` > `.playscrub__bar` (play/pause `icon-btn`, step
+back, `input.playscrub__scrub` (`aria-valuetext` "Frame 3 of 16: …") with
+`.playscrub__marks`, step forward, `.playscrub__count` "3 / 16") +
+`.playscrub__text` (`.playscrub__label`, `.playscrub__note[aria-live]`).
+Keyboard anywhere inside: Space play/pause (Space on a focused button never
+fires it twice), ←/→ step, Home/End. Never autoplays; pauses when scrolled
+off-screen or the tab is hidden; pressing play on the last frame restarts;
+under reduced motion "play" still steps frames at most 2 fps. Pure rules in
+`controls/timeline.ts` (`stepIndex`, `playTick`, `playStart`,
+`frameInterval`, `frameCounter`), tested. Pattern with a trace (types.ts §8):
 
 ```tsx
 const frame = signal(0);
@@ -1417,26 +1511,30 @@ const state = computed(() => TRACE[frame.value].state);
 <ArrayView state={state} label="The array being sorted" />
 ```
 
-### 7.5 `Scrolly` ⏳ G4
+### 7.5 `Scrolly` ✅ G4
 
 ```ts
 interface ScrollyProps {
   steps: readonly { id: string; content: ComponentChildren }[];
   step?: Signal<number>;            // current step (written by scrolling; can be read by visuals)
-  children: (step: number) => ComponentChildren;   // the pinned visual
+  children: (step: number) => ComponentChildren;   // the pinned visual (a bare stage works best)
+  label?: string;                   // accessible name of the steps group; default "Steps"
 }
 ```
 
-Desktop: visual pinned (sticky) beside/above the text column while steps
-scroll past; phone: visual sticky at the top (≤ 45vh) with steps below. The
-current step gets `.is-current` and lights nothing by itself (steps can call
-`highlight`). Without JS or under reduced motion, all steps and the visual
-still read top to bottom. Keyboard users reach every step by Tab.
+`div.scrolly.is-wide` > `.scrolly__visual` (sticky) + `.scrolly__steps` >
+`article.scrolly__step[data-step=<id>][tabindex=0]`. At ≥ 1000px the steps
+column and the visual sit side by side (visual sticky beside the steps);
+below that the visual sticks to the top (at most 45vh, its `.plate__stage`
+shrinks to fit) with the steps scrolling under it. The current step is the
+one nearest the reading line (the centre of what the pinned visual leaves
+free: `nearestToLine`, tested); it gets `.is-current` (an ink rule) and
+`aria-current="step"`, and lights nothing by itself (steps can call
+`highlight`). Nothing is hidden or faded, so all steps and the visual read
+top to bottom under reduced motion; every step is a tab stop and focusing
+one makes it current. Smoke counts Scrolly steps like `Step`s.
 
-Each Scrolly step renders as `article.scrolly__step[data-step]`, so a Build
-section written as a Scrolly counts its steps for smoke like `Step`s do.
-
-### 7.6 `CodeCell` ⏳ G4
+### 7.6 `CodeCell` ✅ G4
 
 An editable, runnable snippet whose output updates the visual (§4.7 "Code it").
 
@@ -1445,11 +1543,11 @@ interface CodeCellProps {
   code: string;                                         // initial source (JavaScript); keep it in problems.ts SNIPPETS so tests run it
   label?: string;                                       // default "Code it"
   editable?: boolean;                                   // default true
-  autorun?: boolean;                                    // run on mount and after edits (debounced 400ms); default false (Run button)
-  inputs?: Readonly<Record<string, ReadonlySignal<unknown> | unknown>>;   // read-only globals; current values, plain data only (see below); re-run on change under autorun
+  autorun?: boolean;                                    // run on mount, after edits and when an input signal changes (debounced 400ms); default false (Run button)
+  inputs?: Readonly<Record<string, ReadonlySignal<unknown> | unknown>>;   // read-only globals; current values, plain data only (see below)
   helpers?: CodePrelude['helpers'];                     // hidden named functions: { loss: 'function loss(w) { return (w - 3) ** 2; }', grad: '(w) => 2 * (w - 3)' }
   prelude?: string;                                     // hidden setup run first (datasets, constants); error lines stay relative to the visible code
-  outputs?: Readonly<Record<string, CodeOutput<any>>>;  // emit('name', v) → validated → the signal → visuals update
+  outputs?: Readonly<Record<string, CodeOutput<any>>>;  // emit('name', v) → validated → the signal → visuals update (keyed by the emitted name)
   stream?: boolean | { throttleMs?: number };           // deliver emits DURING the run (default false: once, when it ends)
   concepts?: Readonly<Record<string, string>>;          // identifier → concept: underlined in the concept's line style
   timeoutMs?: number;                                   // default 2000
@@ -1462,48 +1560,57 @@ interface CodeOutput<T> {
   from?: 'last' | 'all';             // 'last' (default): the latest emit(name, v); 'all': the array of every value emitted under name
 }
 codeOutput<T>(signal, parse, from?): CodeOutput<T>
-// ready-made parsers (controls/parsers.ts): parseNumber, parseVec2, parsePoints (Vec2[]), parseNumbers (number[]), parseMat2
+// ready-made parsers (controls/parsers.ts, tested; they throw learner-facing Errors):
+//   parseNumber, parseNumbers (number[]), parseVec2, parsePoints (Vec2[]; {x, y} objects too), parseMat2 ([[a, b], [c, d]] or flat → Mat2)
 ```
 
 **Emit semantics.** `emit(name, v)` records a snapshot each time it is
 called. Without `stream`, outputs update once when the run ends: `from:
 'last'` gets the final value, `from: 'all'` the whole sequence (every GD
-iterate). With `stream`, each emit is delivered as it happens, throttled
-(default 50ms, the last emit always arrives), so a loop animates its
-visual while it runs. **A bad emit never reaches a visual**: when `parse`
-rejects a value, the cell shows a learner-facing error under the code
-("`emit("path", …)`: expected a list of [x, y] points") and the output
-signal keeps its previous value, so Plot never receives a malformed path
-(smoke fails on console errors).
+iterate). With `stream`, each emit is delivered as it happens, throttled per
+name (default 50ms; the last emit of every name always arrives; for `from:
+'all'` the signal grows with what arrived, then gets the full list at the
+end), so a loop animates its visual while it runs. **A bad emit never
+reaches a visual**: when `parse` rejects a value, the cell shows a
+learner-facing error under the code ("`emit("path", …)`: expected a list of
+[x, y] points, got number 5") and the output signal keeps its previous value.
 
 **Inputs cross into a Worker**, so they must be structured-cloneable plain
 data (numbers, strings, arrays, plain objects, typed arrays). Functions such
 as the loss go in `helpers` as source strings; signals in `inputs` are read
 for their current value. A non-cloneable input is a lesson bug: the cell
-refuses to run and shows `cloneIssue`'s message naming the bad path (and
-logs a `console.error`, so smoke catches it).
+refuses to run, shows `cloneIssue`'s message naming the bad path, and logs a
+`console.error`, so smoke catches it.
 
 **Keyboard (no trap, WCAG 2.1.2).** In the editor, Tab inserts two spaces
-and Shift+Tab outdents; **Esc, then Tab** (or Shift+Tab) moves focus out of
-the editor, the CodeMirror convention. A visible `.fig-keys` line under the
-editor says "Tab indents · Esc, then Tab, leaves the editor". A read-only
-cell (`editable: false`) never captures Tab.
+(indents every selected line), Shift+Tab outdents, Enter keeps the line's
+indentation (one level more after `{ [ (`), Ctrl/⌘+Enter runs; **Esc, then
+Tab** (or Shift+Tab) moves focus out of the editor, the CodeMirror
+convention. The visible `.fig-keys` line under the editor says so. A
+read-only cell (`editable: false`) has no textarea and never captures Tab.
+Pure edits in `controls/editor.ts`, the tokenizer in `controls/highlight.ts`
+(both tested).
 
-DOM: `.codecell` > `.codecell__bar` (label, **Run**, **Reset**) +
-`pre.codecell__code` (editor: a `textarea` over a highlighted `pre`; syntax by
-ink weight and italics only) + `.fig-keys` + `.codecell__out` (logs, errors
-with line numbers, "Stopped after 2 s"), `aria-live="polite"`. Scrolls
-horizontally inside the cell at 390px, never the page.
+DOM: `.codecell[data-codecell]` > `.codecell__bar` (label, **Reset**, **Run**)
++ `.codecell__code` (a line-number `.codecell__gutter` whose error line is
+marked, and `.codecell__area`: a transparent `textarea.codecell__input` laid
+exactly over `pre.codecell__hl`, its highlighted copy; syntax by ink weight
+and italics only, `.tok-ct.ct-<concept>` underlines) + `.fig-keys` +
+`.codecell__out` (logs, "Line 2: …" errors, "In the hidden setup code: …",
+"Stopped after 2 s …", rejected emits, "Ran in 12 ms · emitted v (25
+values)"), `aria-live="polite"`. The textarea scrolls sideways inside the
+cell at 390px (never the page) and is 16px on touch screens (no zoom on
+focus).
 
-### 7.7 `runSandboxed` (controls/sandbox.ts) ⏳ G4
+### 7.7 `runSandboxed` (controls/sandbox.ts) ✅ G4
 
 ```ts
 interface SandboxRequest {
   code: string;
-  inputs?: Record<string, unknown>;                     // checked with cloneIssue before posting
+  inputs?: Record<string, unknown>;                     // checked with cloneIssue before posting (refused without starting a worker)
   helpers?: CodePrelude['helpers']; prelude?: string;   // functions are sent as their toString()
   tests?: { entry: string; tests: readonly CodeTest[] };   // a write-the-code problem: runCodeTests instead of runSnippet
-  timeoutMs?: number;
+  timeoutMs?: number;                                   // default 2000, counted from when the code starts (not from worker load)
   stream?: boolean | { throttleMs?: number };
 }
 interface SandboxResult {
@@ -1514,18 +1621,24 @@ interface SandboxResult {
   report?: CodeRunReport;                               // already sanitizeReport'ed: hidden tests show only name + ✓/×
 }
 runSandboxed(req, opts?: { onEmit?: (name: string, value: unknown) => void; signal?: AbortSignal }): Promise<SandboxResult>
+createSandbox(makeWorker): typeof runSandboxed          // the same runner around any worker factory (tests use fakes)
 ```
 
 A module Worker (`new Worker(new URL('./sandbox.worker.ts', import.meta.url), { type: 'module' })`)
-that removes `fetch`, `XMLHttpRequest`, `WebSocket`, `EventSource`,
-`importScripts` and `indexedDB` before running anything, then calls the
-**same pure functions lesson tests call** (`runSnippet` or `runCodeTests`,
-§3.8), posts every result through `sanitizeReport` / `toCloneable` (so a
+that captures `postMessage`, then removes `fetch`, `XMLHttpRequest`,
+`WebSocket`, `WebTransport`, `EventSource`, `importScripts`, `indexedDB`,
+`caches`, `BroadcastChannel`, `Worker`, `SharedWorker`, `RTCPeerConnection`,
+`postMessage` and `close` from its global and prototype chain (`lockDown`,
+tested), refuses `import`/`import()` before running (`forbiddenSyntax`), and
+calls the **same pure functions lesson tests call** (`runSnippet` or
+`runCodeTests`, §3.8) through `runRequest` (controls/sandbox-core.ts, tested
+in Node). Every result goes through `sanitizeReport` / `toCloneable` (so a
 test that returns a function or a cyclic object can't throw
-`DataCloneError`), streams emits when asked, and is terminated (and
-replaced) on timeout. The worker types its global with `workerScope()`
-(`@kit/util`) instead of the `webworker` lib. Problem's code answers and
-ExamSet's submit-time grading use it too.
+`DataCloneError`); emits stream when asked; each run gets a fresh worker
+(no globals leak between runs; the next one is warmed while the current
+runs), and a run past its time limit is terminated and replaced. The
+worker types its global with `workerScope()` (`@kit/util`). Problem's code
+answers and ExamSet's submit-time grading use it too.
 
 <!-- /region:G4-controls -->
 

@@ -4,3 +4,120 @@
    Start from the classes components.css already defines (DESIGN.md §13);
    add only what is missing. Tokens only: no raw colours, sizes from --sp-*, motion from --dur-*.
    ========================================================================== */
+
+/* ── Figure ─────────────────────────────────────────────────────────────── */
+
+/* A text-width plate's caption is its first child (so it can float into the margin at
+   ≥ 1000px, beside the stage); below that it reads last, after mission, keys and legend. */
+@media (max-width: 999px) {
+  .plate:not(.is-wide) > .caption {
+    order: 10;
+  }
+}
+/* Knobs under the readout (Figure's `controls`). */
+.plate__controls {
+  display: grid;
+  gap: var(--sp-2);
+  margin-top: var(--sp-3);
+}
+.plate__main > :first-child {
+  margin-top: var(--sp-4);
+}
+.plate__main > .fig-keys:first-child {
+  margin-top: var(--sp-3);
+}
+.readout__val {
+  white-space: nowrap;
+}
+.readout__sym .katex {
+  font-size: 1em;
+}
+.readout__status .icon,
+.mission__status .icon {
+  width: 15px;
+  height: 15px;
+  vertical-align: -2px;
+}
+/* Legend rows that carry a concept are the keyboard route to hover-linking: they wash
+   with the concept when it is lit anywhere, but their words stay ink. */
+.legend li.ct {
+  color: inherit;
+  padding: 0 4px;
+  margin-inline: -4px;
+  cursor: default;
+}
+.legend li.ct:focus-visible {
+  outline-offset: 1px;
+}
+
+/* ── Lesson head, sections, steps ───────────────────────────────────────── */
+
+.lesson-head__unit {
+  font-variant-caps: all-small-caps;
+  color: var(--ink-3);
+}
+.pill--wip {
+  border-style: dashed;
+}
+.lesson-meta__soon {
+  color: var(--ink-3);
+}
+/* main#main takes focus from the skip link without a ring around the whole lesson. */
+.lesson:focus {
+  outline: none;
+}
+.build-step {
+  margin: var(--sp-7) 0 0;
+}
+.section__head + .build-step,
+.section__head + * + .build-step:first-of-type {
+  margin-top: var(--sp-5);
+}
+.build-step__title {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sp-3);
+  margin: 0 0 var(--sp-3);
+}
+.build-step__n {
+  flex: none;
+  font-style: italic;
+  font-weight: 500;
+  font-variant-numeric: oldstyle-nums;
+  color: var(--ink-3);
+}
+
+/* ── Where next, references ─────────────────────────────────────────────── */
+
+.next-col > .label {
+  margin-bottom: var(--sp-1);
+}
+.next-empty {
+  margin: var(--sp-2) 0 0;
+  font-size: var(--fs-note);
+  color: var(--ink-3);
+}
+.lesson-card__soon {
+  font-style: italic;
+}
+.refs__head {
+  margin: var(--sp-7) 0 var(--sp-2);
+}
+.refs__title {
+  font-style: italic;
+}
+.refs__url {
+  font-family: var(--font-mono);
+  font-size: 0.86em;
+  overflow-wrap: anywhere;
+  color: var(--ink-3);
+}
+.colophon a {
+  color: inherit;
+}
+/* A wide plate with no mission or keys still sets its legend and caption in the margin column. */
+@media (min-width: 1000px) {
+  .plate.is-wide .plate__side:first-child {
+    grid-column: 2;
+  }
+}

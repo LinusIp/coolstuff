@@ -1,6 +1,1152 @@
 /* ==========================================================================
    practice.css
-   Owner: G3 practice (WorkedExample, Problem, ProblemSet, Quiz, Predict).
-   Start from the classes components.css already defines (DESIGN.md §13);
-   add only what is missing. Tokens only: no raw colours, sizes from --sp-*, motion from --dur-*.
+   Owner: G3 practice (WorkedExample, Problem, ProblemSet, Quiz, Predict, ExamSet).
+   Builds on components.css §11–14 (example, problem, trap, quiz classes);
+   adds only what is missing. Tokens only: no raw colours, sizes from --sp-*,
+   motion from --dur-*.
    ========================================================================== */
+
+/* ── Worked example ─────────────────────────────────────────────────────── */
+
+.example__title {
+  font-size: var(--fs-small);
+  font-style: italic;
+  color: var(--ink-2);
+}
+.example__panel:focus-visible {
+  outline-offset: 4px;
+}
+.example__statement {
+  margin-bottom: var(--sp-4);
+}
+.example__figure {
+  margin: 0 0 var(--sp-4);
+}
+.example__figure > .plate {
+  margin: 0;
+}
+.knowwant__list {
+  margin: 0;
+  padding-left: 1.1em;
+}
+.knowwant__list li {
+  margin: 0;
+}
+.step__text {
+  font-size: var(--fs-small);
+}
+.step__text p:last-child {
+  margin-bottom: 0;
+}
+.steps .step:focus-visible {
+  outline-offset: 2px;
+}
+
+/* Live parameters: the knobs above the statement. */
+.params {
+  display: grid;
+  gap: var(--sp-1) var(--sp-5);
+  margin: 0 0 var(--sp-4);
+  padding: var(--sp-3) var(--sp-4) var(--sp-2);
+  background: var(--sunk);
+  border-radius: var(--radius);
+}
+.param {
+  min-width: 0;
+}
+.param--choice {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 0 var(--sp-3);
+}
+.param--choice .param__why {
+  grid-column: 1 / -1;
+}
+.param__label {
+  font-size: 1.05em;
+}
+.param--choice .seg {
+  max-width: 440px;
+}
+.param .seg__btn .katex {
+  font-size: 1.3em;
+}
+.params__note {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: var(--fs-meta);
+  color: var(--ink-3);
+}
+/* The reason a value isn't allowed. Empty lines take no space but stay in the tree (aria-live). */
+.param__why {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: var(--fs-meta);
+  line-height: 1.4;
+  color: var(--ink-2);
+}
+.param__why:not(:empty) {
+  padding: 2px 0 var(--sp-2);
+}
+.param__why:not(:empty)::before {
+  content: '⚠ ';
+  color: var(--c-error);
+}
+.param__blocked {
+  display: block;
+}
+
+/* ── Practice problem ───────────────────────────────────────────────────── */
+
+.problem__title {
+  font-size: var(--fs-small);
+  font-style: italic;
+  color: var(--ink-2);
+}
+.problem__prompt {
+  margin-bottom: var(--sp-4);
+}
+.problem__prompt:focus-visible {
+  outline-offset: 4px;
+}
+.problem__figure {
+  margin: 0 0 var(--sp-4);
+}
+.problem__figure > .plate,
+.problem__figure > figure {
+  margin: 0;
+}
+.problem__form {
+  margin: 0 0 var(--sp-4);
+}
+.problem__form > .answer-row:last-of-type {
+  margin-bottom: var(--sp-3);
+}
+.answer-row--action {
+  margin: var(--sp-3) 0 var(--sp-3);
+}
+.answer-row--reason {
+  margin: var(--sp-3) 0 0;
+}
+.answer-row--matrix {
+  align-items: center;
+}
+.answer-row__label--text {
+  font-size: var(--fs-small);
+  color: var(--ink-2);
+}
+.answer-row__unit {
+  font-size: 1.05em;
+}
+/* "We read: …": how the checker understood the input, never whether it is right. */
+.answer-row__read {
+  flex-basis: 100%;
+  min-height: 1.45em;
+  margin: -6px 0 0;
+  font-family: var(--font-sans);
+  font-size: var(--fs-meta);
+  line-height: 1.45;
+  color: var(--ink-2);
+}
+.answer-row__read .math-inline {
+  color: var(--ink);
+}
+.feedback {
+  margin-top: var(--sp-1);
+}
+.feedback:empty {
+  margin: 0;
+}
+.feedback--note {
+  color: var(--ink-2);
+}
+.feedback--note .icon {
+  color: var(--ink-3);
+}
+.field--wide {
+  flex: 1 1 200px;
+  width: auto;
+  min-width: 0;
+  max-width: 340px;
+}
+.field--list {
+  width: min(100%, 230px);
+}
+.field--complex {
+  width: 150px;
+}
+.field--reason {
+  flex: 1 1 260px;
+  width: auto;
+  min-width: 0;
+  font-family: var(--font-serif);
+  font-size: var(--fs-small);
+}
+
+/* Matrix answer: a grid of fields between brackets. */
+.mgrid {
+  display: inline-flex;
+  align-items: stretch;
+  gap: 6px;
+  max-width: 100%;
+}
+.mgrid__bracket {
+  flex: none;
+  width: 7px;
+  border: 1.5px solid var(--ink);
+}
+.mgrid__bracket--l {
+  border-right: 0;
+}
+.mgrid__bracket--r {
+  border-left: 0;
+}
+.mgrid__cells {
+  display: grid;
+  grid-template-columns: repeat(var(--cols, 2), minmax(56px, 78px));
+  gap: 6px;
+  padding: 4px 0;
+}
+.answer-row .mgrid__cell,
+.mgrid__cell {
+  width: 100%;
+  min-width: 0;
+  padding: 0 6px;
+  text-align: center;
+}
+.cfields {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+}
+
+/* Choice rows inside a problem: the picked option is inked before Check (radios and checkboxes). */
+.choice:not(.is-correct):not(.is-wrong):not(.choice--check):has(> input:checked) {
+  border-color: var(--ink);
+  box-shadow: inset 3px 0 0 var(--ink);
+}
+.choice:not(.is-correct):not(.is-wrong):not(.choice--check):has(> input:checked) .choice__key {
+  border-color: var(--ink);
+  background: var(--ink);
+  color: var(--on-ink);
+}
+.choice:has(> input[type='checkbox']) .choice__key {
+  border-radius: 4px;
+}
+/* A fieldset without chrome. */
+.choices {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.choices__help {
+  margin: 0 0 var(--sp-2);
+}
+/* The right option the learner didn't pick (review, quiz "also true", predict). */
+.choice.is-answer {
+  border-style: dashed;
+  border-color: var(--c-correct);
+}
+.choice.is-answer .choice__key {
+  border-color: var(--c-correct);
+  color: var(--c-correct);
+}
+.choice.is-answer .choice__verdict {
+  color: var(--c-correct);
+}
+.choice__tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--font-sans);
+  font-size: var(--fs-meta);
+  font-weight: 560;
+  color: var(--c-correct);
+  white-space: nowrap;
+}
+/* Option rows that are buttons (quiz and predict: picking is the action). */
+.choice__btn {
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--sp-3);
+  width: 100%;
+  min-height: 54px;
+  margin: 0;
+  padding: var(--sp-2) var(--sp-4);
+  border: 0;
+  border-radius: var(--radius);
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-size: var(--fs-small);
+  line-height: 1.45;
+  text-align: left;
+  cursor: pointer;
+}
+.choice__btn[aria-disabled='true'] {
+  cursor: default;
+}
+.choice__btn:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+.choice.is-picked {
+  border-color: var(--ink);
+  box-shadow: inset 3px 0 0 var(--ink);
+}
+.choice.is-picked .choice__key {
+  border-color: var(--ink);
+  background: var(--ink);
+  color: var(--on-ink);
+}
+/* Proof checklist: square keys that fill with a tick. */
+.checklist {
+  min-width: 0;
+  margin: var(--sp-3) 0 0;
+  padding: 0;
+  border: 0;
+}
+.choice__box {
+  border-radius: 3px;
+}
+.choice__box svg {
+  width: 15px;
+  height: 15px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0;
+}
+.choice--check.is-ticked {
+  border-color: var(--c-correct);
+}
+.choice--check.is-ticked .choice__box {
+  border-color: var(--c-correct);
+  background: var(--c-correct);
+  color: var(--on-ink);
+}
+.choice--check.is-ticked .choice__box svg {
+  opacity: 1;
+}
+.choice--check label {
+  grid-template-columns: 30px minmax(0, 1fr);
+}
+
+/* Drag a point. */
+.problem__plate {
+  max-width: 480px;
+  margin: 0 0 var(--sp-2);
+}
+.problem__readout {
+  font-family: var(--font-mono);
+  font-size: var(--fs-code);
+  font-variant-numeric: tabular-nums;
+}
+.problem__readout.is-correct {
+  color: var(--c-correct);
+}
+.problem__plate .fig-keys {
+  margin-top: var(--sp-2);
+}
+.problem__slider,
+.problem__custom {
+  margin: 0 0 var(--sp-2);
+}
+.problem__describe {
+  margin: var(--sp-2) 0 0;
+  font-family: var(--font-sans);
+  font-size: var(--fs-meta);
+  color: var(--ink-2);
+}
+.problem__missing {
+  padding: var(--sp-3) var(--sp-4);
+  border: 1.5px dashed var(--c-error);
+  border-radius: var(--radius);
+  font-size: var(--fs-small);
+  color: var(--c-error);
+}
+
+/* Put in order: rows with a grip, a position number and ↑ ↓ buttons. */
+.order {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.order__item {
+  position: relative;
+  display: grid;
+  grid-template-columns: 36px 22px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0 var(--sp-2);
+  min-height: 54px;
+  margin: 0;
+  padding: 2px 2px 2px 0;
+  border: var(--hair) solid var(--rule);
+  border-radius: var(--radius);
+  background: var(--paper);
+  font-size: var(--fs-small);
+  line-height: 1.4;
+  transition: border-color var(--dur-1) var(--ease-out);
+}
+.order__item + .order__item {
+  margin-top: var(--sp-2);
+}
+.order__item.is-dragging {
+  z-index: 2;
+  border-color: var(--ink);
+  background: var(--raised);
+  box-shadow: inset 3px 0 0 var(--ink);
+  transition: none;
+}
+.order__item.is-drop-before::before,
+.order__item.is-drop-after::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--ink);
+}
+.order__item.is-drop-before::before {
+  top: -6px;
+}
+.order__item.is-drop-after::after {
+  bottom: -6px;
+}
+.order__item.is-correct {
+  border-color: var(--c-correct);
+  box-shadow: inset 3px 0 0 var(--c-correct);
+}
+.order__item.is-wrong {
+  border-color: var(--c-error);
+  box-shadow: inset 3px 0 0 var(--c-error);
+}
+.order__grip {
+  display: grid;
+  place-items: center;
+  align-self: stretch;
+  width: 36px;
+  min-height: var(--hit);
+  color: var(--ink-3);
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.order.is-sorting .order__grip,
+.match.is-dragging .order__grip {
+  cursor: grabbing;
+}
+.order__grip svg {
+  width: 12px;
+  height: 18px;
+  fill: currentColor;
+}
+.order__item:hover .order__grip {
+  color: var(--ink);
+}
+.order__n {
+  font-family: var(--font-sans);
+  font-size: var(--fs-meta);
+  font-weight: 620;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums lining-nums;
+}
+.order__text {
+  min-width: 0;
+  padding: var(--sp-2) 0;
+}
+.order__btns {
+  display: inline-flex;
+}
+.order__btns .icon-btn svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* Match: items with a select menu (and a grip), slots that show what's in them. */
+.match {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+  gap: var(--sp-4);
+  align-items: start;
+}
+.match__items,
+.match__slots {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.match__item {
+  position: relative;
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr);
+  align-items: center;
+  gap: 2px var(--sp-2);
+  margin: 0;
+  padding: 2px var(--sp-2) var(--sp-2) 0;
+  border: var(--hair) solid var(--rule);
+  border-radius: var(--radius);
+  background: var(--paper);
+  font-size: var(--fs-small);
+  line-height: 1.4;
+}
+.match__item + .match__item {
+  margin-top: var(--sp-2);
+}
+.match__item.is-lifted {
+  z-index: 3;
+  border-color: var(--ink);
+  background: var(--raised);
+  pointer-events: none;
+}
+.match__item.is-correct {
+  border-color: var(--c-correct);
+  box-shadow: inset 3px 0 0 var(--c-correct);
+}
+.match__item.is-wrong {
+  border-color: var(--c-error);
+  box-shadow: inset 3px 0 0 var(--c-error);
+}
+.match__text {
+  padding: var(--sp-2) 0 0;
+  cursor: default;
+}
+.match__select {
+  grid-column: 2;
+  width: 100%;
+  height: var(--hit);
+  padding: 0 var(--sp-2);
+  font-family: var(--font-sans);
+  font-size: var(--fs-ui);
+}
+.match__select.is-empty {
+  color: var(--ink-3);
+}
+.match__slot {
+  display: grid;
+  gap: 4px;
+  min-height: 64px;
+  margin: 0;
+  padding: var(--sp-2) var(--sp-3);
+  border: 1.5px dashed var(--rule-strong);
+  border-radius: var(--radius);
+  font-size: var(--fs-small);
+  transition: border-color var(--dur-1) var(--ease-out), background-color var(--dur-1) var(--ease-out);
+}
+.match__slot + .match__slot {
+  margin-top: var(--sp-2);
+}
+.match__slot.is-over {
+  border-style: solid;
+  border-color: var(--ink);
+  background: var(--w-ink);
+}
+.match__slot-text {
+  font-weight: 600;
+}
+.match__placed {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.match__chip {
+  border-radius: var(--radius);
+  font-family: var(--font-serif);
+  font-size: var(--fs-note);
+  color: var(--ink);
+}
+.match__empty {
+  font-size: var(--fs-note);
+  font-style: italic;
+  color: var(--ink-3);
+}
+
+/* Proof: write, compare, tick. */
+.proof .answer-row__label {
+  display: block;
+  margin-bottom: var(--sp-1);
+}
+.proof__text {
+  display: block;
+  width: 100%;
+  height: auto;
+  min-height: 120px;
+  padding: var(--sp-2) var(--sp-3);
+  font-family: var(--font-serif);
+  font-size: var(--fs-small);
+  line-height: 1.5;
+  resize: vertical;
+}
+.proof .answer-row {
+  margin: var(--sp-3) 0 0;
+}
+.proof__compare {
+  margin-top: var(--sp-4);
+}
+.proof__label {
+  margin: 0 0 var(--sp-2);
+  padding: 0;
+}
+.proof__model {
+  padding: var(--sp-3) var(--sp-4);
+  border-left: 2px solid var(--ink-2);
+  background: var(--sunk);
+  font-size: var(--fs-small);
+}
+.proof__model p:last-child {
+  margin-bottom: 0;
+}
+
+/* Code answers: the editor, then one line per test. */
+.problem__code {
+  margin: 0 0 var(--sp-3);
+}
+.tests {
+  margin: var(--sp-3) 0 var(--sp-2);
+}
+.tests__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-sans);
+  font-size: var(--fs-meta);
+  line-height: 1.45;
+}
+.test {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr);
+  gap: 6px;
+  margin: 0;
+  padding: 6px 0;
+  border-top: var(--hair) dotted var(--rule);
+}
+.test:first-child {
+  border-top: 0;
+}
+.test__mark {
+  padding-top: 2px;
+}
+.test.is-pass .test__mark {
+  color: var(--c-correct);
+}
+.test.is-fail .test__mark {
+  color: var(--c-error);
+}
+.test__body {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px var(--sp-2);
+  min-width: 0;
+}
+.test__name {
+  font-weight: 620;
+  color: var(--ink);
+}
+.test__call {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-family: var(--font-mono);
+  font-size: 13.5px;
+  color: var(--ink-2);
+}
+.test__detail {
+  flex-basis: 100%;
+  color: var(--c-error);
+  overflow-wrap: anywhere;
+}
+.test__detail--ok {
+  color: var(--ink-3);
+}
+.tests__logs {
+  margin-top: var(--sp-2);
+}
+.tests__logs pre {
+  margin: 4px 0 0;
+  padding: var(--sp-2) var(--sp-3);
+  overflow-x: auto;
+  background: var(--sunk);
+  font-family: var(--font-mono);
+  font-size: 13.5px;
+}
+
+/* Show solution asks once. */
+.reveal-confirm {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-2) var(--sp-3);
+  padding: var(--sp-2) var(--sp-3);
+  border-left: 2px solid var(--ink);
+  background: var(--sunk);
+}
+.reveal-confirm__text {
+  flex: 1 1 220px;
+  font-size: var(--fs-small);
+}
+.card__foot .problem__meta {
+  text-align: right;
+}
+.problem__solved {
+  margin-left: auto;
+}
+.problem__solved + .problem__meta {
+  margin-left: 0;
+}
+.solution:focus-visible {
+  outline-offset: 4px;
+}
+.solution__label {
+  margin-bottom: var(--sp-2);
+}
+.solution .sanity {
+  margin-bottom: var(--sp-4);
+}
+.solution__extra {
+  margin: 0 0 var(--sp-4);
+  font-size: var(--fs-small);
+}
+.solution .problem__figure--solution {
+  margin-bottom: var(--sp-3);
+}
+.solution .wrong-note {
+  animation: none;
+}
+.problem__yours {
+  margin: 0 0 var(--sp-2);
+}
+.problem--review .field:disabled {
+  color: var(--ink);
+}
+.problem--review .choice input:disabled + label {
+  cursor: default;
+}
+
+/* ── Problem set ────────────────────────────────────────────────────────── */
+
+.problem-set > .card.problem {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+}
+.pset__top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-2) var(--sp-4);
+  margin: 0 0 var(--sp-4);
+}
+.pset__top .pset {
+  margin: 0;
+}
+.pset__title {
+  flex-basis: 100%;
+}
+/* 44px targets: 32px dots 12px apart, each growing an invisible 44px square. */
+.pset {
+  gap: var(--sp-3);
+}
+.pset__dot {
+  width: 32px;
+  height: 32px;
+}
+.pset__dot::after {
+  inset: -6px;
+}
+.pset__dot .icon {
+  width: 15px;
+  height: 15px;
+}
+.pset__count {
+  margin-left: auto;
+  font-family: var(--font-sans);
+  font-size: var(--fs-meta);
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums lining-nums;
+}
+.pset__nav {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--sp-2);
+  margin-top: var(--sp-4);
+  padding-top: var(--sp-4);
+  border-top: var(--hair) solid var(--rule);
+}
+.pset__nav .btn svg {
+  width: 18px;
+  height: 18px;
+}
+.pset__note {
+  margin: var(--sp-3) 0 0;
+  font-family: var(--font-sans);
+  font-size: var(--fs-meta);
+  color: var(--ink-3);
+}
+.problem-list__top {
+  margin-top: var(--sp-5);
+}
+.problem-list__probe {
+  height: 1px;
+  margin-bottom: -1px;
+}
+
+/* ── Quick check ────────────────────────────────────────────────────────── */
+
+.quiz__top {
+  flex-wrap: wrap;
+}
+.quiz__title {
+  flex-basis: 100%;
+}
+.quiz__figure {
+  margin: 0 0 var(--sp-4);
+}
+.quiz__options .choice + .choice {
+  margin-top: var(--sp-2);
+}
+.quiz__drag-why {
+  margin-top: var(--sp-4);
+  padding-top: var(--sp-3);
+  border-top: var(--hair) solid var(--rule);
+  font-size: var(--fs-small);
+}
+.quiz__drag-why .feedback {
+  margin: 0 0 var(--sp-1);
+}
+.quiz__summary:focus-visible {
+  outline-offset: 4px;
+}
+.quiz__score {
+  margin: 0 0 var(--sp-4);
+  font-size: var(--fs-lead);
+}
+.quiz__score-n {
+  font-size: 1.5em;
+  font-weight: 620;
+  font-variant-numeric: lining-nums;
+}
+.quiz__praise {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--c-correct);
+  font-family: var(--font-sans);
+  font-size: var(--fs-ui);
+  font-weight: 560;
+}
+.quiz__misses {
+  list-style: none;
+  margin: var(--sp-2) 0 0;
+  padding: 0;
+}
+.quiz__misses li {
+  margin: 0;
+}
+.quiz__miss {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  justify-content: start;
+  gap: var(--sp-3);
+  width: 100%;
+  padding: var(--sp-2) var(--sp-3);
+  text-align: left;
+  line-height: 1.45;
+}
+.quiz__miss-n {
+  color: var(--c-error);
+  white-space: nowrap;
+}
+.quiz__miss .rich {
+  font-family: var(--font-serif);
+  font-size: var(--fs-small);
+  font-weight: 400;
+  color: var(--ink);
+}
+
+/* ── Predict ────────────────────────────────────────────────────────────── */
+
+.predict {
+  border-top: 2px solid var(--ink);
+}
+.predict__prompt {
+  margin-bottom: var(--sp-4);
+}
+.predict__options {
+  margin: 0 0 var(--sp-2);
+}
+.predict__options .choice + .choice {
+  margin-top: var(--sp-2);
+}
+.predict__slider {
+  margin: 0 0 var(--sp-2);
+}
+.predict__reveal {
+  margin-top: var(--sp-4);
+  padding-top: var(--sp-3);
+  border-top: var(--hair) solid var(--rule);
+}
+.predict__reveal:focus-visible {
+  outline-offset: 4px;
+}
+.predict__reveal .feedback {
+  margin: 0 0 var(--sp-2);
+}
+.predict__extra {
+  font-size: var(--fs-small);
+  font-style: italic;
+  color: var(--ink-2);
+}
+.predict__reveal .card__foot {
+  margin-top: var(--sp-2);
+}
+
+/* ── Exam-style set ─────────────────────────────────────────────────────── */
+
+.exam__facts {
+  list-style: none;
+  margin: 0 0 var(--sp-4);
+  padding: 0;
+  font-size: var(--fs-small);
+}
+.exam__facts li {
+  margin: 0;
+  padding: 4px 0;
+}
+.exam__fact-n {
+  display: inline-block;
+  min-width: 1.6em;
+  font-size: 1.35em;
+  font-weight: 620;
+  font-variant-numeric: lining-nums tabular-nums;
+}
+.exam__history {
+  margin: 0 0 var(--sp-4);
+  font-family: var(--font-sans);
+  font-size: var(--fs-meta);
+  color: var(--ink-2);
+}
+.exam__bar {
+  position: sticky;
+  top: var(--masthead-h);
+  z-index: 5;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-2) var(--sp-4);
+  margin: 0 calc(-1 * var(--sp-6)) var(--sp-4);
+  padding: var(--sp-2) var(--sp-6);
+  background: var(--raised);
+  border-top: var(--hair) solid var(--rule);
+  border-bottom: var(--hair) solid var(--rule);
+}
+.exam__bar:focus-visible {
+  outline-offset: -3px;
+}
+.exam__timer {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: var(--fs-ui);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+.exam__timer .icon {
+  width: 16px;
+  height: 16px;
+}
+.exam__timer.is-low {
+  font-weight: 700;
+  box-shadow: inset 0 -2px 0 var(--ink);
+}
+.exam__answered {
+  font-family: var(--font-sans);
+  font-size: var(--fs-meta);
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums lining-nums;
+}
+.exam__jump {
+  flex: 1 1 200px;
+}
+.exam__jump ol {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-3);
+  margin: 0;
+  padding: 0;
+}
+.exam__jump li {
+  margin: 0;
+}
+.exam__qlink {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 1.5px solid var(--rule-strong);
+  border-radius: 50%;
+  font-family: var(--font-sans);
+  font-size: 12.5px;
+  font-weight: 620;
+  color: var(--ink-2);
+  text-decoration: none;
+  font-variant-numeric: lining-nums;
+}
+.exam__qlink::after {
+  content: '';
+  position: absolute;
+  inset: -6px;
+}
+.exam__qlink.is-answered {
+  border-color: var(--ink);
+  background: var(--ink);
+  color: var(--on-ink);
+}
+.exam__submit {
+  margin-left: auto;
+}
+.exam__confirm {
+  margin: 0 0 var(--sp-4);
+  padding: var(--sp-3) var(--sp-4);
+  border-left: 2px solid var(--ink);
+  background: var(--sunk);
+  font-size: var(--fs-small);
+}
+.exam__confirm p {
+  margin: 0 0 var(--sp-2);
+}
+.exam .card.problem {
+  margin: var(--sp-4) 0;
+  scroll-margin-top: calc(var(--masthead-h) + 76px);
+}
+.exam__end {
+  margin-top: var(--sp-4);
+}
+.exam__results:focus-visible {
+  outline-offset: 4px;
+}
+.exam__score {
+  margin: 0 0 var(--sp-3);
+  font-size: var(--fs-lead);
+}
+.exam__score-n {
+  font-size: 1.6em;
+  font-weight: 620;
+  font-variant-numeric: lining-nums;
+}
+.exam__score-time {
+  color: var(--ink-2);
+}
+.exam__strip {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  margin: 0 0 var(--sp-4);
+  padding: 0;
+}
+.exam__strip li {
+  margin: 0;
+}
+.exam__mark {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: var(--hit);
+  min-width: var(--hit);
+  padding: 0 10px;
+  border-radius: var(--radius);
+  font-family: var(--font-sans);
+  font-size: var(--fs-meta);
+  font-weight: 620;
+  text-decoration: none;
+  font-variant-numeric: lining-nums;
+}
+.exam__mark.is-correct {
+  color: var(--c-correct);
+  background: var(--w-green);
+}
+.exam__mark.is-wrong {
+  color: var(--c-error);
+  background: var(--w-red);
+}
+.exam__walk {
+  margin: var(--sp-6) 0 0;
+  padding-top: var(--sp-4);
+  border-top: var(--hair) solid var(--rule);
+}
+
+/* ── Phones ─────────────────────────────────────────────────────────────── */
+
+@media (max-width: 699px) {
+  .params {
+    padding: var(--sp-2) var(--sp-3);
+  }
+  .param--choice {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+  .field--wide,
+  .field--list {
+    width: 100%;
+    flex: 1 1 100%;
+  }
+  .answer-row .field--complex {
+    flex: 1 1 120px;
+  }
+  .mgrid__cells {
+    grid-template-columns: repeat(var(--cols, 2), minmax(48px, 64px));
+  }
+  .answer-row--matrix .problem__check {
+    flex-basis: 100%;
+  }
+  .match {
+    grid-template-columns: 1fr;
+  }
+  .order__item {
+    grid-template-columns: 32px 18px minmax(0, 1fr) auto;
+  }
+  .order__grip {
+    width: 32px;
+  }
+  .choice__btn {
+    gap: var(--sp-3);
+    padding: var(--sp-2) var(--sp-3);
+  }
+  .exam__bar {
+    margin-inline: calc(-1 * var(--sp-4));
+    padding-inline: var(--sp-4);
+  }
+  .exam__jump {
+    order: 5;
+    flex-basis: 100%;
+  }
+  .card__foot .problem__meta {
+    flex-basis: 100%;
+    text-align: left;
+    margin-left: 0;
+  }
+  .problem__solved {
+    margin-left: 0;
+  }
+  .pset__count {
+    flex-basis: 100%;
+    margin-left: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .order__item,
+  .match__slot {
+    transition: none;
+  }
+}

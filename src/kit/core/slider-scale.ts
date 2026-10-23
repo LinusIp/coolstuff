@@ -113,3 +113,42 @@ export function formatSliderValue(value: number, s: SliderScale): string {
   if (/^-0(\.0*)?$/.test(out)) out = out.slice(1);
   return out.replace(/^-/, '−');
 }
+
+/** A detent: a meaningful value marked under the track (the eigenvalues), optionally labelled. */
+export type SliderDetent = number | { value: number; label?: string };
+
+/** The detent's value. */
+export const detentValue = (d: SliderDetent): number => (typeof d === 'number' ? d : d.value);
+
+/**
+ * Magnetic detents for dragging: if `value` is within `radius` of a detent,
+ * return that detent's value, else `value`. `radius` is in world units on a
+ * linear scale (default 1.5 steps) and in track fraction on a log scale
+ * (default 0.015, i.e. 1.5% of the track). Excluded or out-of-range detents
+ * never attract; the nearest detent wins.
+ */
+export function magnetDetent(value: number, detents: readonly SliderDetent[] | undefined, s: SliderScale, radius?: number): number {
+  if (!detents?.length) return value;
+  const log = s.scale === 'log';
+  const r = radius ?? (log ? 0.015 : 1.5 * (s.step ?? (s.max - s.min) / 100));
+  const ex = s.exclude ?? [];
+  const exStep = s.step ?? (s.max - s.min) / 100;
+  let best = value;
+  let bestD = Infinity;
+  for (const raw of detents) {
+    const d = detentValue(raw);
+    if (!(d >= s.min && d <= s.max)) continue;
+    if (ex.some((e) => Math.abs(d - e) < exStep / 2)) continue;
+    const dist = log ? Math.abs(sliderPosition(value, s) - sliderPosition(d, s)) : Math.abs(value - d);
+    if (dist <= r && dist < bestD) {
+      best = d;
+      bestD = dist;
+    }
+  }
+  return best;
+}
+
+/** Home/End: the smallest or largest value the slider can actually land on (snapped, never excluded). */
+export function sliderExtreme(which: 'min' | 'max', s: SliderScale): number {
+  return which === 'min' ? snapSliderValue(s.min, s, s.min - 1) : snapSliderValue(s.max, s, s.max + 1);
+}

@@ -21,3 +21,4 @@ export * from './contour';
 export * from './axes';
 export * from './stats';
 export * from './layout';
+export * from './eig3';

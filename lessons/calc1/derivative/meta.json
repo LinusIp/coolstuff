@@ -1,0 +1,10 @@
+{
+  "title": "The derivative as slope and as rate",
+  "subject": "calc1",
+  "unit": "The derivative",
+  "order": 4,
+  "prerequisites": ["calc1/continuity"],
+  "minutes": 20,
+  "level": "core",
+  "status": "wip"
+}

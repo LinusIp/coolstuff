@@ -12,7 +12,7 @@
  * phone, a missing <title>, a KaTeX error, heading levels that skip (h2 → h4)
  * or more than one h1, and (on the phone) a control smaller than 44×44px or
  * without an accessible name.
- * Lessons also fail on: a missing required section (CLAUDE.md §4), fewer than
+ * Shipped lessons (and any lesson picked with --only) also fail on: a missing required section (CLAUDE.md §4), fewer than
  * 3 worked examples / 8 practice problems, a quick check outside 4–6
  * questions, Build steps outside 3–6, traps outside 2–4, fewer than 2 references, no explained key
  * formula in Formalize, no KaTeX, a blank or collapsed visible figure, a
@@ -59,7 +59,12 @@ const VIEWPORTS = {
 type ViewportName = keyof typeof VIEWPORTS;
 
 /** Chromium's own messages about the headless software GPU, not about our code. */
-const IGNORED_CONSOLE: RegExp[] = [/GPU stall due to ReadPixels/, /\[\.WebGL-[^\]]+\].*performance warning/i];
+const IGNORED_CONSOLE: RegExp[] = [
+  /GPU stall due to ReadPixels/,
+  /\[\.WebGL-[^\]]+\].*performance warning/i,
+  // Printed by Playwright itself because these runs block service workers on purpose.
+  /Service Worker registration blocked by Playwright/,
+];
 
 interface Failure {
   page: string;
@@ -343,7 +348,10 @@ async function checkPage(b: Browser, helper: Page, t: (typeof targets)[number], 
     );
     for (const e of texErrors) fail(name, `KaTeX error: ${e}`);
     await checkQuality(page, name, vp);
-    if (t.lesson) await checkLesson(page, helper, name, t.lesson, vp);
+    // Lesson-structure checks apply to shipped lessons, and to any lesson you
+    // single out with --only (that's how you check one while building it).
+    // Other wip lessons are "coming soon" drafts: they only get the page checks.
+    if (t.lesson && (t.lesson.meta.status === 'shipped' || only)) await checkLesson(page, helper, name, t.lesson, vp);
   } catch (err) {
     fail(name, `failed to load: ${(err as Error).message.split('\n')[0]}`);
   } finally {

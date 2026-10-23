@@ -1,6 +1,409 @@
 /* ==========================================================================
    visual.css
    Owner: G2 visuals (Stage2D, Stage3D, Plot, MatrixGrid).
-   Start from the classes components.css already defines (DESIGN.md §13);
-   add only what is missing. Tokens only: no raw colours, sizes from --sp-*, motion from --dur-*.
+   Builds on components.css §8 (.plate*, .fig-*, .fig-handle*, .readout…).
+   Tokens only: no raw colours, sizes from --sp-*, motion from --dur-*.
    ========================================================================== */
+
+/* ── Stage2D: layers ───────────────────────────────────────────────────── */
+
+.stage2d {
+  width: 100%;
+}
+.stage2d__canvases,
+.stage2d__overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.stage2d__overlay {
+  overflow: hidden;
+}
+.stage2d__canvas {
+  pointer-events: none;
+}
+.stage2d.is-pannable {
+  cursor: grab;
+}
+.stage2d.is-pannable.is-panning {
+  cursor: grabbing;
+}
+.stage2d:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+.stage2d__reset {
+  position: absolute;
+  top: var(--sp-1);
+  right: var(--sp-1);
+  background: color-mix(in srgb, var(--plate) 88%, transparent);
+}
+.stage2d__keys {
+  margin-top: var(--sp-2);
+}
+
+/* ── Marks ─────────────────────────────────────────────────────────────── */
+
+/* A mark without a concept is drawn in ink. */
+.s2-mark:not(.ct) {
+  --c: var(--ink-2);
+}
+.s2-mark.is-correct {
+  --c: var(--hue-green);
+}
+.s2-head {
+  stroke: none;
+}
+.s2-double-core {
+  fill: none;
+  stroke: var(--plate);
+}
+.s2-point {
+  fill: var(--c);
+  stroke: var(--plate);
+}
+.s2-point.is-hollow {
+  fill: var(--plate);
+  stroke: var(--c);
+}
+.s2-fill-wash {
+  fill: var(--c);
+  fill-opacity: calc(0.12 + var(--lit, 0) * 0.06);
+  stroke: none;
+}
+.s2-fill-hatch {
+  stroke: none;
+}
+.s2-hatch-line {
+  stroke: var(--c);
+  stroke-width: 1.3;
+  opacity: 0.7;
+}
+/* The kept line of a Band: a strong rule, a touch lighter than the focal pair. */
+.s2-band > .fig-line {
+  opacity: 0.88;
+}
+/* Concept groups light as a whole. */
+svg .s2-polygon.ct .fig-line {
+  stroke-width: inherit;
+}
+
+/* ── Labels (HTML overlay) ─────────────────────────────────────────────── */
+
+.stage2d__label {
+  position: absolute;
+  left: 0;
+  top: 0;
+  padding: 0 2px;
+  border-radius: 2px;
+  color: var(--c, var(--ink));
+  font-family: var(--font-serif);
+  font-size: var(--fs-fig-label);
+  line-height: 1.25;
+  white-space: nowrap;
+  pointer-events: none;
+  will-change: transform;
+  /* The plate-coloured halo (paint-order on SVG text; a shadow ring here). */
+  text-shadow:
+    -1.5px -1.5px 0 var(--plate),
+    1.5px -1.5px 0 var(--plate),
+    -1.5px 1.5px 0 var(--plate),
+    1.5px 1.5px 0 var(--plate),
+    0 0 4px var(--plate);
+}
+.stage2d__label:not(.ct) {
+  --c: var(--ink);
+}
+.stage2d__label .katex {
+  font-size: 1.04em;
+}
+.stage2d__label:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+/* ── Handles ───────────────────────────────────────────────────────────── */
+
+/* The handle wears its concept's ink (the wrapper carries `ct ct-<name>`);
+   a handle with no concept is ink (blue would claim it is an input). */
+.s2-handle.ct > .fig-handle:not(.is-correct) {
+  --c: inherit;
+}
+.s2-handle:not(.ct) > .fig-handle:not(.is-correct) {
+  --c: var(--ink-2);
+}
+.fig-handle.is-disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+/* ── Plot ──────────────────────────────────────────────────────────────── */
+
+.plot-dots {
+  fill: var(--c);
+  stroke: none;
+}
+.plot-bars .fig-line,
+.plot-area .fig-line {
+  stroke-linejoin: round;
+}
+.plot-contours__label {
+  fill: var(--c, var(--ink-2));
+}
+/* Heat-map key: a small ramp with its end values, in the plate's corner. */
+.plot-key {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: 4px;
+  padding: 2px 6px;
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--plate) 86%, transparent);
+  text-shadow: none;
+  font-family: var(--font-sans);
+  font-size: var(--fs-fig-tick);
+  font-variant-numeric: tabular-nums lining-nums;
+  color: var(--ink-2);
+  vertical-align: middle;
+}
+.plot-key__bar {
+  display: inline-block;
+  width: 64px;
+  height: 8px;
+  border: var(--hair) solid var(--rule-strong);
+  border-radius: 2px;
+}
+/* The cursor: a dotted guide, a grip with a 44px hit area, dots where it meets each curve. */
+.plot-cursor__line {
+  fill: none;
+  stroke: var(--ink-2);
+  stroke-width: var(--sw-guide);
+  stroke-dasharray: 2 3;
+}
+.plot-cursor__hit {
+  fill: transparent;
+  cursor: ew-resize;
+}
+@media (pointer: coarse) {
+  /* On touch only the grip drags: the rest of the plot keeps scrolling the page. */
+  .plot-cursor__hit {
+    pointer-events: none;
+  }
+}
+.plot-cursor__grip {
+  cursor: ew-resize;
+  outline: none;
+  touch-action: none;
+}
+.plot-cursor__grip-hit {
+  fill: transparent;
+}
+.plot-cursor__grip-body {
+  fill: var(--plate);
+  stroke: var(--ink-2);
+  stroke-width: 1.5;
+}
+.plot-cursor__grip-mark {
+  fill: none;
+  stroke: var(--ink-2);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.plot-cursor__grip:hover .plot-cursor__grip-body,
+.plot-cursor.is-linked .plot-cursor__grip-body {
+  stroke: var(--ink);
+}
+.plot-cursor__focus {
+  fill: none;
+  stroke: var(--focus);
+  stroke-width: 2;
+  opacity: 0;
+}
+.plot-cursor__grip:focus-visible .plot-cursor__focus {
+  opacity: 1;
+}
+
+/* ── MatrixGrid ────────────────────────────────────────────────────────── */
+
+/* The transformed grid is context: faint, thin, in the matrix's ink (or ink). */
+.mxg__grid .mxg__lines {
+  stroke-width: 1px;
+  opacity: calc(0.24 + var(--lit, 0) * 0.26);
+}
+.mxg__grid .mxg__axes {
+  stroke-width: 1.4px;
+  opacity: calc(0.45 + var(--lit, 0) * 0.3);
+}
+.mxg__grid.s2-mark:not(.ct) {
+  --c: var(--ink-3);
+}
+/* The entries panel: a strip joined under the stage, like a readout. */
+.mxg__panel {
+  align-items: center;
+  gap: var(--sp-2) var(--sp-4);
+}
+.mxg__name {
+  font-family: var(--font-serif);
+  font-size: 1.15em;
+}
+.mxg__mat {
+  align-items: center;
+  gap: 0 var(--sp-3);
+}
+.mxg__mat.is-editable {
+  padding: 2px 9px;
+}
+.mxg__cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+.mxg__entry {
+  min-width: 3.4ch;
+  padding: 0 2px;
+  border-radius: 2px;
+  text-align: right;
+}
+.mxg__entry[role='spinbutton']:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+.mxg__step {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: var(--hair) solid var(--rule-strong);
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--ink-2);
+  font: 560 var(--fs-ui) / 1 var(--font-sans);
+  cursor: pointer;
+}
+.mxg__step::before {
+  content: '';
+  position: absolute;
+  inset: -7px;
+}
+.mxg__step:hover {
+  background: var(--w-ink);
+  color: var(--ink);
+}
+.mxg__det {
+  font-family: var(--font-sans);
+  font-size: var(--fs-ui);
+  font-weight: 560;
+  color: var(--ink-2);
+}
+.mxg__det.is-flipped,
+.mxg__det.is-flat {
+  color: var(--ink);
+}
+
+/* Phone 3×3: tap an entry, step it with one shared pair. */
+.mxg__entry.is-pick {
+  display: inline-grid;
+  place-items: center end;
+  min-width: 5ch;
+  min-height: var(--hit);
+  padding: 0 6px;
+  cursor: pointer;
+}
+.mxg__entry.is-selected {
+  background: var(--w-ink);
+  box-shadow: inset 0 -2px 0 var(--ink);
+}
+.mxg__editor {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  flex-basis: 100%;
+}
+.mxg__edit-btn {
+  min-width: var(--hit);
+  min-height: var(--hit);
+  font-size: 1.1em;
+}
+.mxg__edit-name {
+  font-family: var(--font-sans);
+  font-size: var(--fs-meta);
+  color: var(--ink-2);
+}
+
+/* ── Stage3D ────────────────────────────────────────────────────────────── */
+
+.stage3d {
+  width: 100%;
+  cursor: grab;
+  touch-action: pan-y; /* vertical swipes scroll the page; horizontal ones orbit */
+}
+.stage3d.is-orbiting {
+  cursor: grabbing;
+}
+.stage3d:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+.stage3d__canvas {
+  pointer-events: none;
+}
+.stage3d__handles {
+  overflow: visible;
+}
+.stage3d__overlay {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.stage3d__label {
+  will-change: transform;
+}
+.stage3d__reset {
+  position: absolute;
+  top: var(--sp-1);
+  right: var(--sp-1);
+  background: color-mix(in srgb, var(--plate) 88%, transparent);
+}
+.stage3d.is-failed {
+  display: grid;
+  place-items: center;
+  cursor: default;
+}
+.stage3d__fallback {
+  max-width: 34em;
+  padding: var(--sp-5);
+  font-size: var(--fs-note);
+  color: var(--ink-2);
+  text-align: center;
+}
+
+/* ── Gallery helpers (dev counters, side-by-side plots) ───────────────── */
+
+.g2-dev {
+  display: block;
+  margin-top: var(--sp-2);
+  font-family: var(--font-sans);
+  font-size: var(--fs-meta);
+  color: var(--ink-3);
+}
+.g2-stack {
+  display: grid;
+  gap: var(--sp-2);
+}
+.g2-pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--sp-3);
+}
+@media (max-width: 699px) {
+  .g2-pair {
+    grid-template-columns: 1fr;
+  }
+}
+.stage2d__portal {
+  display: contents;
+}

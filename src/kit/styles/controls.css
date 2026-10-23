@@ -4,3 +4,456 @@
    Start from the classes components.css already defines (DESIGN.md §13);
    add only what is missing. Tokens only: no raw colours, sizes from --sp-*, motion from --dur-*.
    ========================================================================== */
+
+/* ── Toggle ─────────────────────────────────────────────────────────────── */
+
+.switch__label {
+  text-align: left;
+}
+.switch:disabled {
+  color: var(--ink-4);
+  cursor: not-allowed;
+}
+.switch:disabled .switch__track {
+  border-color: var(--ink-4);
+}
+.switch:disabled .switch__track::after {
+  background: var(--ink-4);
+}
+
+/* ── Segmented ──────────────────────────────────────────────────────────── */
+
+.seg__btn .rich {
+  text-align: center;
+}
+
+/* ── Stepper ────────────────────────────────────────────────────────────── */
+
+.stepper__label {
+  min-width: 7.5em;
+  text-align: center;
+  color: var(--ink-2);
+}
+
+/* ── Slider ─────────────────────────────────────────────────────────────── */
+
+/* A concept slider: the thumb, fill and value wear the ink (via --c); the label stays ink,
+   and the linked-hover wash sits on the label only, not the whole row. */
+.slider.ct {
+  color: var(--ink);
+  background-color: transparent;
+  box-shadow: none;
+}
+.slider.ct .slider__label {
+  border-radius: var(--radius);
+  background-color: color-mix(in srgb, var(--c) calc(var(--lit, 0) * 14%), transparent);
+  transition: background-color var(--dur-1) var(--ease-out);
+}
+.slider__label {
+  cursor: default;
+}
+/* Detent labels sit under the track; a detent the value sits on is inked. */
+.slider__tick.is-on {
+  color: var(--c);
+}
+.slider__tick.is-on::before {
+  background: var(--c);
+}
+.slider.is-disabled {
+  --c: var(--ink-4);
+}
+.slider.is-disabled .slider__label,
+.slider.is-disabled .slider__value {
+  color: var(--ink-4);
+}
+.slider.is-disabled input[type='range'] {
+  cursor: not-allowed;
+}
+/* Phones: label above, track and value on one row, so the track gets the width. */
+@media (max-width: 699px) {
+  .slider {
+    grid-template-columns: minmax(0, 1fr) auto;
+    row-gap: 0;
+  }
+  .slider__label {
+    grid-column: 1 / -1;
+  }
+}
+
+/* ── CodeCell ───────────────────────────────────────────────────────────── */
+
+.codecell__label {
+  font-size: var(--fs-label);
+}
+.codecell__actions {
+  gap: var(--sp-1);
+}
+/* Editor: line-number gutter + a textarea laid exactly over its highlighted copy.
+   Both share one font box, so the caret sits on the glyphs; the textarea scrolls
+   sideways inside the cell (never the page) and the copy follows it. */
+.codecell__code {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  font-family: var(--font-mono);
+  font-size: var(--fs-code);
+  line-height: 1.55;
+  font-variant-numeric: tabular-nums lining-nums;
+  font-variant-ligatures: none;
+  tab-size: 2;
+}
+.codecell__code:has(.codecell__input:focus-visible) {
+  outline: 2px solid var(--focus);
+  outline-offset: -2px;
+}
+.codecell__gutter {
+  display: flex;
+  flex-direction: column;
+  padding: var(--sp-3) var(--sp-2) var(--sp-3) var(--sp-3);
+  border-right: var(--hair) solid var(--rule);
+  color: var(--ink-3);
+  text-align: right;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.codecell__gutter span {
+  display: block;
+  min-width: 1.6ch;
+  height: 1.55em;
+}
+.codecell__gutter .is-error {
+  color: var(--c-error);
+  font-weight: 600;
+  box-shadow: inset -2px 0 0 var(--c-error);
+  margin-right: calc(-1 * var(--sp-2));
+  padding-right: var(--sp-2);
+}
+.codecell__area {
+  position: relative;
+  min-width: 0;
+  overflow: hidden;
+}
+.codecell__hl {
+  position: absolute;
+  top: 0;
+  left: 0;
+  min-width: 100%;
+  margin: 0;
+  padding: var(--sp-3) var(--sp-4);
+  border: 0;
+  border-radius: 0;
+  background: none;
+  font: inherit;
+  font-variant-ligatures: none;
+  white-space: pre;
+  overflow: visible;
+  pointer-events: none;
+  color: var(--ink);
+}
+/* A read-only cell has no textarea: the copy is the code, and scrolls itself. */
+.codecell__area:not(:has(.codecell__input)) .codecell__hl {
+  position: static;
+  overflow-x: auto;
+  pointer-events: auto;
+}
+.codecell__input {
+  display: block;
+  width: 100%;
+  /* rows of text + padding + room for a classic horizontal scrollbar */
+  height: calc(var(--rows, 3) * 1.55em + 2 * var(--sp-3) + 10px);
+  min-height: var(--hit);
+  margin: 0;
+  padding: var(--sp-3) var(--sp-4);
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: transparent;
+  caret-color: var(--ink);
+  font: inherit;
+  font-variant-ligatures: none;
+  line-height: inherit;
+  letter-spacing: inherit;
+  white-space: pre;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: thin;
+  resize: none;
+  tab-size: 2;
+}
+.codecell__input:focus,
+.codecell__input:focus-visible {
+  outline: none;
+}
+.codecell__input::selection {
+  color: transparent;
+  background: color-mix(in srgb, var(--hue-blue) 28%, transparent);
+}
+.tok-str,
+.tok-regex {
+  color: var(--ink-2);
+}
+.tok-num {
+  font-weight: 500;
+}
+/* An identifier the lesson maps to a concept: underlined in the concept's line style,
+   washed when the concept is lit anywhere on the page (a slider being dragged). */
+.tok-ct {
+  padding-bottom: 2px;
+  background: var(--u), color-mix(in srgb, var(--c) calc(var(--lit, 0) * 16%), transparent);
+  border-radius: 1px;
+}
+.codecell__keys {
+  margin: 0;
+  padding: var(--sp-2) var(--sp-4);
+  border-top: var(--hair) solid var(--rule);
+}
+.codecell__out p {
+  margin: 0;
+}
+.codecell__out p + p {
+  margin-top: 2px;
+}
+.codecell__log {
+  color: var(--ink);
+}
+.codecell__status {
+  color: var(--ink-3);
+  font-family: var(--font-sans);
+  font-size: var(--fs-meta);
+}
+.codecell__error {
+  color: var(--c-error);
+}
+.codecell__error::before {
+  content: '× ';
+  font-weight: 700;
+}
+/* Touch keyboards zoom into text under 16px; keep the editor at 16px there. */
+@media (pointer: coarse) {
+  .codecell__code {
+    font-size: 16px;
+  }
+}
+@media (max-width: 699px) {
+  .codecell {
+    margin-inline: -6px;
+  }
+  .codecell__bar {
+    padding-left: var(--sp-3);
+  }
+}
+
+/* ── PlayScrub ──────────────────────────────────────────────────────────── */
+
+.playscrub {
+  margin: var(--sp-4) 0;
+  font-family: var(--font-sans);
+}
+.playscrub__bar {
+  display: grid;
+  grid-template-columns: auto auto minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 2px;
+}
+.playscrub__play {
+  border-color: var(--rule-strong);
+  color: var(--ink);
+}
+.playscrub__track {
+  position: relative;
+  margin: 0 var(--sp-2);
+}
+.playscrub__scrub {
+  --fill: 0%;
+  -webkit-appearance: none;
+  appearance: none;
+  display: block;
+  width: 100%;
+  height: var(--hit);
+  margin: 0;
+  background: transparent;
+  cursor: pointer;
+}
+.playscrub__scrub::-webkit-slider-runnable-track {
+  height: 2px;
+  border-radius: 1px;
+  background: linear-gradient(to right, var(--ink-2) var(--fill), var(--rule-strong) var(--fill));
+}
+.playscrub__scrub::-moz-range-track {
+  height: 2px;
+  background: var(--rule-strong);
+}
+.playscrub__scrub::-moz-range-progress {
+  height: 2px;
+  background: var(--ink-2);
+}
+.playscrub__scrub::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px;
+  height: 20px;
+  margin-top: -9px;
+  border: 2px solid var(--raised);
+  border-radius: 3px;
+  background: var(--ink);
+  box-shadow: 0 0 0 1px var(--ink);
+}
+.playscrub__scrub::-moz-range-thumb {
+  width: 10px;
+  height: 16px;
+  border: 2px solid var(--raised);
+  border-radius: 3px;
+  background: var(--ink);
+}
+.playscrub__scrub:focus-visible {
+  outline: none;
+}
+.playscrub__scrub:focus-visible::-webkit-slider-thumb {
+  box-shadow: 0 0 0 1px var(--ink), 0 0 0 3px var(--raised), 0 0 0 5px var(--focus);
+}
+.playscrub__scrub:focus-visible::-moz-range-thumb {
+  box-shadow: 0 0 0 3px var(--raised), 0 0 0 5px var(--focus);
+}
+.playscrub__scrub:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+.playscrub__marks {
+  position: absolute;
+  inset: 0 7px;
+  pointer-events: none;
+}
+.playscrub__mark {
+  position: absolute;
+  top: calc(50% + 6px);
+  width: 2px;
+  height: 6px;
+  margin-left: -1px;
+  background: var(--ink-3);
+}
+.playscrub__mark.is-on {
+  background: var(--ink);
+}
+.playscrub__count {
+  min-width: 4.6em;
+  padding-left: var(--sp-2);
+  text-align: right;
+  font-family: var(--font-mono);
+  font-size: var(--fs-meta);
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+.playscrub__text {
+  margin-top: var(--sp-1);
+  padding-left: calc(var(--hit) * 2 + var(--sp-2) + 2px);
+}
+.playscrub__label {
+  margin: 0;
+  font-size: var(--fs-meta);
+  font-weight: 560;
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums lining-nums;
+}
+.playscrub__note {
+  min-height: 1.5em;
+  font-family: var(--font-serif);
+  font-size: var(--fs-small);
+  line-height: 1.45;
+  color: var(--ink);
+}
+@media (max-width: 699px) {
+  .playscrub__bar {
+    grid-template-columns: auto auto auto 1fr;
+    grid-template-areas: 'play back fwd count' 'track track track track';
+  }
+  .playscrub__play {
+    grid-area: play;
+  }
+  .playscrub__back {
+    grid-area: back;
+  }
+  .playscrub__fwd {
+    grid-area: fwd;
+  }
+  .playscrub__count {
+    grid-area: count;
+  }
+  .playscrub__track {
+    grid-area: track;
+    margin: 0;
+  }
+  .playscrub__text {
+    padding-left: 0;
+  }
+}
+
+/* ── Scrolly ────────────────────────────────────────────────────────────── */
+
+.scrolly {
+  display: grid;
+  gap: var(--sp-5);
+  margin: var(--sp-6) 0;
+}
+.scrolly__visual {
+  position: sticky;
+  top: var(--masthead-h);
+  z-index: 2;
+  max-height: 45vh;
+  overflow: hidden;
+  padding: var(--sp-2) 0;
+  background: var(--paper);
+}
+.scrolly__visual > .plate,
+.scrolly__visual > .plate__stage {
+  margin: 0;
+}
+.scrolly__visual .plate__stage {
+  max-height: calc(45vh - var(--sp-4));
+}
+.scrolly__steps {
+  display: grid;
+  gap: 28vh;
+  padding-bottom: 24vh;
+}
+.scrolly__step {
+  padding: var(--sp-3) var(--sp-4) var(--sp-3) var(--sp-5);
+  border-left: 2px solid var(--rule);
+  background: var(--paper);
+  transition: border-color var(--dur-2) var(--ease-out);
+}
+.scrolly__step.is-current {
+  border-left-color: var(--ink);
+}
+.scrolly__step > :last-child {
+  margin-bottom: 0;
+}
+.scrolly__step:focus-visible {
+  outline-offset: 4px;
+}
+@media (min-width: 1000px) {
+  .scrolly {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr);
+    align-items: start;
+    gap: var(--gutter);
+  }
+  .scrolly__visual {
+    order: 2;
+    top: calc(var(--masthead-h) + var(--sp-6));
+    max-height: none;
+    overflow: visible;
+    padding: 0;
+  }
+  .scrolly__visual .plate__stage {
+    max-height: none;
+  }
+  .scrolly__steps {
+    order: 1;
+    gap: 40vh;
+    padding: 12vh 0 30vh;
+  }
+}
+@media (max-width: 699px) {
+  .scrolly__visual {
+    margin-inline: calc(-1 * var(--page-pad));
+    padding-inline: var(--page-pad);
+  }
+}

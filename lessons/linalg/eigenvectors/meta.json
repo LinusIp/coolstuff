@@ -1,0 +1,10 @@
+{
+  "title": "Eigenvectors and eigenvalues",
+  "subject": "linalg",
+  "unit": "Eigen-everything",
+  "order": 14,
+  "prerequisites": ["linalg/change-of-basis"],
+  "minutes": 20,
+  "level": "core",
+  "status": "wip"
+}

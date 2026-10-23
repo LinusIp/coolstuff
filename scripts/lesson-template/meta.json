@@ -1,0 +1,10 @@
+{
+  "title": "{{title}}",
+  "subject": "{{subject}}",
+  "unit": "{{unit}}",
+  "order": {{order}},
+  "prerequisites": {{prerequisites}},
+  "minutes": 20,
+  "level": "core",
+  "status": "wip"
+}
