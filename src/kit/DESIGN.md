@@ -57,7 +57,7 @@ flash), `import '@kit/styles/index.css'`, and, for a lesson,
 no Cyrillic or Vietnamese files ship, and `unicode-range` means a browser
 fetches a subset only when the page uses it.
 
-**Not used (removable):** `@fontsource-variable/literata`,
+**Removed** (were candidates during design): `@fontsource-variable/literata`,
 `@fontsource-variable/inter-tight`.
 
 ### Scale

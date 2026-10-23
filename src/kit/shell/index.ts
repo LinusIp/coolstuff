@@ -3,7 +3,7 @@
  * component as it lands. Planned:
  *
  *   export { LessonPage, type LessonPageProps } from './LessonPage';
- *   export { Section, type SectionProps } from './Section';
+ *   export { Section, Step, type SectionProps, type StepProps } from './Section';
  *   export { Figure, Readout, Mission, Legend, FigKeys, type FigureProps } from './Figure';
  *   export { SiteHeader, type SiteHeaderProps } from './SiteHeader';
  *   export { WhereNext, References, type WhereNextProps } from './WhereNext';

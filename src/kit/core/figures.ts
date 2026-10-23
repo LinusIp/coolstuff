@@ -23,7 +23,7 @@
  */
 import type { ComponentChildren } from 'preact';
 import type { Signal } from '@preact/signals';
-import type { ParamValues, ProblemInstance } from '../types';
+import type { ParamValues, PracticeItem, ProblemInstance } from '../types';
 
 /** A worked example's figure: reads the live params and may write them (drag x₀ in the figure). */
 export type ExampleFigure = (params: ParamValues, setParams: (patch: Partial<ParamValues>) => void) => ComponentChildren;
@@ -49,3 +49,13 @@ export interface LessonFigures {
 
 /** Identity helper so a lesson's FIGURES object is checked against LessonFigures. */
 export const defineFigures = (figures: LessonFigures): LessonFigures => figures;
+
+/**
+ * One problem on a page that mixes lessons (subject practice, exam set), with
+ * its lesson's figures so problem figures and custom drags still render.
+ * `ProblemSet items` and `ExamSet items` take these (README §8.6).
+ */
+export interface PracticeEntry extends PracticeItem {
+  /** The owning lesson's `FIGURES` (from its figures.tsx), if it has one. */
+  figures?: LessonFigures;
+}

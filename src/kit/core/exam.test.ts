@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { domId, drawExam, problemKey, scoreExam } from './exam';
+import { domId, drawExam, problemKey, scoreExam, type ExamResponse } from './exam';
 import { formatAtPrecision } from './answers';
 import { DEMO, PROBLEMS } from '../gallery/samples';
 import type { NumericAnswer, PracticeItem } from '../types';
@@ -53,5 +53,16 @@ describe('exam papers', () => {
     expect(r.total).toBe(6);
     expect(r.verdicts[0]).toMatchObject({ correct: false, reason: 'empty' });
     expect(r.score).toBe(responses.filter((x, k) => x && k > 0).length);
+  });
+
+  it('code answers need a sandbox verdict before scoring', () => {
+    const paper = drawExam(items, { seed: 3, count: 6 });
+    const k = paper.findIndex((q) => q.instance.answer.kind === 'code');
+    if (k < 0) return;
+    const rs = paper.map(() => null as ExamResponse);
+    rs[k] = { kind: 'code', source: 'function f() {}' };
+    expect(scoreExam(paper, rs).verdicts[k]).toMatchObject({ correct: false, reason: 'incomplete' });
+    rs[k] = { kind: 'code', source: '  ' };
+    expect(scoreExam(paper, rs).verdicts[k]).toMatchObject({ reason: 'empty' });
   });
 });

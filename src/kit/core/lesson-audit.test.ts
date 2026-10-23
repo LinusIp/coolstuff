@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import * as samples from '../gallery/samples';
-import { anchorIds, auditDerivations, auditFormulas, auditLesson, auditReferences, auditTraps, validateLessonModule } from './lesson-audit';
+import { anchorIds, auditDerivations, auditFigureKeys, auditFormulas, auditLesson, auditReferences, auditTraps, figureKeys, validateLessonModule } from './lesson-audit';
 import type { FormulaSpec, TrapSpec } from '../types';
 
 const known = ['linalg/determinant', 'linalg/eigenvectors'];
@@ -65,5 +65,21 @@ describe('the problems.ts module contract (build-index)', () => {
     expect(validateLessonModule({})).toEqual([expect.stringMatching(/export `C`/), expect.stringMatching(/export `PROBLEMS`/)]);
     expect(validateLessonModule({ C: samples.C, PROBLEMS: [{ id: 'A b', difficulty: 4 }] }).join()).toMatch(/bad id.*difficulty 1, 2 or 3/);
     expect(validateLessonModule({ C: samples.C, PROBLEMS: samples.PROBLEMS, PROBLEM: [] }).join()).toMatch(/did you mean "PROBLEMS"/);
+  });
+});
+
+describe('figure keys (figures.tsx)', () => {
+  it('lists every key the content uses, by FIGURES group', () => {
+    const k = figureKeys(samples);
+    expect(k.traps).toEqual(['rotation', 'zero-vector']);
+    expect(k.customs.every((c) => typeof c === 'string')).toBe(true);
+  });
+  it('flags missing and unused renderers', () => {
+    const k = figureKeys(samples);
+    const all = Object.fromEntries(Object.entries(k).map(([g, keys]) => [g, Object.fromEntries((keys as string[]).map((x) => [x, () => null]))]));
+    expect(auditFigureKeys(samples, all)).toEqual([]);
+    const errs = auditFigureKeys(samples, { ...all, traps: { rotation: () => null, spare: () => null } }).join();
+    expect(errs).toMatch(/FIGURES\.traps\["zero-vector"\] is missing/);
+    expect(errs).toMatch(/FIGURES\.traps\["spare"\] is never used/);
   });
 });

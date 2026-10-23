@@ -91,8 +91,12 @@ export function drawExam(items: readonly PracticeItem[], opts: ExamOptions): Exa
   });
 }
 
-/** What the learner submitted for one question: a checkable response, a code verdict (from the sandbox), or nothing. */
-export type ExamResponse = AnswerResponse | { kind: 'code'; verdict: Verdict } | null | undefined;
+/**
+ * What the learner submitted for one question: a checkable response, code
+ * (its `source`, plus the `verdict` once ExamSet has run it in the sandbox at
+ * submit time), or nothing.
+ */
+export type ExamResponse = AnswerResponse | { kind: 'code'; source?: string; verdict?: Verdict } | null | undefined;
 
 export interface ExamResult {
   score: number;
@@ -106,7 +110,10 @@ export function scoreExam(paper: readonly ExamQuestion[], responses: readonly Ex
   const verdicts = paper.map((q, k): Verdict => {
     const r = responses[k];
     if (!r) return { correct: false, reason: 'empty', message: 'Not answered.' };
-    if (r.kind === 'code') return r.verdict;
+    if (r.kind === 'code') {
+      if (r.verdict) return r.verdict;
+      return r.source?.trim() ? { correct: false, reason: 'incomplete', message: 'This code was never run against the tests.' } : { correct: false, reason: 'empty', message: 'Not answered.' };
+    }
     if (r.kind !== q.instance.answer.kind) return { correct: false, reason: 'unparseable', message: 'That answer is the wrong kind for this question.' };
     return checkAnswer(q.instance.answer, r, q.instance.commonWrong);
   });

@@ -877,7 +877,7 @@ export interface ProgressSummary {
  * for every lesson folder that has a problems.ts.
  *
  * Its visual partner is `figures.tsx` (no side effects, no mountLesson):
- * `export const FIGURES: LessonFigures` (README §8.6), imported by lesson.tsx
+ * `export const FIGURES = defineFigures({…})` (README §8.6), imported by lesson.tsx
  * and by the practice pages.
  */
 export interface LessonContent {
@@ -896,6 +896,12 @@ export interface LessonContent {
   REFERENCES: readonly Reference[];
   PREDICTS?: readonly PredictSpec[];
   GLOSSARY?: readonly GlossaryTerm[];
+  /**
+   * "Code it" sources by name, so lesson.test.ts can run the shipped snippet
+   * in Node with `runSnippet(SNIPPETS.gd, { inputs, helpers })` and lesson.tsx
+   * passes the same string to `<CodeCell code={SNIPPETS.gd} />`.
+   */
+  SNIPPETS?: Readonly<Record<string, string>>;
 }
 
 /** One problem on a page that mixes lessons (subject practice, exam-style set). */

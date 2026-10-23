@@ -6,3 +6,4 @@ export * from './capabilities';
 export * from './fps';
 export * from './pwa';
 export * from './dom';
+export * from './worker';

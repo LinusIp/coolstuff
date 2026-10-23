@@ -77,6 +77,43 @@ export function announce(message: string): void {
   setTimeout(() => (region.textContent = message), 30);
 }
 
+/** The bits of `window` that `printWithClass` touches (injectable for tests). */
+export interface PrintHost {
+  document: { body: { classList: { add(c: string): void; remove(c: string): void } } };
+  print(): void;
+  addEventListener(type: 'afterprint', fn: () => void, opts?: { once?: boolean }): void;
+  removeEventListener(type: 'afterprint', fn: () => void): void;
+  matchMedia?(q: string): { matches: boolean; addEventListener(t: 'change', fn: (e: { matches: boolean }) => void): void; removeEventListener(t: 'change', fn: (e: { matches: boolean }) => void): void };
+}
+
+/**
+ * Print with a body class on (TLDR's "Print card": `printWithClass('print-card')`).
+ * `print()` doesn't block on iOS Safari or Firefox Android, so the class is
+ * removed on `afterprint` (or when the print media query turns off), never
+ * synchronously; the returned function removes it early if needed.
+ */
+export function printWithClass(className: string, host: PrintHost | undefined = typeof window === 'undefined' ? undefined : (window as unknown as PrintHost)): () => void {
+  if (!host) return () => {};
+  const body = host.document.body;
+  body.classList.add(className);
+  const mq = host.matchMedia?.('print');
+  let done = false;
+  const cleanup = () => {
+    if (done) return;
+    done = true;
+    body.classList.remove(className);
+    host.removeEventListener('afterprint', cleanup);
+    mq?.removeEventListener('change', onMedia);
+  };
+  const onMedia = (e: { matches: boolean }) => {
+    if (!e.matches) cleanup();
+  };
+  host.addEventListener('afterprint', cleanup, { once: true });
+  mq?.addEventListener('change', onMedia);
+  host.print();
+  return cleanup;
+}
+
 /** Set SVG/HTML attributes, skipping unchanged writes; numbers are rounded to 0.01. null removes. */
 export function attr(el: Element, attrs: Record<string, string | number | null | undefined>): void {
   for (const [k, v] of Object.entries(attrs)) {

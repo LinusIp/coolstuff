@@ -5,10 +5,11 @@
  *   export { Stage2D, useStage, Vector, Segment, Line, Point, Curve, Polyline, Polygon,
  *            Label, Band, Arc, Handle, CanvasLayer, type Stage2DProps, type StageApi } from './Stage2D';
  *   export { Plot, type PlotProps, type PlotSeries } from './Plot';
- *   export { MatrixGrid, type MatrixGridProps } from './MatrixGrid';
+ *   export { MatrixGrid, imageOf, type MatrixGridProps, type MatrixGridVector } from './MatrixGrid';
  *   export * from './scales';
  *
- * Stage3D is NOT re-exported here (it may pull in three.js): import it from
- * '@kit/visual/Stage3D' so only lessons that need 3D pay for it.
+ * Stage3D (with its primitives and MatrixGrid3D) is NOT re-exported here (it
+ * may pull in three.js): import it from '@kit/visual/Stage3D' so only lessons
+ * that need 3D pay for it.
  */
 export {};

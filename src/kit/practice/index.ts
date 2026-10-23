@@ -7,5 +7,6 @@
  *   export { ProblemSet, type ProblemSetProps } from './ProblemSet';
  *   export { Quiz, type QuizProps } from './Quiz';
  *   export { Predict, type PredictProps } from './Predict';
+ *   export { ExamSet, type ExamSetProps } from './ExamSet';
  */
 export {};

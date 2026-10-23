@@ -193,7 +193,49 @@ export function auditLesson(content: Partial<LessonContent>, opts: LessonAuditOp
     ...tag('next', auditReferences(content.REFERENCES)),
     ...tag('predict', auditPredicts(content.PREDICTS, o)),
     ...tag('glossary', auditGlossary(content.GLOSSARY, o)),
+    ...tag('code', Object.entries(content.SNIPPETS ?? {}).flatMap(([k, src]) => (typeof src === 'string' && src.trim() ? [] : [`SNIPPETS.${k} is empty`]))),
   ];
+}
+
+/** The figure keys a lesson's content refers to, by the `LessonFigures` map that must render them. */
+export interface FigureKeys {
+  examples: string[];
+  problems: string[];
+  customs: string[];
+  traps: string[];
+  quiz: string[];
+}
+
+/** Every `figure` key in the content: worked examples, problems (custom drag targets go to `customs`), traps, quiz questions. */
+export function figureKeys(content: Partial<LessonContent>): FigureKeys {
+  const uniq = (xs: (string | undefined)[]) => [...new Set(xs.filter((x): x is string => !!x))];
+  const problems = content.PROBLEMS ?? [];
+  const isCustom = (p: (typeof problems)[number]) => p.answer.kind === 'drag' && p.answer.target.mode === 'custom';
+  return {
+    examples: uniq((content.EXAMPLES ?? []).map((e) => e.figure)),
+    problems: uniq(problems.filter((p) => !isCustom(p)).map((p) => p.figure)),
+    customs: uniq(problems.filter(isCustom).map((p) => p.figure)),
+    traps: uniq((content.TRAPS ?? []).map((t) => t.figure)),
+    quiz: uniq((content.QUIZ ?? []).map((q) => q.figure)),
+  };
+}
+
+/**
+ * Every figure key the content uses has a renderer in the lesson's
+ * figures.tsx `FIGURES` (and no renderer is orphaned). lesson.test.ts can
+ * import figures.tsx (it has no side effects) and call:
+ *
+ *   expect(auditFigureKeys(content, FIGURES)).toEqual([]);
+ */
+export function auditFigureKeys(content: Partial<LessonContent>, figures: Partial<Record<keyof FigureKeys, Readonly<Record<string, unknown>> | undefined>>): string[] {
+  const out: string[] = [];
+  const keys = figureKeys(content);
+  for (const group of Object.keys(keys) as (keyof FigureKeys)[]) {
+    const have = Object.keys(figures[group] ?? {});
+    for (const k of keys[group]) if (!have.includes(k)) out.push(`figures.tsx: FIGURES.${group}["${k}"] is missing (used by the content)`);
+    for (const k of have) if (!keys[group].includes(k)) out.push(`figures.tsx: FIGURES.${group}["${k}"] is never used`);
+  }
+  return out;
 }
 
 const isConceptSet = (c: unknown): c is ConceptSet => !!c && typeof (c as ConceptSet).macros === 'function' && Array.isArray((c as ConceptSet).names);
@@ -219,9 +261,9 @@ export function validateLessonModule(mod: Record<string, unknown>): string[] {
     }
   }
   for (const k of Object.keys(mod)) {
-    if (/^[A-Z][A-Z_]*$/.test(k) && !['C', 'TLDR', 'FORMULAS', 'DERIVATIONS', 'EXAMPLES', 'PROBLEMS', 'QUIZ', 'TRAPS', 'REFERENCES', 'PREDICTS', 'GLOSSARY'].includes(k)) {
+    if (/^[A-Z][A-Z_]*$/.test(k) && !['C', 'TLDR', 'FORMULAS', 'DERIVATIONS', 'EXAMPLES', 'PROBLEMS', 'QUIZ', 'TRAPS', 'REFERENCES', 'PREDICTS', 'GLOSSARY', 'SNIPPETS'].includes(k)) {
       // Extra upper-case exports are allowed (lesson constants), but warn about likely typos of the contract names.
-      if (/^(PROBLEM|EXAMPLE|TRAP|REFERENCE|FORMULA|DERIVATION|PREDICT)$/.test(k)) out.push(`problems.ts exports "${k}"; did you mean "${k}S"?`);
+      if (/^(PROBLEM|EXAMPLE|TRAP|REFERENCE|FORMULA|DERIVATION|PREDICT|SNIPPET)$/.test(k)) out.push(`problems.ts exports "${k}"; did you mean "${k}S"?`);
     }
   }
   return out;

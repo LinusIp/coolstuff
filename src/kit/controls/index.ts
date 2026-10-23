@@ -7,7 +7,8 @@
  *   export { Stepper, type StepperProps } from './Stepper';
  *   export { PlayScrub, type PlayScrubProps } from './PlayScrub';
  *   export { Scrolly, type ScrollyProps } from './Scrolly';
- *   export { CodeCell, type CodeCellProps } from './CodeCell';
+ *   export { CodeCell, codeOutput, type CodeCellProps, type CodeOutput } from './CodeCell';
+ *   export * from './parsers';                       // parseNumber, parseVec2, parsePoints, parseNumbers, parseMat2
  *   export { runSandboxed, type SandboxRequest, type SandboxResult } from './sandbox';
  */
 export {};
